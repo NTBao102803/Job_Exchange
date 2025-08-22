@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/user_service/pom.xml" />
+        <option value="$PROJECT_DIR$/api_gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/recommendation_service/pom.xml" />
+        <option value="$PROJECT_DIR$/job_service/pom.xml" />
+        <option value="$PROJECT_DIR$/notification_service/pom.xml" />
+        <option value="$PROJECT_DIR$/messaging_service/pom.xml" />
+        <option value="$PROJECT_DIR$/chatbot_service/pom.xml" />
+        <option value="$PROJECT_DIR$/ai_matching_service/pom.xml" />
+        <option value="$PROJECT_DIR$/discovery_service/pom.xml" />
+        <option value="$PROJECT_DIR$/config_service/pom.xml" />
+        <option value="$PROJECT_DIR$/auth_service/pom.xml" />
+        <option value="$PROJECT_DIR$/search_service/pom.xml" />
+        <option value="$PROJECT_DIR$/storage_service/pom.xml" />
+        <option value="$PROJECT_DIR$/admin_service/pom.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+</project>
