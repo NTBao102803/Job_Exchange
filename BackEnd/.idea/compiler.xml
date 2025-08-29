@@ -2,6 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -10,7 +11,6 @@
         <module name="admin_service" />
         <module name="storage_service" />
         <module name="messaging_service" />
-        <module name="auth_service" />
         <module name="notification_service" />
         <module name="recommendation_service" />
         <module name="chatbot_service" />
@@ -29,6 +29,15 @@
         </processorPath>
         <module name="user_service" />
         <module name="api_gateway" />
+      </profile>
+      <profile name="Annotation profile for auth_service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
+        </processorPath>
+        <module name="auth_service" />
       </profile>
     </annotationProcessing>
   </component>
