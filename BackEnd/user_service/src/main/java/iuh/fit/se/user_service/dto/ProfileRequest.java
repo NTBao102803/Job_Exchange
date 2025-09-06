@@ -1,0 +1,15 @@
+package iuh.fit.se.user_service.dto;
+
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
+@Data
+public class ProfileRequest {
+    private Long userId;
+
+    @Email
+    private String email;
+
+    @NotBlank
+    private String role;
+}
