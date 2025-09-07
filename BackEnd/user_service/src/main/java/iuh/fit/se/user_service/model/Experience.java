@@ -1,6 +1,7 @@
 package iuh.fit.se.user_service.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -26,5 +27,6 @@ public class Experience {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id")
+    @JsonIgnore // ngăn lặp vô hạn json
     private Profile profile;
 }

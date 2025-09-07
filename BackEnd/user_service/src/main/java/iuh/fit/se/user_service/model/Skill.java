@@ -1,5 +1,6 @@
 package iuh.fit.se.user_service.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
@@ -19,5 +20,6 @@ public class Skill {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id")
+    @JsonIgnore // ngăn lặp vô hạn json
     private Profile profile;
 }
