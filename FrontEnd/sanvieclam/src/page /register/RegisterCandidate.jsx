@@ -1,4 +1,3 @@
-// src/pages/RegisterCandidatePage.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
@@ -21,7 +20,7 @@ const RegisterCandidate = () => {
       <div className="w-1/3 relative flex items-center justify-center bg-gray-900">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{ backgroundImage: "url('/logohomebanner3.png')" }}
+          style={{ backgroundImage: "url('/registercandidate.png')" }}
         ></div>
 
         <div className="relative z-10 text-center p-8 text-white drop-shadow-lg">
@@ -42,6 +41,7 @@ const RegisterCandidate = () => {
 
       {/* Bên phải: Form đăng ký */}
       <div className="w-2/3 flex flex-col bg-white shadow-2xl relative z-10">
+
 
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-lg p-10">
