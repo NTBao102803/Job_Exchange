@@ -83,7 +83,7 @@ const Login = () => {
                 Đăng ký Ứng viên
               </button>
               <button
-                onClick={() => navigate("/register-employer")}
+                onClick={() => navigate("/register-recruiter")}
                 className="py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold shadow-md hover:scale-[1.03] transition"
               >
                 Đăng ký Nhà tuyển dụng

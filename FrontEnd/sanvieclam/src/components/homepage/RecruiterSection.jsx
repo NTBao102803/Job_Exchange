@@ -1,4 +1,3 @@
-// src/components/RecruiterSection.jsx
 import React from "react";
 import { motion } from "framer-motion";
 import { Briefcase, Users, Sparkles } from "lucide-react";

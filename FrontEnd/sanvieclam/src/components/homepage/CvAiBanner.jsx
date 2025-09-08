@@ -1,4 +1,3 @@
-// src/components/CvAiBanner.jsx
 import React from "react";
 import { motion } from "framer-motion";
 import { FileText, Sparkles } from "lucide-react";

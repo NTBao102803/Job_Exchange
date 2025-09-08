@@ -1,4 +1,3 @@
-// src/components/FeaturedJobs.js
 import React from "react";
 import { motion } from "framer-motion";
 

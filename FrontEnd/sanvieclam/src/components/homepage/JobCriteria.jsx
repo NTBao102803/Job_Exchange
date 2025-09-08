@@ -1,4 +1,3 @@
-// src/components/JobCriteriaMini.js
 import React from "react";
 import { motion } from "framer-motion";
 import { Search, Briefcase, BookOpen, Users } from "lucide-react";
