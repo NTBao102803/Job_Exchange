@@ -44,7 +44,6 @@ const Header = ({ onHomeClick, onJobsClick,onCvAiBannerClick,onRecruiterSection,
 
         <div className="flex space-x-4">
           <a href="/login" className="px-4 py-2 border border-white rounded hover:bg-white hover:text-indigo-900 transition duration-300">Đăng nhập</a>
-          <a href="/register" className="px-4 py-2 bg-pink-600 rounded hover:bg-pink-500 transition duration-300">Đăng ký</a>
         </div>
       </div>
     </header>

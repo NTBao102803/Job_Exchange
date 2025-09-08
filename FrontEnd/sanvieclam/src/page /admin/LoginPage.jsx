@@ -1,4 +1,3 @@
-// src/pages/admin/LoginPage.jsx
 import React from "react";
 import AdminLogin from "../../components/admin/AdminLogin";
 

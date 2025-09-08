@@ -40,6 +40,7 @@ const CvAiBanner = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             className="px-6 py-3 rounded-2xl bg-yellow-400 text-gray-900 font-semibold shadow-lg hover:bg-yellow-300 transition"
+            onClick={() => window.location.href = "/login"}
           >
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5" />

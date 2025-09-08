@@ -36,10 +36,12 @@ const RecruiterSection = () => {
           </p>
 
           <div className="flex gap-4 mt-4">
-            <button className="px-6 py-3 rounded-2xl bg-gradient-to-r from-green-400 to-cyan-400 text-black font-semibold shadow hover:scale-105 transition">
+            <button className="px-6 py-3 rounded-2xl bg-gradient-to-r from-green-400 to-cyan-400 text-black font-semibold shadow hover:scale-105 transition" 
+                    onClick={() => window.location.href = "/login"}>
               Đăng tuyển ngay
             </button>
-            <button className="px-6 py-3 rounded-2xl border border-cyan-400/50 hover:bg-cyan-400/10 transition">
+            <button className="px-6 py-3 rounded-2xl border border-cyan-400/50 hover:bg-cyan-400/10 transition"
+                    onClick={() => window.location.href = "/login"}>
               Tìm ứng viên
             </button>
           </div>

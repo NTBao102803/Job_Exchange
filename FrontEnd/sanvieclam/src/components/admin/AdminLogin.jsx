@@ -26,7 +26,7 @@ const AdminLogin = ({ onSubmit }) => {
     }
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 700)); // mô phỏng delay
+      await new Promise((r) => setTimeout(r, 700)); 
       onSubmit?.({ username: username.trim(), password });
     } catch (err) {
       setError("Đã có lỗi xảy ra. Vui lòng thử lại.");
