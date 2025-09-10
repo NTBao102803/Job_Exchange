@@ -66,8 +66,11 @@ public class JobServiceImpl implements JobService {
     // ========================
     // Admin functions
     // ========================
-
     @Override
+    public List<JobDto> getJobsByStatus(JobStatus status) {
+        return jobRepository.findByStatus(status).stream().map(JobMapper::toDto).toList();
+    }
+
     public JobDto approveJob(Long id) {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
@@ -75,11 +78,11 @@ public class JobServiceImpl implements JobService {
         return JobMapper.toDto(jobRepository.save(job));
     }
 
-    @Override
-    public JobDto rejectJob(Long id) {
+    public JobDto rejectJob(Long id, String reason) {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
         job.setStatus(JobStatus.REJECTED);
+        job.setRejectReason(reason);
         return JobMapper.toDto(jobRepository.save(job));
     }
 
@@ -91,11 +94,4 @@ public class JobServiceImpl implements JobService {
         return JobMapper.toDto(jobRepository.save(job));
     }
 
-    @Override
-    public List<JobDto> getJobsByStatus(JobStatus status) {
-        return jobRepository.findByStatus(status)
-                .stream()
-                .map(JobMapper::toDto)
-                .toList();
-    }
 }

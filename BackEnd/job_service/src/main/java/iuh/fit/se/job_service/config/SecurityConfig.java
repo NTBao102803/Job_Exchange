@@ -11,18 +11,33 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAccessDeniedHandler customAccessDeniedHandler) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/jobs/public/**").permitAll() // Cho phép API public
+                        // Public
+                        .requestMatchers("/api/jobs/public/**").permitAll()
+
+                        // User
+                        .requestMatchers("/api/jobs/create", "/api/jobs/my/**").hasRole("USER")
+
+                        // Admin
                         .requestMatchers("/api/jobs/admin/**").hasRole("ADMIN")
+
+                        // Ai cũng xem được list job
+                        .requestMatchers("/api/jobs", "/api/jobs/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(ex -> ex
+                        .accessDeniedHandler(customAccessDeniedHandler))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

@@ -28,6 +28,8 @@ public class Job {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private String rejectReason;
+
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now();

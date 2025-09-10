@@ -52,16 +52,19 @@ public class JwtService {
     }
 
     public String generateToken(UserDetails userDetails) {
-        return createToken(userDetails.getUsername(), accessExpiration);
+        return createToken(userDetails, accessExpiration);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return createToken(userDetails.getUsername(), refreshExpiration);
+        return createToken(userDetails, refreshExpiration);
     }
-
-    private String createToken(String subject, Long expiration) {
+//    thêm role vào token
+    private String createToken(UserDetails userDetails, Long expiration) {
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(userDetails.getUsername())
+                .claim("roles", userDetails.getAuthorities().stream()
+                        .map(Object::toString)
+                        .toList())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(secretKey, SignatureAlgorithm.HS512)

@@ -17,7 +17,7 @@ public interface JobService {
 
     // Admin functions
     JobDto approveJob(Long id);
-    JobDto rejectJob(Long id);
+    JobDto rejectJob(Long id, String reason);
     JobDto removeJob(Long id);
     List<JobDto> getJobsByStatus(JobStatus status);
 }
