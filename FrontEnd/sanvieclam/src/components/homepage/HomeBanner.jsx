@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 
 const suggestions = ["Front-end Developer", "Internship", "Remote", "Part-time", "Full-time"];
 
-const HeroBanner = () => {
+const HeroBanner = ({ onStartClick }) => {
   return (
     <section className="relative w-full min-h-[750px] bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 overflow-hidden text-gray-900 flex items-center">
       <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 px-4 py-12 pt-52 pb-48 items-center">
@@ -50,7 +50,8 @@ const HeroBanner = () => {
               placeholder="Tìm công việc, ngành nghề, địa điểm..."
               className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400 text-base md:text-lg"
             />
-            <button className="bg-gradient-to-r from-yellow-400 to-orange-500 px-6 py-2 rounded-2xl text-black font-semibold shadow hover:scale-105 transition">
+            <button className="bg-gradient-to-r from-yellow-400 to-orange-500 px-6 py-2 rounded-2xl text-black font-semibold shadow hover:scale-105 transition"
+            onClick={onStartClick}>
               Tìm kiếm
             </button>
           </motion.div>

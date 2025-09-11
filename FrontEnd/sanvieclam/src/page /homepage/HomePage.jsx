@@ -7,8 +7,10 @@ import FeaturedJobs from "../../components/homepage/FeaturedJobs";
 import CvAiBanner from "../../components/homepage/CvAiBanner";
 import RecruiterSection from "../../components/homepage/RecruiterSection";
 import BlogSection from "../../components/homepage/BlogSection";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
+   const navigate = useNavigate();
   const heroRef = useRef(null);
   const featuredRef = useRef(null);
   const cvAiBannerRef = useRef(null);
@@ -53,14 +55,14 @@ export default function HomePage() {
               onBlog={scrollToBlogSection}
               onFooter={scrollToFooter} />
       <div ref={heroRef}>
-        <HomeBanner />
+        <HomeBanner onStartClick={() => navigate("/login")}/>
       </div>
       <JobCriteria />
       <div ref={featuredRef}>
         <FeaturedJobs />
       </div>
       <div ref={cvAiBannerRef}>
-        <CvAiBanner />
+        <CvAiBanner onStartClick={() => navigate("/login")}/>
       </div>
       <div ref={recruiterRef}>
         <RecruiterSection />

@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { FileText, Sparkles } from "lucide-react";
 
-const CvAiBanner = () => {
+const CvAiBanner = ({ onStartClick }) => {
   return (
     <section className="relative w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-20 px-6 overflow-hidden">
       {/* Hiệu ứng background */}
@@ -39,7 +39,7 @@ const CvAiBanner = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             className="px-6 py-3 rounded-2xl bg-yellow-400 text-gray-900 font-semibold shadow-lg hover:bg-yellow-300 transition"
-            onClick={() => window.location.href = "/login"}
+            onClick={onStartClick}
           >
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5" />

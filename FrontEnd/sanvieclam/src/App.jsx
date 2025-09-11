@@ -5,6 +5,7 @@ import LoginPage from "./page /admin/LoginPage";
 import Login from "./page /login/Login"; 
 import RegisterCandidate from "./page /register/RegisterCandidate";
 import RegisterRecruiter from "./page /register/RegisterRecruiter";
+import DashboadCandidate from "./page /candidate/DashboadCandidate";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register-candidate" element={<RegisterCandidate />} />
         <Route path="/register-recruiter" element={<RegisterRecruiter />} />
+        <Route path="/candidate/dashboard-candidate" element={<DashboadCandidate />} />
       </Routes>
     </Router>
   );

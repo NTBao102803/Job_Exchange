@@ -58,6 +58,7 @@ const Login = () => {
 
               <button
                 type="submit"
+                onClick={() => navigate("/candidate/dashboard-candidate")}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-lg shadow-lg hover:opacity-95 transform hover:scale-[1.02] transition duration-300"
               >
                 Đăng nhập
