@@ -13,7 +13,7 @@ const Login = () => {
         {/* Nút quay lại */}
         <div className="p-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2 text-gray-600 hover:text-pink-600 transition"
           >
             <ArrowLeft size={20} />
