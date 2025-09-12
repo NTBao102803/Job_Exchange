@@ -6,6 +6,7 @@ import Login from "./page /login/Login";
 import RegisterCandidate from "./page /register/RegisterCandidate";
 import RegisterRecruiter from "./page /register/RegisterRecruiter";
 import DashboadCandidate from "./page /candidate/DashboadCandidate";
+import DashboadRecruiter from "./page /recruiter/DashboadRecruiter";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/register-candidate" element={<RegisterCandidate />} />
         <Route path="/register-recruiter" element={<RegisterRecruiter />} />
         <Route path="/candidate/dashboard-candidate" element={<DashboadCandidate />} />
+        <Route path="/recruiter/dashboard-recruiter" element={<DashboadRecruiter />} />
       </Routes>
     </Router>
   );
