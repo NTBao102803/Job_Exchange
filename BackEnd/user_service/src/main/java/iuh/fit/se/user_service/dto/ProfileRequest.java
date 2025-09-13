@@ -12,4 +12,7 @@ public class ProfileRequest {
 
     @NotBlank
     private String role;
+
+    @NotBlank
+    private String fullName;
 }

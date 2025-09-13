@@ -21,7 +21,7 @@ public class VerificationToken {
     private LocalDateTime expiryDate;
 
     // Các trường tạm để lưu thông tin đăng ký trước khi xác thực
-    private String tempUserName;
+    private String tempFullName;
 
     private String tempPassword;
 

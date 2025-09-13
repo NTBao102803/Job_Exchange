@@ -99,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
 
         VerificationToken token = new VerificationToken();
 
-        token.setTempUserName(request.getUserName());
+        token.setTempFullName(request.getFullName());
         token.setTempPassword(passwordEncoder.encode(request.getPassWord()));
         token.setEmail(request.getEmail());
         token.setRoleName(role.getRoleName());
@@ -125,7 +125,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 2. Tạo user từ thông tin tạm
         User user = new User();
-        user.setUserName(token.getTempUserName());
+        user.setFullName(token.getTempFullName());
         user.setPassword(token.getTempPassword()); // đã được mã hoá
         user.setEmail(token.getEmail());
         user.setIsActive(true);
@@ -145,6 +145,7 @@ public class AuthServiceImpl implements AuthService {
         profileRequest.setUserId(user.getId());
         profileRequest.setEmail(user.getEmail());
         profileRequest.setRole(role.getRoleName());
+        profileRequest.setFullName(user.getFullName());
 
         try {
             restTemplate.postForObject(

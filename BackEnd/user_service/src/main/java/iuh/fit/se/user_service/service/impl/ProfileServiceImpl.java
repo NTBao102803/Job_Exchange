@@ -80,6 +80,7 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setId(request.getUserId());
         profile.setEmail(request.getEmail());
         profile.setRole(request.getRole());
+        profile.setFullName(request.getFullName());
         return repo.save(profile);
     }
 

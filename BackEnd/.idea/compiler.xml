@@ -17,9 +17,10 @@
         <module name="discovery_service" />
         <module name="job_service" />
         <module name="config_service" />
+        <module name="employer_service" />
         <module name="search_service" />
       </profile>
-      <profile name="Annotation profile for user_service" enabled="true">
+      <profile name="Annotation profile for api_gateway" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -27,8 +28,8 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
         </processorPath>
         <module name="user_service" />
-        <module name="auth_service" />
         <module name="api_gateway" />
+        <module name="auth_service" />
       </profile>
     </annotationProcessing>
   </component>
@@ -41,6 +42,7 @@
       <module name="chatbot_service" options="-parameters" />
       <module name="config_service" options="-parameters" />
       <module name="discovery_service" options="-parameters" />
+      <module name="employer_service" options="-parameters" />
       <module name="job_service" options="-parameters" />
       <module name="messaging_service" options="-parameters" />
       <module name="notification_service" options="-parameters" />

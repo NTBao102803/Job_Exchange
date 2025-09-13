@@ -78,7 +78,7 @@ public class JwtService {
 
     public String generateEmailVerificationToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getUserName())
+                .setSubject(user.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 phút
                 .signWith(secretKey, SignatureAlgorithm.HS512) // ⚡ sửa lại giống access token
