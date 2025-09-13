@@ -31,6 +31,7 @@ public class SecurityConfig {
                                 "/api/auth/request-otp",
                                 "/api/auth/verify-otp",
                                 "/api/auth/login",
+                                "/api/auth/logout",
                                 "/api/auth/register",
                                 "/api/auth/refresh-token",
                                 "api/user/**"

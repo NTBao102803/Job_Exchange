@@ -62,6 +62,26 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletResponse response) {
+        Cookie jwtCookie = new Cookie("jwtToken", null);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(true); // Chỉ sử dụng nếu bạn dùng HTTPS
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(0); // Xóa cookie
+
+        Cookie refreshCookie = new Cookie("refreshToken", null);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(0);
+
+        response.addCookie(jwtCookie);
+        response.addCookie(refreshCookie);
+
+        return ResponseEntity.ok("Logged out successfully");
+    }
+
 
     private void addJwtCookie(HttpServletResponse response, String token, String cookieName) {
         Cookie jwtCookie = new Cookie(cookieName, token);
