@@ -1,15 +1,15 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import HomePage from "./page /homepage/HomePage";
-import LoginPage from "./page /admin/LoginPage";
-import Login from "./page /login/Login"; 
-import RegisterCandidate from "./page /register/RegisterCandidate";
-import RegisterRecruiter from "./page /register/RegisterRecruiter";
-import DashboardCandidate from "./page /candidate/DashboardCandidate";
-import DashboardRecruiter from "./page /recruiter/DashboardRecruiter";
+import HomePage from "./page/homepage/HomePage";
+import LoginPage from "./page/admin/LoginPage";
+import Login from "./page/login/Login"; 
+import RegisterCandidate from "./page/register/RegisterCandidate";
+import RegisterRecruiter from "./page/register/RegisterRecruiter";
+import DashboardCandidate from "./page/candidate/DashboardCandidate";
+import DashboardRecruiter from "./page/recruiter/DashboardRecruiter";
 import AdminLayout from "./layout/AdminLayout";
-import AdminCandidate from "./page /admin/AdminCandidate";
-import AdminDashboard from "./page /admin/AdminDashboad";
+import AdminCandidate from "./page/admin/AdminCandidate";
+import AdminDashboard from "./page/admin/AdminDashboad";
 
 function App() {
   return (
@@ -25,7 +25,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="candidates" element={<AdminCandidate />} />
         </Route>
-        
+
           {/* Trang login ứng viên và nhà tuyển dụng */}
         <Route path="/login" element={<Login />} />
         <Route path="/register-candidate" element={<RegisterCandidate />} />
