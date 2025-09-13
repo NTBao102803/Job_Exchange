@@ -1,14 +1,12 @@
 import React, { useRef } from "react";
-import HeaderCandidate from "../../components/candidate/HeaderCandidate";
-import HomeBanner from "../../components/homepage/HomeBanner";
+import HeaderRecruiter from "../../components/recruiter/HeaderRecruiter";
+import HomeBanner from "../../components/recruiter/HomeBanner";
 import JobCriteria from "../../components/homepage/JobCriteria";
-import FeaturedJobs from "../../components/homepage/FeaturedJobs";
-import CvAiBanner from "../../components/homepage/CvAiBanner";
 import BlogSection from "../../components/homepage/BlogSection";
 import Footer from "../../components/Footer";
-import SmartJobSuggestions from "../../components/candidate/SmartJobSuggestions";
+import SmartCandidateSuggestions from "../../components/recruiter/SmartCandidateSuggestions";
 
-export default function DashboadCandidate() {
+export default function DashboardCandidate() {
   const heroRef = useRef(null);
   const blogRef = useRef(null);
   const footerRef = useRef(null);
@@ -27,16 +25,14 @@ export default function DashboadCandidate() {
 
   return (
     <div>
-      <HeaderCandidate onHomeClick={scrollToHero} 
+      <HeaderRecruiter onHomeClick={scrollToHero} 
                        onBlog={scrollToBlogSection}
                        onFooter={scrollToFooter} />
       <div ref={heroRef}>
         <HomeBanner />
       </div>
       <JobCriteria/>
-      <FeaturedJobs/>
-      <CvAiBanner/>
-      <SmartJobSuggestions/>
+      <SmartCandidateSuggestions/>
       <div ref={blogRef}>
         <BlogSection/>
       </div>
