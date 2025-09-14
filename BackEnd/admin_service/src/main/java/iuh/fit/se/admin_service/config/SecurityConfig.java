@@ -19,7 +19,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**", "/error").permitAll()
-                        .requestMatchers("/api/jobs/admin/**").hasRole("ADMIN")
+                        .requestMatchers(
+                                "/api/jobs/admin/**",
+                                "/api/admin/employers/**"
+                                ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

@@ -139,22 +139,24 @@ public class AuthServiceImpl implements AuthService {
         // 3. Xóa token sau khi xác thực thành công
         verificationTokenRepository.delete(token);
 
-        // 4. Gọi user-service để tạo profile
-        RestTemplate restTemplate = new RestTemplate();
-        ProfileRequest profileRequest = new ProfileRequest();
-        profileRequest.setUserId(user.getId());
-        profileRequest.setEmail(user.getEmail());
-        profileRequest.setRole(role.getRoleName());
-        profileRequest.setFullName(user.getFullName());
+        // 4. Gọi user-service để tạo profile (chỉ khi KHÔNG phải EMPLOYER)
+        if (!"EMPLOYER".equalsIgnoreCase(role.getRoleName())) {
+            RestTemplate restTemplate = new RestTemplate();
+            ProfileRequest profileRequest = new ProfileRequest();
+            profileRequest.setUserId(user.getId());
+            profileRequest.setEmail(user.getEmail());
+            profileRequest.setRole(role.getRoleName());
+            profileRequest.setFullName(user.getFullName());
 
-        try {
-            restTemplate.postForObject(
-                    "http://localhost:8082/api/user",
-                    profileRequest,
-                    Void.class
-            );
-        } catch (Exception ex) {
-            throw new RuntimeException("Không thể tạo profile cho user trong user-service", ex);
+            try {
+                restTemplate.postForObject(
+                        "http://localhost:8082/api/user",
+                        profileRequest,
+                        Void.class
+                );
+            } catch (Exception ex) {
+                throw new RuntimeException("Không thể tạo profile cho user trong user-service", ex);
+            }
         }
 
         // 5. Sinh JWT Token
@@ -165,6 +167,7 @@ public class AuthServiceImpl implements AuthService {
         // 6. Trả về response
         return new AuthResponse(accessToken, refreshToken, user);
     }
+
 
 
     @Override
