@@ -27,7 +27,7 @@ export default function DashboardCandidate() {
     footerRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   const goJob = () => {
-    navigate("/candidate/dashboard-candidate#featured-jobs");
+    navigate("/candidate/dashboard-joblist");
   };
     const goCVAIClick = () => { 
     navigate("/candidate/dashboard-candidate#cv-ai-banner");
