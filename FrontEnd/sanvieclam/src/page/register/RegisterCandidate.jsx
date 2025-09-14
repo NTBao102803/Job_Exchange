@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Await, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
+import {requestOTP, verifyOTP } from "../../api/AuthApi";
 
 const RegisterCandidate = () => {
   const navigate = useNavigate();
@@ -14,45 +15,107 @@ const RegisterCandidate = () => {
   const [isShaking, setIsShaking] = useState(false);
 
   const [form, setForm] = useState({
-    fullname: "",
+    fullName: "",
     email: "",
-    password: "",
+    passWord: "",
     confirmPassword: "",
+    roleName: "USER"
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+   // ✅ Reset form khi load lại trang
+  useEffect(() => {
+    setForm({
+      fullName: "",
+      email: "",
+      passWord: "",
+      confirmPassword: "",
+      roleName: "USER",
+    });
+    setOtp(Array(6).fill(""));
+  }, []);
 
   // validate
   const validateForm = () => {
     let errs = {};
-    if (!form.fullname.trim()) errs.fullname = "Họ và tên không được trống";
-    if (!form.email.trim()) errs.email = "Email không được trống";
-    if (form.password.length < 4) errs.password = "Mật khẩu ít nhất 4 ký tự";
-    if (form.password !== form.confirmPassword)
+
+    // fullName
+    if (!form.fullName.trim()) {
+      errs.fullName = "Họ và tên không được để trống";
+    } else if (form.fullName.length < 3 || form.fullName.length > 50) {
+      errs.fullName = "Họ và tên phải có độ dài từ 3 đến 50 ký tự";
+    }
+
+    // email
+    if (!form.email.trim()) {
+      errs.email = "Email không được để trống";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errs.email = "Email không hợp lệ";
+    } else if (form.email.length > 100) {
+      errs.email = "Email không được dài quá 100 ký tự";
+    }
+
+    // password
+    if (!form.passWord) {
+      errs.passWord = "Password không được để trống";
+    } else if (form.passWord.length < 8 || form.passWord.length > 100) {
+      errs.passWord = "Password phải có độ dài từ 8 đến 100 ký tự";
+    } else if (!/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/.test(form.passWord)) {
+      errs.passWord = "Password phải chứa ít nhất 1 chữ thường, 1 chữ hoa, 1 số và 1 ký tự đặc biệt";
+    }
+
+    // confirmPassword
+    if (form.passWord !== form.confirmPassword) {
       errs.confirmPassword = "Mật khẩu nhập lại không khớp";
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const handleRegister = (e) => {
+   // Gửi OTP (đăng ký bước 1)
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // TODO: Gọi API đăng ký
-    setStep("otp");
-    setTimeLeft(60);
+    try {
+      setLoading(true);
+      await requestOTP({
+        fullName: form.fullName,
+        email: form.email,
+        passWord: form.passWord,        
+        roleName: form.roleName
+      });
+      // Chuyển qua bước OTP
+      setStep("otp");
+      setTimeLeft(60);
+    } catch (err) {
+      // err.message đã được ném từ AuthApi.jsx
+      setErrors({ ...errors, email: err.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleVerifyOtp = (e) => {
+  // Xác thực OTP (bước 2)
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
     const otpCode = otp.join("");
-    console.log("OTP nhập:", otpCode);
+    if (!otpCode || otpCode.length < 6) return;
 
-    // TODO: gọi API verify OTP
-    if (otpCode === "123456") {
-      navigate("/candidate/dashboard-candidate");
-    } else {
+    try {
+      setLoading(true);
+      const res = await verifyOTP(form.email, otpCode);
+      console.log("Xác thực OTP thành công:", res);
+      // → chuyển sang trang đăng nhập
+      navigate("/login");
+    } catch (err) {
+      console.error("Xác thực OTP thất bại:", err);
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,11 +144,19 @@ const RegisterCandidate = () => {
     }
   }, [step, timeLeft]);
 
-  const resendOtp = () => {
+  const resendOtp = async () => {
     if (timeLeft === 0) {
-      // TODO: gọi API resend OTP
-      console.log("Đã gửi lại OTP");
-      setTimeLeft(60);
+      try {
+        await requestOTP({
+          fullName: form.fullName,
+          email: form.email,
+          passWord: form.passWord,
+          roleName: form.roleName
+        });
+        setTimeLeft(60);
+      } catch (err) {
+        console.error("Không gửi lại được OTP:", err);
+      }
     }
   };
 
@@ -100,7 +171,7 @@ const RegisterCandidate = () => {
       {/* Bên trái */}
       <div className="w-1/3 relative flex items-center justify-center bg-gray-900">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
+className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{ backgroundImage: "url('/registercandidate.png')" }}
         ></div>
 
@@ -129,7 +200,11 @@ const RegisterCandidate = () => {
                 <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center tracking-wide">
                   Đăng ký Ứng viên
                 </h1>
-                <form className="space-y-6" onSubmit={handleRegister}>
+                <form className="space-y-6" 
+                      onSubmit={handleRegister}
+                      autoComplete="off" // ✅ tắt autofill
+                >
+                  
                   {/* Fullname */}
                   <div>
                     <label className="block text-gray-700 font-semibold mb-2">
@@ -137,15 +212,17 @@ const RegisterCandidate = () => {
                     </label>
                     <input
                       type="text"
-                      value={form.fullname}
+                      value={form.fullName}
+                      autoComplete="off" // ✅ clear khi reload
                       onChange={(e) =>
-                        setForm({ ...form, fullname: e.target.value })
+                        setForm({ ...form, fullName: e.target.value })
                       }
                       className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                      placeholder="Nhập họ và tên..."
+                      placeholder="Nhập họ và tên"
+                      
                     />
-                    {errors.fullname && (
-                      <p className="text-red-500 text-sm">{errors.fullname}</p>
+                    {errors.fullName && (
+                      <p className="text-red-500 text-sm">{errors.fullName}</p>
                     )}
                   </div>
 
@@ -157,30 +234,29 @@ const RegisterCandidate = () => {
                     <input
                       type="email"
                       value={form.email}
+                      autoComplete="new-email" // ✅ ngăn Chrome nhớ email
                       onChange={(e) =>
                         setForm({ ...form, email: e.target.value })
                       }
                       className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                      placeholder="Nhập email..."
+                      placeholder="Nhập email"
                     />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm">{errors.email}</p>
-                    )}
+                    {errors.email && <p className="text-red-500">{errors.email}</p>}
                   </div>
-
-                  {/* Mật khẩu */}
+{/* Mật khẩu */}
                   <div className="relative">
                     <label className="block text-gray-700 font-semibold mb-2">
                       Mật khẩu
                     </label>
                     <input
                       type={showPassword ? "text" : "password"}
-                      value={form.password}
+                      value={form.passWord}
+                      autoComplete="new-password" // ✅ clear khi reload
                       onChange={(e) =>
-                        setForm({ ...form, password: e.target.value })
+                        setForm({ ...form, passWord: e.target.value })
                       }
                       className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition pr-12"
-                      placeholder="Tạo mật khẩu..."
+                      placeholder="Tạo mật khẩu"
                     />
                     <button
                       type="button"
@@ -189,8 +265,8 @@ const RegisterCandidate = () => {
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
-                    {errors.password && (
-                      <p className="text-red-500 text-sm">{errors.password}</p>
+                    {errors.passWord && (
+                      <p className="text-red-500 text-sm">{errors.passWord}</p>
                     )}
                   </div>
 
@@ -202,11 +278,12 @@ const RegisterCandidate = () => {
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       value={form.confirmPassword}
+                      autoComplete="new-password"
                       onChange={(e) =>
                         setForm({ ...form, confirmPassword: e.target.value })
                       }
                       className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition pr-12"
-                      placeholder="Nhập lại mật khẩu..."
+                      placeholder="Nhập lại mật khẩu"
                     />
                     <button
                       type="button"
@@ -230,7 +307,7 @@ const RegisterCandidate = () => {
 
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-green-400 via-blue-500 to-indigo-500 text-white font-bold text-lg shadow-lg hover:opacity-95 transform hover:scale-[1.02] transition duration-300"
+className="w-full py-3 rounded-xl bg-gradient-to-r from-green-400 via-blue-500 to-indigo-500 text-white font-bold text-lg shadow-lg hover:opacity-95 transform hover:scale-[1.02] transition duration-300"
                   >
                     Đăng ký ngay
                   </button>
@@ -294,7 +371,7 @@ const RegisterCandidate = () => {
                       Gửi lại OTP
                     </button>
                   )}
-                </div>
+</div>
               </>
             )}
           </div>
