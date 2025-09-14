@@ -10,6 +10,7 @@ import DashboardRecruiter from "./page/recruiter/DashboardRecruiter";
 import AdminLayout from "./layout/AdminLayout";
 import AdminCandidate from "./page/admin/AdminCandidate";
 import AdminDashboard from "./page/admin/AdminDashboad";
+import DashboardCandidateProfile from "./page/candidate/DashboardCandidateProfile";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/register-recruiter" element={<RegisterRecruiter />} />
           {/* Dashboard ứng viên */}
         <Route path="/candidate/dashboard-candidate" element={<DashboardCandidate />} />
+        <Route path="/candidate/candidateprofile" element={<DashboardCandidateProfile />} />
           {/* Dashboard nhà tuyển dụng */}
         <Route path="/recruiter/dashboard-recruiter" element={<DashboardRecruiter />} />
       </Routes>
