@@ -51,7 +51,9 @@ export default function DashboardCandidate() {
         <HomeBanner />
       </div>
       <JobCriteria/>
-      <FeaturedJobs/>
+      <FeaturedJobs onStartClick={() => navigate("/candidate/dashboard-joblist")}
+                    onJob={(job) => navigate(`/candidate/jobs/${job.id}`, { state: { job } })}
+      />
       <CvAiBanner/>
       <SmartJobSuggestions/>
       <div ref={blogRef}>

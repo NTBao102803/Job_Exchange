@@ -59,7 +59,9 @@ export default function HomePage() {
       </div>
       <JobCriteria />
       <div ref={featuredRef}>
-        <FeaturedJobs />
+        <FeaturedJobs onStartClick={() => navigate("/login")}
+                      onJob={() => navigate("/login")}
+        />
       </div>
       <div ref={cvAiBannerRef}>
         <CvAiBanner onStartClick={() => navigate("/login")}/>
