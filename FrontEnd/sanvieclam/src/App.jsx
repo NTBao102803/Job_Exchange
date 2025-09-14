@@ -13,6 +13,7 @@ import AdminDashboard from "./page/admin/AdminDashboad";
 import DashboardCandidateProfile from "./page/candidate/DashboardCandidateProfile";
 import DashboardRecruiterProfile from "./page/recruiter/DashboardRecruiterProfile";
 import DashboardJobList from "./page/candidate/DashboadJobList";
+import DashboardJobDetail from "./page/candidate/DashboadJobDetail";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
         <Route path="/candidate/dashboard-candidate" element={<DashboardCandidate />} />
         <Route path="/candidate/candidateprofile" element={<DashboardCandidateProfile />} />
         <Route path="/candidate/dashboard-joblist" element={<DashboardJobList />} />
+        <Route path="/candidate/jobs/:id" element={<DashboardJobDetail />} />
           {/* Dashboard nhà tuyển dụng */}
         <Route path="/recruiter/dashboard-recruiter" element={<DashboardRecruiter />} />
         <Route path="/recruiter/recruiterprofile" element={<DashboardRecruiterProfile />} />

@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Search, Flame, Briefcase, TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const JobList = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -213,7 +215,8 @@ const JobList = () => {
                   className="bg-white rounded-xl border border-indigo-200 shadow-md p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:shadow-xl hover:scale-[1.01] transition transform"
                 >
                   <div>
-                    <h3 className="text-lg font-semibold text-indigo-700">
+                    <h3 className="text-lg font-semibold text-indigo-700"
+                        onClick={() => navigate(`/candidate/jobs/${job.id}`, { state: { job } })}>
                       {job.title}
                     </h3>
                     <p className="text-sm text-gray-600">{job.company}</p>
@@ -224,7 +227,8 @@ const JobList = () => {
                       💰 {job.salary}
                     </p>
                   </div>
-                  <button className="mt-3 sm:mt-0 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg shadow-md hover:from-indigo-600 hover:to-purple-600 transition">
+                  <button   onClick={() => navigate(`/candidate/jobs/${job.id}`, { state: { job } })}
+                            className="mt-3 sm:mt-0 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg shadow-md hover:from-indigo-600 hover:to-purple-600 transition">
                     Ứng tuyển
                   </button>
                 </div>
