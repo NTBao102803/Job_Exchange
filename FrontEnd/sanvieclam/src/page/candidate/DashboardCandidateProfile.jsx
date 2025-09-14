@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaderCandidate from "../../components/candidate/HeaderCandidate";
-import DashboardCandidateProfile from "../../components/candidate/CandidateProfile";
+import CandidateProfile from "../../components/candidate/CandidateProfile";
 import Footer from "../../components/Footer";
 
-export default function DashboardCandidate() {
+export default function DashboardCandidateProfile() {
     const navigate = useNavigate();
     const footerRef = useRef(null);
     // scroll mượt đến Footer
@@ -40,7 +40,7 @@ export default function DashboardCandidate() {
                         onJobUTClick={goJobUTClick}
                         onBlog={goBlog}
                         onFooter={scrollToFooter} />
-      <DashboardCandidateProfile/>
+      <CandidateProfile/>
       <div ref={footerRef}>
         <Footer/>
       </div>

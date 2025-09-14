@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const HeaderRecruiter = ({ onHomeClick,onBlog,onFooter}) => {
+const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBlog,onFooter}) => {
   const [show, setShow] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,9 +40,9 @@ const HeaderRecruiter = ({ onHomeClick,onBlog,onFooter}) => {
         {/* Navigation */}
         <nav className="flex-1 flex justify-evenly ml-32">
           <button onClick={onHomeClick} className="hover:text-pink-400 transition duration-300">Trang chủ</button>
-          <button className="hover:text-pink-400 transition duration-300">Đăng tin tuyển dụng</button>
-          <button className="hover:text-pink-400 transition duration-300">Gợi ý ứng viên thông minh</button>
-          <button className="hover:text-pink-400 transition duration-300">Quản lý bài đăng</button>
+          <button onClick={onUpTinClick} className="hover:text-pink-400 transition duration-300">Đăng tin tuyển dụng</button>
+          <button onClick={onSmartCandidate}className="hover:text-pink-400 transition duration-300">Gợi ý ứng viên thông minh</button>
+          <button onClick={onQLBD} className="hover:text-pink-400 transition duration-300">Quản lý bài đăng</button>
           <button onClick={onBlog} className="hover:text-pink-400 transition duration-300">Blog</button>
           <button onClick={onFooter} className="hover:text-pink-400 transition duration-300">Liên hệ</button>
         </nav>
@@ -58,7 +58,7 @@ const HeaderRecruiter = ({ onHomeClick,onBlog,onFooter}) => {
 
           {menuOpen && (
             <div className="absolute right-0 mt-3 w-48 bg-white text-gray-800 rounded-xl shadow-lg py-2 z-50">
-              <button className="block px-4 py-2 w-full text-left hover:bg-gray-100">Hồ sơ của tôi</button>
+              <button onClick={() => navigate("/recruiter/recruiterprofile")} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Hồ sơ của tôi</button>
               <button onClick={() => navigate("/login")} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Đăng xuất</button>
             </div>
           )}

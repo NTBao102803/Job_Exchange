@@ -11,6 +11,7 @@ import AdminLayout from "./layout/AdminLayout";
 import AdminCandidate from "./page/admin/AdminCandidate";
 import AdminDashboard from "./page/admin/AdminDashboad";
 import DashboardCandidateProfile from "./page/candidate/DashboardCandidateProfile";
+import DashboardRecruiterProfile from "./page/recruiter/DashboardRecruiterProfile";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
         <Route path="/candidate/candidateprofile" element={<DashboardCandidateProfile />} />
           {/* Dashboard nhà tuyển dụng */}
         <Route path="/recruiter/dashboard-recruiter" element={<DashboardRecruiter />} />
+        <Route path="/recruiter/recruiterprofile" element={<DashboardRecruiterProfile />} />
       </Routes>
     </Router>
   );
