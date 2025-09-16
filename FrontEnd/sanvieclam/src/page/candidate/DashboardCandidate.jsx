@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import HeaderCandidate from "../../components/candidate/HeaderCandidate";
 import HomeBanner from "../../components/homepage/HomeBanner";
 import JobCriteria from "../../components/homepage/JobCriteria";
@@ -9,6 +10,7 @@ import Footer from "../../components/Footer";
 import SmartJobSuggestions from "../../components/candidate/SmartJobSuggestions";
 
 export default function DashboardCandidate() {
+  const navigate = useNavigate();
   const heroRef = useRef(null);
   const blogRef = useRef(null);
   const footerRef = useRef(null);
@@ -24,17 +26,34 @@ export default function DashboardCandidate() {
   const scrollToFooter = () => {
     footerRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
+  const goJob = () => {
+    navigate("/candidate/dashboard-joblist");
+  };
+    const goCVAIClick = () => { 
+    navigate("/candidate/dashboard-candidate#cv-ai-banner");
+  };
+    const goJobSmartClick = () => { 
+    navigate("/candidate/dashboard-candidate#smart-job-suggestions");
+  };
+    const goJobUTClick = () => { 
+    navigate("/candidate/dashboard-candidate#job-applied");
+  };
   return (
     <div>
       <HeaderCandidate onHomeClick={scrollToHero} 
+                       onJobClick={goJob}
+                       onCVAIClick={goCVAIClick}
+                       onJobSmartClick={goJobSmartClick}
+                       onJobUTClick={goJobUTClick}
                        onBlog={scrollToBlogSection}
                        onFooter={scrollToFooter} />
       <div ref={heroRef}>
         <HomeBanner />
       </div>
       <JobCriteria/>
-      <FeaturedJobs/>
+      <FeaturedJobs onStartClick={() => navigate("/candidate/dashboard-joblist")}
+                    onJob={(job) => navigate(`/candidate/jobs/${job.id}`, { state: { job } })}
+      />
       <CvAiBanner/>
       <SmartJobSuggestions/>
       <div ref={blogRef}>

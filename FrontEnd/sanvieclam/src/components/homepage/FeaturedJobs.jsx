@@ -2,7 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const jobs = [
-  {
+  { 
+    id:1,
     title: "Frontend Developer",
     company: "Tech Corp",
     salary: "15 - 20 triệu",
@@ -12,6 +13,7 @@ const jobs = [
     hot: true,
   },
   {
+    id:2,
     title: "Backend Developer",
     company: "Innovatech",
     salary: "18 - 25 triệu",
@@ -21,6 +23,7 @@ const jobs = [
     hot: false,
   },
   {
+    id:3,
     title: "UI/UX Designer",
     company: "Creative Studio",
     salary: "12 - 18 triệu",
@@ -30,6 +33,7 @@ const jobs = [
     hot: true,
   },
   {
+    id:4,
     title: "Fullstack Developer",
     company: "NextGen Tech",
     salary: "20 - 30 triệu",
@@ -40,7 +44,7 @@ const jobs = [
   },
 ];
 
-const FeaturedJobs = () => {
+const FeaturedJobs = ({ onStartClick,onJob }) => {
   return (
     <section className="w-full py-16 bg-gradient-to-r from-blue-50 via-blue-100 to-blue-50 text-gray-900">
       <h2 className="text-3xl md:text-4xl font-extrabold mb-12 text-center">
@@ -82,7 +86,8 @@ const FeaturedJobs = () => {
               </div>
 
               <div className="flex justify-end mt-4">
-                <button className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-2xl shadow-lg transition-all duration-300 hover:bg-blue-700">
+                <button onClick={()=> onJob(job)}
+                        className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-2xl shadow-lg transition-all duration-300 hover:bg-blue-700">
                   Ứng tuyển
                 </button>
               </div>
@@ -92,7 +97,8 @@ const FeaturedJobs = () => {
       </div>
 
       <div className="mt-12 flex justify-center">
-        <button className="bg-blue-600 text-white font-semibold py-3 px-8 rounded-3xl shadow-lg hover:bg-blue-700 transition-all duration-300">
+        <button onClick={onStartClick}
+                className="bg-blue-600 text-white font-semibold py-3 px-8 rounded-3xl shadow-lg hover:bg-blue-700 transition-all duration-300">
           Xem thêm việc làm
         </button>
       </div>

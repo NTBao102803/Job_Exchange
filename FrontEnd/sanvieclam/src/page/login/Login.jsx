@@ -1,47 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
-import axiosClient from "../../api/axiosClient";
 
 const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [passWord, setPassWord] = useState("");
-  const [error, setError] = useState("");
-
-  const handleLogin = async (e) => {
-    e.preventDefault(); // chặn reload trang
-    setError("");
-
-    try {
-      const response = await axiosClient.post("/auth/login", {
-        email,
-        passWord,
-      });
-
-      // Giả sử backend trả về { token, user }
-      const { token, user } = response.data;
-
-      // Lưu token và user vào localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      console.log(user.role)
-
-      // Điều hướng theo role nếu có
-      if (user.role.roleName === "USER") {
-        navigate("/candidate/dashboard-candidate");
-      } else if (user.role.roleName === "EMPLOYER") {
-        navigate("/recruiter/dashboard-recruiter");
-      } else {
-        navigate("/");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Sai tài khoản hoặc mật khẩu!");
-    }
-  };
 
   return (
     <div className="min-h-screen flex bg-gray-100">
@@ -62,21 +25,17 @@ const Login = () => {
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-lg p-10">
             <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center tracking-wide">
-              Đăng nhập tài khoản
+              Đăng nhập tài khoản 
             </h1>
-
-            <form className="space-y-6" onSubmit={handleLogin}>
+            <form className="space-y-6">
               <div>
                 <label className="block text-gray-700 font-semibold mb-2">
                   Tên đăng nhập
                 </label>
                 <input
                   type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-                  placeholder="Nhập email"
-                  required
+                  placeholder="Nhập email..."
                 />
               </div>
               <div className="relative">
@@ -85,11 +44,8 @@ const Login = () => {
                 </label>
                 <input
                   type={showPassword ? "text" : "password"}
-                  value={passWord}
-                  onChange={(e) => setPassWord(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition pr-12"
                   placeholder="Nhập mật khẩu..."
-                  required
                 />
                 <button
                   type="button"
@@ -100,12 +56,9 @@ const Login = () => {
                 </button>
               </div>
 
-              {error && (
-                <p className="text-red-500 text-sm font-medium">{error}</p>
-              )}
-
               <button
                 type="submit"
+                onClick={() => navigate("/candidate/dashboard-candidate")}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-lg shadow-lg hover:opacity-95 transform hover:scale-[1.02] transition duration-300"
               >
                 Đăng nhập
@@ -122,7 +75,7 @@ const Login = () => {
               </a>
             </div>
 
-            {/* 2 nút đăng ký */}
+            {/* 2 nút đăng ký dành riêng */}
             <div className="mt-10 grid grid-cols-2 gap-4">
               <button
                 onClick={() => navigate("/register-candidate")}
@@ -138,6 +91,7 @@ const Login = () => {
               </button>
             </div>
 
+            {/* Ghi chú nhỏ */}
             <p className="mt-10 text-center text-gray-400 text-sm">
               Bằng việc đăng nhập, bạn đồng ý với{" "}
               <a href="/terms" className="text-indigo-500 hover:underline">
@@ -155,10 +109,12 @@ const Login = () => {
 
       {/* Bên phải: Logo + Giới thiệu */}
       <div className="w-1/3 relative flex items-center justify-center bg-gray-900">
+        {/* Background hình mờ */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{ backgroundImage: "url('/logohomebanner3.png')" }}
         ></div>
+
         <div className="relative z-10 text-center p-8 text-white drop-shadow-lg">
           <img
             src="/Logo.png"
@@ -169,7 +125,7 @@ const Login = () => {
             Chào mừng bạn đến với SinhVienJob
           </h2>
           <p className="text-base leading-relaxed max-w-xs mx-auto">
-            Nơi kết nối <strong>Ứng viên</strong> và <strong>Nhà tuyển dụng</strong>.  
+            Nơi kết nối **Ứng viên** và **Nhà tuyển dụng**.  
             Hãy đăng nhập để bắt đầu hành trình sự nghiệp hoặc tìm kiếm nhân tài cho doanh nghiệp của bạn!
           </p>
         </div>

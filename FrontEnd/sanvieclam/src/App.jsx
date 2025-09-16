@@ -10,6 +10,10 @@ import DashboardRecruiter from "./page/recruiter/DashboardRecruiter";
 import AdminLayout from "./layout/AdminLayout";
 import AdminCandidate from "./page/admin/AdminCandidate";
 import AdminDashboard from "./page/admin/AdminDashboad";
+import DashboardCandidateProfile from "./page/candidate/DashboardCandidateProfile";
+import DashboardRecruiterProfile from "./page/recruiter/DashboardRecruiterProfile";
+import DashboardJobList from "./page/candidate/DashboadJobList";
+import DashboardJobDetail from "./page/candidate/DashboadJobDetail";
 
 function App() {
   return (
@@ -25,15 +29,19 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="candidates" element={<AdminCandidate />} />
         </Route>
-        
+
           {/* Trang login ứng viên và nhà tuyển dụng */}
         <Route path="/login" element={<Login />} />
         <Route path="/register-candidate" element={<RegisterCandidate />} />
         <Route path="/register-recruiter" element={<RegisterRecruiter />} />
           {/* Dashboard ứng viên */}
         <Route path="/candidate/dashboard-candidate" element={<DashboardCandidate />} />
+        <Route path="/candidate/candidateprofile" element={<DashboardCandidateProfile />} />
+        <Route path="/candidate/dashboard-joblist" element={<DashboardJobList />} />
+        <Route path="/candidate/jobs/:id" element={<DashboardJobDetail />} />
           {/* Dashboard nhà tuyển dụng */}
         <Route path="/recruiter/dashboard-recruiter" element={<DashboardRecruiter />} />
+        <Route path="/recruiter/recruiterprofile" element={<DashboardRecruiterProfile />} />
       </Routes>
     </Router>
   );

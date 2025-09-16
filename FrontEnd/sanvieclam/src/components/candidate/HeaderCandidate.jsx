@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const HeaderCandidate = ({ onHomeClick,onBlog,onFooter}) => {
+const HeaderCandidate = ({ onHomeClick,onJobClick,onCVAIClick,onJobSmartClick,onBlog,onFooter,onJobUTClick}) => {
   const [show, setShow] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,10 +40,10 @@ const HeaderCandidate = ({ onHomeClick,onBlog,onFooter}) => {
         {/* Navigation */}
         <nav className="flex-1 flex justify-evenly ml-32">
           <button onClick={onHomeClick} className="hover:text-pink-400 transition duration-300">Trang chủ</button>
-          <button className="hover:text-pink-400 transition duration-300">Việc làm</button>
-          <button className="hover:text-pink-400 transition duration-300">Tạo CV AI</button>
-          <button className="hover:text-pink-400 transition duration-300">Gợi ý việc làm thông minh</button>
-          <button className="hover:text-pink-400 transition duration-300">Việc làm đã ứng tuyển</button>
+          <button onClick={onJobClick}className="hover:text-pink-400 transition duration-300">Việc làm</button>
+          <button onClick={onCVAIClick}className="hover:text-pink-400 transition duration-300">Tạo CV AI</button>
+          <button onClick={onJobSmartClick}className="hover:text-pink-400 transition duration-300">Gợi ý việc làm thông minh</button>
+          <button onClick={onJobUTClick}className="hover:text-pink-400 transition duration-300">Việc làm đã ứng tuyển</button>
           <button onClick={onBlog} className="hover:text-pink-400 transition duration-300">Blog</button>
           <button onClick={onFooter} className="hover:text-pink-400 transition duration-300">Liên hệ</button>
         </nav>
@@ -59,7 +59,7 @@ const HeaderCandidate = ({ onHomeClick,onBlog,onFooter}) => {
 
           {menuOpen && (
             <div className="absolute right-0 mt-3 w-48 bg-white text-gray-800 rounded-xl shadow-lg py-2 z-50">
-              <button className="block px-4 py-2 w-full text-left hover:bg-gray-100">Hồ sơ của tôi</button>
+              <button onClick ={() => navigate("/candidate/candidateprofile")} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Hồ sơ của tôi</button>
               <button onClick={() => navigate("/login")} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Đăng xuất</button>
             </div>
           )}
