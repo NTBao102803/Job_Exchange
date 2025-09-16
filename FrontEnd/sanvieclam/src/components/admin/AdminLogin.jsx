@@ -1,18 +1,22 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { login } from "../../api/AuthApi";
 
 const AdminLogin = ({ onSubmit }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [passWord, setPassWord] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+
   const validate = () => {
-    if (!username.trim()) return "Vui lòng nhập tên đăng nhập";
-    if (!password) return "Vui lòng nhập mật khẩu";
-    if (password.length < 4) return "Mật khẩu quá ngắn (tối thiểu 4 ký tự)";
+    if (!email.trim()) return "Vui lòng nhập email";
+    if (!passWord.trim()) return "Vui lòng nhập mật khẩu";
+    if (passWord.trim().length < 8) return "Mật khẩu quá ngắn (tối thiểu 8 ký tự)";
     return "";
   };
 
@@ -24,12 +28,28 @@ const AdminLogin = ({ onSubmit }) => {
       setError(v);
       return;
     }
+
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 700)); 
-      onSubmit?.({ username: username.trim(), password });
+      const res = await login({ email: email, passWord: passWord });
+      const { token, user } = res.data;
+
+      if (!user?.role || user.role.roleName !== "ADMIN") {
+        setError("Bạn không có quyền truy cập khu vực quản trị");
+        setLoading(false);
+        return;
+      }
+
+      // Lưu token và user vào localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      navigate("/admin/dashboard"); // điều hướng sang admin dashboard
     } catch (err) {
-      setError("Đã có lỗi xảy ra. Vui lòng thử lại.");
+      console.error(err);
+      setError(
+        err.response?.data?.message || "Sai tài khoản hoặc mật khẩu!"
+      );
     } finally {
       setLoading(false);
     }
@@ -64,8 +84,8 @@ const AdminLogin = ({ onSubmit }) => {
               <span className="text-sm font-medium text-gray-700">Tên đăng nhập</span>
               <input
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="mt-2 w-full rounded-xl border border-gray-200 bg-white/80 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
                 placeholder="admin@example.com"
               />
@@ -75,9 +95,9 @@ const AdminLogin = ({ onSubmit }) => {
               <span className="text-sm font-medium text-gray-700">Mật khẩu</span>
               <div className="mt-2 relative">
                 <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? "text" : "passWord"}
+                  value={passWord}
+                  onChange={(e) => setPassWord(e.target.value)}
                   className="w-full rounded-xl border border-gray-200 bg-white/80 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
                   placeholder="••••••••"
                 />
