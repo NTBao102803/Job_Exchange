@@ -23,3 +23,23 @@ export const requestOTP = async (user) => {
 export const verifyOTP = async (email, otp) => {
   return await axiosClient.post(`/employers/verify-otp?email=${email}&otp=${otp}`);
 };
+
+// lấy hồ sơ
+export const getEmployerProfile = async () => {
+  try {
+    const response = await axiosClient.get("/employers/profile");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// update hồ sơ
+export const updateEmployerProfile = async (data) => {
+  try {
+    const response = await axiosClient.put("/employers/profile", data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

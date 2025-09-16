@@ -33,13 +33,16 @@ export const login = async (loginData) => {
 export const logout = async () => {
   try {
     const response = await axiosClient.post("/auth/logout");
+    
+    // Xoá token và user ở localStorage
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
+
     return response;
   } catch (error) {
     if (error.response?.status === 403) {
+      localStorage.removeItem("token");
       localStorage.removeItem("user");
-      document.cookie = "jwtToken=; Max-Age=0; path=/";
-      document.cookie = "refreshToken=; Max-Age=0; path=/";
       return { message: "Phiên đăng nhập đã hết hạn. Đã tự động đăng xuất." };
     }
     throw error;
