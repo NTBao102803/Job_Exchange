@@ -12,9 +12,9 @@ import AdminCandidate from "./page/admin/AdminCandidate";
 import AdminDashboard from "./page/admin/AdminDashboad";
 import DashboardCandidateProfile from "./page/candidate/DashboardCandidateProfile";
 import DashboardRecruiterProfile from "./page/recruiter/DashboardRecruiterProfile";
-import DashboardJobList from "./page/candidate/DashboadJobList";
-import DashboardJobDetail from "./page/candidate/DashboadJobDetail";
-
+import DashboardJobList from "./page/candidate/DashboardJobList";
+import DashboardJobDetail from "./page/candidate/DashboardJobDetail";
+import DashboardSmartJobSuggestionsList from "./page/candidate/DashboardSmartJobSuggestionsList";
 function App() {
   return (
     <Router>
@@ -39,6 +39,7 @@ function App() {
         <Route path="/candidate/candidateprofile" element={<DashboardCandidateProfile />} />
         <Route path="/candidate/dashboard-joblist" element={<DashboardJobList />} />
         <Route path="/candidate/jobs/:id" element={<DashboardJobDetail />} />
+        <Route path="/candidate/dashboard-smartjobsuggestionslist" element={<DashboardSmartJobSuggestionsList />} />
           {/* Dashboard nhà tuyển dụng */}
         <Route path="/recruiter/dashboard-recruiter" element={<DashboardRecruiter />} />
         <Route path="/recruiter/recruiterprofile" element={<DashboardRecruiterProfile />} />

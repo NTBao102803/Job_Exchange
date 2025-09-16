@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaderCandidate from "../../components/candidate/HeaderCandidate";
-import JobDetail from "../../components/candidate/JobDetail";
+import JobList from "../../components/candidate/JobList";
 import Footer from "../../components/Footer";
 
-export default function DashboardJobDetail() {
+export default function DashboardJobList() {
   const footerRef = useRef(null);
   const navigate = useNavigate();
      // scroll mượt đến Footer
@@ -21,7 +21,7 @@ export default function DashboardJobDetail() {
      navigate("/candidate/dashboard-candidate#cv-ai-banner");
    };
      const goJobSmartClick = () => { 
-     navigate("/candidate/dashboard-candidate#smart-job-suggestions");
+     navigate("/candidate/dashboard-smartjobsuggestionslist");
    };
      const goJobUTClick = () => { 
      navigate("/candidate/dashboard-candidate#job-applied");
@@ -40,7 +40,7 @@ export default function DashboardJobDetail() {
                        onFooter={scrollToFooter} />
 
      
-      <JobDetail/>
+      <JobList/>
       <div ref={footerRef}>
         <Footer/>
       </div>

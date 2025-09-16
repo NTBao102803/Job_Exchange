@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 
 const smartJobs = [
@@ -38,6 +39,7 @@ const smartJobs = [
 ];
 
 const SmartJobSuggestions = () => {
+  const navigate = useNavigate();
   return (
     <section className="w-full py-20 bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 text-white">
       <h2 className="text-3xl md:text-4xl font-extrabold mb-12 text-center flex items-center justify-center gap-3">
@@ -80,7 +82,10 @@ const SmartJobSuggestions = () => {
               </div>
 
               <div className="flex justify-end mt-4">
-                <button className="bg-yellow-400 text-gray-900 font-bold py-2 px-5 rounded-2xl shadow-lg 
+                <button onClick={() =>
+                      navigate(`/candidate/jobs/${job.id}`, { state: { job } })
+                    }
+                        className="bg-yellow-400 text-gray-900 font-bold py-2 px-5 rounded-2xl shadow-lg 
                                    hover:bg-yellow-300 transition-all duration-300">
                   Xem chi tiết
                 </button>
@@ -91,7 +96,8 @@ const SmartJobSuggestions = () => {
       </div>
 
       <div className="mt-14 flex justify-center">
-        <button className="bg-white text-pink-600 font-bold py-3 px-10 rounded-3xl shadow-lg 
+        <button onClick={() => navigate("/candidate/dashboard-smartjobsuggestionslist")}
+                className="bg-white text-pink-600 font-bold py-3 px-10 rounded-3xl shadow-lg 
                            hover:bg-pink-100 transition-all duration-300">
           Xem thêm gợi ý
         </button>

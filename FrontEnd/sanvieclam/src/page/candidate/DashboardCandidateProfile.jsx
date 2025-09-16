@@ -21,7 +21,7 @@ export default function DashboardCandidateProfile() {
     navigate("/candidate/dashboard-candidate#cv-ai-banner");
   };
     const goJobSmartClick = () => { 
-    navigate("/candidate/dashboard-candidate#smart-job-suggestions");
+    navigate("/candidate/dashboard-smartjobsuggestionslist");
   };
     const goJobUTClick = () => { 
     navigate("/candidate/dashboard-candidate#job-applied");
