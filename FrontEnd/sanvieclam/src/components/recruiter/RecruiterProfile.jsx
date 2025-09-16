@@ -1,57 +1,73 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  getEmployerProfile,
+  updateEmployerProfile,
+} from "../../api/RecruiterApi";
 
 const RecruiterProfile = () => {
   const [formData, setFormData] = useState({
-    fullName: "Nguyễn Văn B",
-    email: "nguyenvanb@company.com",
-    phone: "0912345678",
-    position: "HR Manager",
-    companyName: "Công ty TNHH Công Nghệ ABC",
-    companyAddress: "Quận 3, TP. Hồ Chí Minh",
-    companySize: "100-500 nhân viên",
-    companyField: "Công nghệ thông tin",
-    taxCode: "0312345678",
-    businessLicense: "1234/GP-ĐKKD",
-    companyWebsite: "https://abc-tech.com",
-    companySocial: "linkedin.com/company/abc-tech",
-    companyDescription:
-      "ABC Tech là công ty công nghệ trẻ trung, năng động, chuyên phát triển phần mềm và giải pháp AI cho doanh nghiệp.",
+    fullName: "",
+    email: "",
+    phone: "",
+    position: "",
+    companyName: "",
+    companyAddress: "",
+    companySize: "",
+    companyField: "",
+    taxCode: "",
+    businessLicense: "",
+    companyDescription: "",
+    companyWebsite: "",
+    companySocial: "",
   });
 
+  const [loading, setLoading] = useState(true);
+
+  // 🟢 Gọi API lấy profile khi load component
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getEmployerProfile();
+        setFormData((prev) => ({
+          ...prev,
+          ...data, // merge để không mất state
+        }));
+      } catch (error) {
+        console.error("❌ Lỗi khi tải hồ sơ:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // 🟢 Update state khi nhập liệu
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleUpdate = () => {
-    alert("Thông tin nhà tuyển dụng đã được cập nhật!");
-    console.log("Updated recruiter data:", formData);
+  // 🟢 Gọi API update
+  const handleUpdate = async () => {
+    try {
+      const updated = await updateEmployerProfile(formData);
+      alert("✅ Thông tin đã được cập nhật!");
+      setFormData((prev) => ({
+        ...prev,
+        ...updated,
+      }));
+    } catch (error) {
+      alert("❌ Cập nhật thất bại!");
+      console.error("Update error:", error);
+    }
   };
-
-  const InputField = ({ label, name, type = "text" }) => (
-    <div>
-      <label className="block text-gray-700 font-semibold mb-2">{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
-      />
-    </div>
-  );
-
-  const TextAreaField = ({ label, name, rows = 3 }) => (
-    <div>
-      <label className="block text-gray-700 font-semibold mb-2">{label}</label>
-      <textarea
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        rows={rows}
-        className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
-      />
-    </div>
-  );
+  
+  if (loading) {
+    return <div className="text-center mt-20">⏳ Đang tải hồ sơ...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 pt-24 p-6 flex justify-center">
@@ -65,10 +81,58 @@ const RecruiterProfile = () => {
           <h2 className="text-2xl font-bold text-blue-500">
             👤 Thông tin cá nhân người đại diện
           </h2>
-          <InputField label="Họ và tên" name="fullName" />
-          <InputField label="Email" name="email" type="email" />
-          <InputField label="Số điện thoại" name="phone" />
-          <InputField label="Chức vụ" name="position" />
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Họ và tên
+            </label>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Số điện thoại
+            </label>
+            <input
+              type="text"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Chức vụ
+            </label>
+            <input
+              type="text"
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
         </div>
 
         {/* 🏢 Thông tin công ty */}
@@ -76,17 +140,97 @@ const RecruiterProfile = () => {
           <h2 className="text-2xl font-bold text-green-600">
             🏢 Thông tin công ty
           </h2>
-          <InputField label="Tên công ty" name="companyName" />
-          <InputField label="Địa chỉ công ty" name="companyAddress" />
-          <InputField label="Quy mô công ty" name="companySize" />
-          <InputField label="Lĩnh vực hoạt động" name="companyField" />
-          <InputField label="Mã số thuế" name="taxCode" />
-          <InputField label="Giấy phép kinh doanh" name="businessLicense" />
-          <TextAreaField
-            label="Mô tả công ty"
-            name="companyDescription"
-            rows={4}
-          />
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Tên công ty
+            </label>
+            <input
+              type="text"
+              name="companyName"
+              value={formData.companyName}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Địa chỉ công ty
+            </label>
+            <input
+              type="text"
+              name="companyAddress"
+              value={formData.companyAddress}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Quy mô công ty
+            </label>
+            <input
+              type="text"
+              name="companySize"
+              value={formData.companySize}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Lĩnh vực hoạt động
+            </label>
+            <input
+              type="text"
+              name="companyField"
+              value={formData.companyField}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Mã số thuế
+            </label>
+            <input
+              type="text"
+              name="taxCode"
+              value={formData.taxCode}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Giấy phép kinh doanh
+            </label>
+            <input
+              type="text"
+              name="businessLicense"
+              value={formData.businessLicense}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Mô tả công ty
+            </label>
+            <textarea
+              name="companyDescription"
+              value={formData.companyDescription}
+              onChange={handleChange}
+              rows={4}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
         </div>
 
         {/* 🌐 Thông tin bổ sung */}
@@ -94,8 +238,32 @@ const RecruiterProfile = () => {
           <h2 className="text-2xl font-bold text-purple-600">
             🌐 Thông tin bổ sung
           </h2>
-          <InputField label="Website công ty" name="companyWebsite" />
-          <InputField label="Mạng xã hội / Liên kết" name="companySocial" />
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Website công ty
+            </label>
+            <input
+              type="text"
+              name="companyWebsite"
+              value={formData.companyWebsite}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Mạng xã hội / Liên kết
+            </label>
+            <input
+              type="text"
+              name="companySocial"
+              value={formData.companySocial}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+          </div>
         </div>
 
         {/* Nút cập nhật */}

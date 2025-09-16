@@ -10,6 +10,7 @@ import iuh.fit.se.employer_service.model.EmployerStatus;
 import iuh.fit.se.employer_service.repository.EmployerRepository;
 import iuh.fit.se.employer_service.service.EmployerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -50,8 +51,8 @@ public class EmployerServiceImpl implements EmployerService {
         AuthUserResponse authResponse = authServiceClient.verifyOtp(email, otp);
 
         // 2. Update employer
-        Employer employer = employerRepository.findByEmail((email)
-                .describeConstable().orElseThrow(() -> new RuntimeException("Employer not found")));
+        Employer employer = employerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Employer not found"));
         employer.setAuthUserId(authResponse.getId());
         employer.setStatus(EmployerStatus.PENDING);
         return employerRepository.save(employer);
@@ -82,8 +83,9 @@ public class EmployerServiceImpl implements EmployerService {
     }
 
     @Override
-    public Employer updateEmployer(Long employerId, EmployerProfileRequest profileRequest) {
-        Employer employer = employerRepository.findById(employerId)
+    public Employer updateEmployer(EmployerProfileRequest profileRequest) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Employer employer = employerRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Employer không tồn tại"));
 
         employer.setFullName(profileRequest.getFullName());
@@ -101,5 +103,13 @@ public class EmployerServiceImpl implements EmployerService {
         employer.setCompanySocial(profileRequest.getCompanySocial());
 
         return employerRepository.save(employer);
+    }
+
+    @Override
+    public Employer getMyEmployer() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return employerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Employer not found"));
     }
 }

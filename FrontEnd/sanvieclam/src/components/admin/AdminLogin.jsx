@@ -32,7 +32,7 @@ const AdminLogin = ({ onSubmit }) => {
     setLoading(true);
     try {
       const res = await login({ email: email, passWord: passWord });
-      const { token, user } = res.data;
+      const { accessToken, user } = res.data;
 
       if (!user?.role || user.role.roleName !== "ADMIN") {
         setError("Bạn không có quyền truy cập khu vực quản trị");
@@ -41,7 +41,7 @@ const AdminLogin = ({ onSubmit }) => {
       }
 
       // Lưu token và user vào localStorage
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
 
       navigate("/admin/dashboard"); // điều hướng sang admin dashboard

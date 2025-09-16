@@ -24,9 +24,14 @@ public class EmployerController {
         Employer employer = employerService.verifyOtp(email, otp);
         return ResponseEntity.ok(employer);
     }
-    @PutMapping("/{id}")
-    public ResponseEntity<Employer> updateProfile(@PathVariable Long id, @RequestBody EmployerProfileRequest profileRequest) {
-        Employer employer = employerService.updateEmployer(id, profileRequest);
+    @PutMapping("/profile")
+    public ResponseEntity<Employer> updateProfile(@RequestBody EmployerProfileRequest profileRequest) {
+        Employer employer = employerService.updateEmployer(profileRequest);
         return ResponseEntity.ok(employer);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<Employer> getMyEmployer() {
+        return ResponseEntity.ok(employerService.getMyEmployer());
     }
 }

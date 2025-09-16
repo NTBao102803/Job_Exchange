@@ -18,6 +18,7 @@ import {
   FileBarChart,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { logout } from "../../api/AuthApi";
 
 const AdminSidebar = () => {
   const [openMenus, setOpenMenus] = useState({});
@@ -25,6 +26,16 @@ const AdminSidebar = () => {
 
   const toggleMenu = (title) => {
     setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();   // gọi API logout + xoá token
+      navigate("/login"); // điều hướng về trang login
+    } catch (err) {
+      console.error("Logout error:", err);
+      navigate("/login");
+    }
   };
 
   const menu = [
@@ -143,7 +154,7 @@ const AdminSidebar = () => {
 
       {/* Logout */}
       <div className="border-t border-indigo-700 px-4 py-4">
-        <button  onClick={() => navigate("/admin")} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-600/90 hover:bg-red-600 w-full font-semibold shadow-md hover:shadow-lg transition-all duration-300">
+        <button  onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-600/90 hover:bg-red-600 w-full font-semibold shadow-md hover:shadow-lg transition-all duration-300">
           <LogOut size={20} />
           <span>Đăng xuất</span>
         </button>

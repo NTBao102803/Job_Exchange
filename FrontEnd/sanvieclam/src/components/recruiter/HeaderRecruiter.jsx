@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../../api/AuthApi";
 
 const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBlog,onFooter}) => {
   const [show, setShow] = useState(true);
@@ -22,6 +23,16 @@ const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBl
       return () => window.removeEventListener("scroll", controlHeader);
     }
   }, [lastScrollY]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();   // gọi API logout + xoá token
+      navigate("/login"); // điều hướng về trang login
+    } catch (err) {
+      console.error("Logout error:", err);
+      navigate("/login");
+    }
+  };
 
   return (
     <header
@@ -59,7 +70,7 @@ const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBl
           {menuOpen && (
             <div className="absolute right-0 mt-3 w-48 bg-white text-gray-800 rounded-xl shadow-lg py-2 z-50">
               <button onClick={() => navigate("/recruiter/recruiterprofile")} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Hồ sơ của tôi</button>
-              <button onClick={() => navigate("/login")} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Đăng xuất</button>
+              <button onClick={handleLogout} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Đăng xuất</button>
             </div>
           )}
         </div>
