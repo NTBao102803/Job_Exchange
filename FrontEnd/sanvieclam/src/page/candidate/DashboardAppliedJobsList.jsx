@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaderCandidate from "../../components/candidate/HeaderCandidate";
-import JobList from "../../components/candidate/JobList";
+import AppliedJobsList from "../../components/candidate/AppliedJobsList";
 import Footer from "../../components/Footer";
 
-export default function DashboardJobList() {
+export default function DashboardAppliedJobsList() {
   const footerRef = useRef(null);
   const navigate = useNavigate();
      // scroll mượt đến Footer
@@ -40,7 +40,7 @@ export default function DashboardJobList() {
                        onFooter={scrollToFooter} />
 
      
-      <JobList/>
+      <AppliedJobsList/>
       <div ref={footerRef}>
         <Footer/>
       </div>

@@ -15,6 +15,7 @@ import DashboardRecruiterProfile from "./page/recruiter/DashboardRecruiterProfil
 import DashboardJobList from "./page/candidate/DashboardJobList";
 import DashboardJobDetail from "./page/candidate/DashboardJobDetail";
 import DashboardSmartJobSuggestionsList from "./page/candidate/DashboardSmartJobSuggestionsList";
+import DashboardAppliedJobsList from "./page/candidate/DashboardAppliedJobsList";
 function App() {
   return (
     <Router>
@@ -40,6 +41,7 @@ function App() {
         <Route path="/candidate/dashboard-joblist" element={<DashboardJobList />} />
         <Route path="/candidate/jobs/:id" element={<DashboardJobDetail />} />
         <Route path="/candidate/dashboard-smartjobsuggestionslist" element={<DashboardSmartJobSuggestionsList />} />
+        <Route path="/candidate/dashboard-appliedjobslist" element={<DashboardAppliedJobsList />} />
           {/* Dashboard nhà tuyển dụng */}
         <Route path="/recruiter/dashboard-recruiter" element={<DashboardRecruiter />} />
         <Route path="/recruiter/recruiterprofile" element={<DashboardRecruiterProfile />} />
