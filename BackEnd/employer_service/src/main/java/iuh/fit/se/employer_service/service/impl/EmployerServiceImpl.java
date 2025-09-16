@@ -3,6 +3,7 @@ package iuh.fit.se.employer_service.service.impl;
 import iuh.fit.se.employer_service.client.AuthServiceClient;
 import iuh.fit.se.employer_service.client.AuthUserRequest;
 import iuh.fit.se.employer_service.client.AuthUserResponse;
+import iuh.fit.se.employer_service.dto.EmployerProfileRequest;
 import iuh.fit.se.employer_service.dto.EmployerRegisterRequest;
 import iuh.fit.se.employer_service.model.Employer;
 import iuh.fit.se.employer_service.model.EmployerStatus;
@@ -27,7 +28,7 @@ public class EmployerServiceImpl implements EmployerService {
         AuthUserRequest registerRequest = new AuthUserRequest(
                 request.getFullName(),
                 request.getEmail(),
-                request.getPassword(),
+                request.getPassWord(),
                 "EMPLOYER"
         );
         authServiceClient.requestOtp(registerRequest);
@@ -38,7 +39,7 @@ public class EmployerServiceImpl implements EmployerService {
         employer.setFullName(request.getFullName());
         employer.setPhone(request.getPhone());
         employer.setCompanyName(request.getCompanyName());
-        employer.setAddress(request.getAddress());
+        employer.setCompanyAddress(request.getCompanyAddress());
         employer.setStatus(EmployerStatus.WAITING_OTP);
         employerRepository.save(employer);
     }
@@ -61,6 +62,9 @@ public class EmployerServiceImpl implements EmployerService {
         Employer employer = employerRepository.findById(employerId)
                 .orElseThrow(() -> new RuntimeException("Employer không tồn tại"));
 
+        if(employer.getStatus() != EmployerStatus.WAITING_APPROVAL) {
+            throw new RuntimeException("Employer chưa hoàn tất hồ sơ");
+        }
         employer.setStatus(EmployerStatus.APPROVED);
         employer.setAuthUserId(authUserId);
 
@@ -73,6 +77,28 @@ public class EmployerServiceImpl implements EmployerService {
                 .orElseThrow(() -> new RuntimeException("Employer không tồn tại"));
 
         employer.setStatus(EmployerStatus.REJECTED);
+
+        return employerRepository.save(employer);
+    }
+
+    @Override
+    public Employer updateEmployer(Long employerId, EmployerProfileRequest profileRequest) {
+        Employer employer = employerRepository.findById(employerId)
+                .orElseThrow(() -> new RuntimeException("Employer không tồn tại"));
+
+        employer.setFullName(profileRequest.getFullName());
+        employer.setPhone(profileRequest.getPhone());
+        employer.setCompanyName(profileRequest.getCompanyName());
+        employer.setCompanyAddress(profileRequest.getCompanyAddress());
+        employer.setStatus(EmployerStatus.WAITING_APPROVAL);
+        employer.setPosition(profileRequest.getPosition());
+        employer.setCompanySize(profileRequest.getCompanySize());
+        employer.setCompanyField(profileRequest.getCompanyField());
+        employer.setTaxCode(profileRequest.getTaxCode());
+        employer.setBusinessLicense(profileRequest.getBusinessLicense());
+        employer.setCompanyDescription(profileRequest.getCompanyDescription());
+        employer.setCompanyWebsite(profileRequest.getCompanyWebsite());
+        employer.setCompanySocial(profileRequest.getCompanySocial());
 
         return employerRepository.save(employer);
     }

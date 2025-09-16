@@ -1,5 +1,6 @@
 package iuh.fit.se.employer_service.controller;
 
+import iuh.fit.se.employer_service.dto.EmployerProfileRequest;
 import iuh.fit.se.employer_service.dto.EmployerRegisterRequest;
 import iuh.fit.se.employer_service.model.Employer;
 import iuh.fit.se.employer_service.service.EmployerService;
@@ -21,6 +22,11 @@ public class EmployerController {
     @PostMapping("/verify-otp")
     public ResponseEntity<Employer> verifyOtp(@RequestParam String email, @RequestParam String otp) {
         Employer employer = employerService.verifyOtp(email, otp);
+        return ResponseEntity.ok(employer);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<Employer> updateProfile(@PathVariable Long id, @RequestBody EmployerProfileRequest profileRequest) {
+        Employer employer = employerService.updateEmployer(id, profileRequest);
         return ResponseEntity.ok(employer);
     }
 }
