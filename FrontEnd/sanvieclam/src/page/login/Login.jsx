@@ -21,10 +21,10 @@ const Login = () => {
       });
 
       // Giả sử backend trả về { token, user }
-      const { token, user } = response.data;
+      const { accessToken, user } = response.data;
 
       // Lưu token và user vào localStorage
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
 
       console.log(user.role);
