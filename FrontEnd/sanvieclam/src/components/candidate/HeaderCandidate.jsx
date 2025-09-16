@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/AuthApi";
 
-const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBlog,onFooter}) => {
+const HeaderCandidate = ({ onHomeClick,onJobClick,onCVAIClick,onJobSmartClick,onBlog,onFooter,onJobUTClick}) => {
   const [show, setShow] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,14 +25,14 @@ const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBl
   }, [lastScrollY]);
 
   const handleLogout = async () => {
-    try {
-      await logout();   // gọi API logout + xoá token
-      navigate("/login"); // điều hướng về trang login
-    } catch (err) {
-      console.error("Logout error:", err);
-      navigate("/login");
-    }
-  };
+      try {
+        await logout();   // gọi API logout + xoá token
+        navigate("/login"); // điều hướng về trang login
+      } catch (err) {
+        console.error("Logout error:", err);
+        navigate("/login");
+      }
+    };
 
   return (
     <header
@@ -51,9 +51,10 @@ const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBl
         {/* Navigation */}
         <nav className="flex-1 flex justify-evenly ml-32">
           <button onClick={onHomeClick} className="hover:text-pink-400 transition duration-300">Trang chủ</button>
-          <button onClick={onUpTinClick} className="hover:text-pink-400 transition duration-300">Đăng tin tuyển dụng</button>
-          <button onClick={onSmartCandidate}className="hover:text-pink-400 transition duration-300">Gợi ý ứng viên thông minh</button>
-          <button onClick={onQLBD} className="hover:text-pink-400 transition duration-300">Quản lý bài đăng</button>
+          <button onClick={onJobClick}className="hover:text-pink-400 transition duration-300">Việc làm</button>
+          <button onClick={onCVAIClick}className="hover:text-pink-400 transition duration-300">Tạo CV AI</button>
+          <button onClick={onJobSmartClick}className="hover:text-pink-400 transition duration-300">Gợi ý việc làm thông minh</button>
+          <button onClick={onJobUTClick}className="hover:text-pink-400 transition duration-300">Việc làm đã ứng tuyển</button>
           <button onClick={onBlog} className="hover:text-pink-400 transition duration-300">Blog</button>
           <button onClick={onFooter} className="hover:text-pink-400 transition duration-300">Liên hệ</button>
         </nav>
@@ -69,7 +70,7 @@ const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBl
 
           {menuOpen && (
             <div className="absolute right-0 mt-3 w-48 bg-white text-gray-800 rounded-xl shadow-lg py-2 z-50">
-              <button onClick={() => navigate("/recruiter/recruiterprofile")} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Hồ sơ của tôi</button>
+              <button onClick ={() => navigate("/candidate/candidateprofile")} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Hồ sơ của tôi</button>
               <button onClick={handleLogout} className="block px-4 py-2 w-full text-left hover:bg-gray-100">Đăng xuất</button>
             </div>
           )}
@@ -79,4 +80,4 @@ const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBl
   );
 };
 
-export default HeaderRecruiter;
+export default HeaderCandidate;
