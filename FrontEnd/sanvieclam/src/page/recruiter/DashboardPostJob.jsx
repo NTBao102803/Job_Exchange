@@ -25,9 +25,7 @@ export default function DashboardPostJob() {
   const goQLBD = () => {  
     navigate("/recruiter/dashboard-recruiter#quan-ly-bai-dang");
   };
-  const goBlog = () => {
-    navigate("/recruiter/dashboard-recruiter#blog-section");
-  };    
+  
 
   return (
     <div>
@@ -35,7 +33,6 @@ export default function DashboardPostJob() {
                        onUpTinClick={goUpTin}
                        onSmartCandidate={goSmartCandidate}
                        onQLBD={goQLBD}
-                       onBlog={goBlog}
                        onFooter={scrollToFooter} />
       <PostJob/>
       <div ref={footerRef}>

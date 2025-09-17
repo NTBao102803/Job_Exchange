@@ -25,9 +25,6 @@ export default function DashboardCandidateProfile() {
   const goQLBD = () => {  
     navigate("/recruiter/dashboard-recruiter#quan-ly-bai-dang");
   };
-  const goBlog = () => {
-    navigate("/recruiter/dashboard-recruiter#blog-section");
-  };    
 
   return (
     <div>
@@ -35,7 +32,6 @@ export default function DashboardCandidateProfile() {
                        onUpTinClick={goUpTin}
                        onSmartCandidate={goSmartCandidate}
                        onQLBD={goQLBD}
-                       onBlog={goBlog}
                        onFooter={scrollToFooter} />
       <RecruiterProfile/>
       <div ref={footerRef}>
