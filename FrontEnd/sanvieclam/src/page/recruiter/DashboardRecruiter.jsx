@@ -25,7 +25,7 @@ export default function DashboardCandidate() {
     footerRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   const goUpTin = () => {  
-    navigate("/recruiter/dashboard-recruiter#up-tin-tuyen-dung");
+    navigate("/recruiter/dashboard-postjob");
   };
   const goSmartCandidate = () => {  
     navigate("/recruiter/dashboard-recruiter#smart-candidate-suggestions");
