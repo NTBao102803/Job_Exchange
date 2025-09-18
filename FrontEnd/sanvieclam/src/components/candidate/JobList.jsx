@@ -66,6 +66,15 @@ const JobList = () => {
       category: "Kinh doanh",
       salary: "20 - 30 triệu",
     },
+    {
+      id: 7,
+      title: "Chuyên viên Kinh doanh Bất động sản",
+      company: "Tập đoàn SunLand",
+      location: "Hà Nội",
+      type: "Fulltime",
+      category: "Kinh doanh",
+      salary: "20 - 30 triệu",
+    },
   ];
 
   const filteredJobs = jobs.filter(

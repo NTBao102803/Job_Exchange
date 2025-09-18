@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/AuthApi";
 
-const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBlog,onFooter}) => {
+const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onFooter}) => {
   const [show, setShow] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -54,7 +54,6 @@ const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onBl
           <button onClick={onUpTinClick} className="hover:text-pink-400 transition duration-300">Đăng tin tuyển dụng</button>
           <button onClick={onSmartCandidate}className="hover:text-pink-400 transition duration-300">Gợi ý ứng viên thông minh</button>
           <button onClick={onQLBD} className="hover:text-pink-400 transition duration-300">Quản lý bài đăng</button>
-          <button onClick={onBlog} className="hover:text-pink-400 transition duration-300">Blog</button>
           <button onClick={onFooter} className="hover:text-pink-400 transition duration-300">Liên hệ</button>
         </nav>
 

@@ -6,6 +6,7 @@ import {
   DollarSign,
   Building2,
   ArrowLeft,
+  CalendarDays,
 } from "lucide-react";
 
 const JobDetail = () => {
@@ -35,9 +36,23 @@ const JobDetail = () => {
     );
   }
 
-  // Helper function hiển thị fallback
+  // Helper hiển thị fallback
   const displayValue = (val) =>
     val && val !== "" ? val : "Chưa có thông tin";
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "Chưa có thông tin";
+    const date = new Date(dateStr);
+    if (isNaN(date)) return "Chưa có thông tin";
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const startDate = formatDate(job.startDate);
+  const endDate = formatDate(job.endDate);
 
   return (
     <div className="bg-gray-50 min-h-screen pt-32 pb-20 px-6">
@@ -48,22 +63,39 @@ const JobDetail = () => {
             {displayValue(job.title)}
           </h1>
           <p className="text-lg text-gray-600 mt-1 flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-indigo-500" />{" "}
+            <Building2 className="w-5 h-5 text-indigo-500" />
             {displayValue(job.company)}
           </p>
 
           {/* Thông tin nhanh */}
-          <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 text-gray-700">
+          <div className="mt-5 flex flex-wrap gap-x-8 gap-y-3 text-gray-700">
             <p className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-red-500" />{" "}
+              <MapPin className="w-5 h-5 text-red-500" />
               {displayValue(job.location)}
             </p>
             <p className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-blue-500" />{" "}
+              <Clock className="w-5 h-5 text-blue-500" />
               {displayValue(job.type)}
             </p>
             <p className="flex items-center gap-2 text-green-600 font-medium">
-              <DollarSign className="w-5 h-5" /> {displayValue(job.salary)}
+              <DollarSign className="w-5 h-5" />
+              {displayValue(job.salary)}
+            </p>
+          </div>
+
+          {/* Ngày tuyển dụng */}
+          <div className="mt-5 flex flex-wrap gap-x-8 gap-y-3 text-gray-700">
+            <p className="flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-purple-500" />
+              <span>
+                <span className="font-medium">Bắt đầu:</span> {startDate}
+              </span>
+            </p>
+            <p className="flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-orange-500" />
+              <span>
+                <span className="font-medium">Kết thúc:</span> {endDate}
+              </span>
             </p>
           </div>
 
@@ -108,32 +140,31 @@ const JobDetail = () => {
                 <p className="mt-2 text-gray-500">Chưa có thông tin</p>
               )}
             </div>
-
-            {/* Liên hệ */}
-            <div>
-              <h2 className="text-xl font-semibold text-indigo-600">
-                📞 Thông tin liên hệ
-              </h2>
-              <p className="mt-2">
-                Người liên hệ:{" "}
-                <span className="font-medium">
-                  {displayValue(job.contactName)}
-                </span>
-              </p>
-              <p>
-                Email:{" "}
-                <span className="font-medium">
-                  {displayValue(job.contactEmail)}
-                </span>
-              </p>
-              <p>
-                SĐT:{" "}
-                <span className="font-medium">
-                  {displayValue(job.contactPhone)}
-                </span>
-              </p>
-            </div>
           </div>
+          {/* Liên hệ */} 
+          <div> 
+            <h2 className="text-xl font-semibold text-indigo-600">
+             📞 Thông tin liên hệ
+            </h2> 
+            <p className="mt-2"> 
+            Người liên hệ:{" "} 
+            <span className="font-medium"> 
+              {displayValue(job.contactName)} 
+            </span> 
+            </p> 
+            <p> 
+            Email:{" "} 
+            <span className="font-medium"> 
+              {displayValue(job.contactEmail)} 
+            </span>
+            </p> 
+            <p> 
+            SĐT:{" "} 
+            <span className="font-medium"> 
+              {displayValue(job.contactPhone)} 
+            </span> 
+            </p> 
+            </div> 
 
           {/* Nút hành động */}
           <div className="mt-10 flex justify-between">
