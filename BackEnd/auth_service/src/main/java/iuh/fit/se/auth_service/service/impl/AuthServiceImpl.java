@@ -3,10 +3,7 @@ package iuh.fit.se.auth_service.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.se.auth_service.config.JwtService;
-import iuh.fit.se.auth_service.dto.AuthRequest;
-import iuh.fit.se.auth_service.dto.AuthResponse;
-import iuh.fit.se.auth_service.dto.ProfileRequest;
-import iuh.fit.se.auth_service.dto.RegisterRequest;
+import iuh.fit.se.auth_service.dto.*;
 import iuh.fit.se.auth_service.event.UserCreatedEvent;
 import iuh.fit.se.auth_service.model.Role;
 import iuh.fit.se.auth_service.model.User;
@@ -142,19 +139,18 @@ public class AuthServiceImpl implements AuthService {
         // 4. Gọi user-service để tạo profile (chỉ khi KHÔNG phải EMPLOYER)
         if (!"EMPLOYER".equalsIgnoreCase(role.getRoleName())) {
             RestTemplate restTemplate = new RestTemplate();
-            ProfileRequest profileRequest = new ProfileRequest();
-            profileRequest.setUserId(user.getId());
-            profileRequest.setEmail(user.getEmail());
-            profileRequest.setRole(role.getRoleName());
-            profileRequest.setFullName(user.getFullName());
+            CandidateRequest candidateRequest = new CandidateRequest();
+//            ProfileRequest profileRequest = new ProfileRequest();
+            candidateRequest.setUserId(user.getId());
+            candidateRequest.setEmail(user.getEmail());
+            candidateRequest.setRole(role.getRoleName());
+            candidateRequest.setFullName(user.getFullName());
 
             try {
                 restTemplate.postForObject(
-                        "http://localhost:8082/api/user",
-                        profileRequest,
-                        Void.class
-                );
-            } catch (Exception ex) {
+                        "http://localhost:8082/api/candidate/internal",
+                        candidateRequest,
+                        Void.class);            } catch (Exception ex) {
                 throw new RuntimeException("Không thể tạo profile cho user trong user-service", ex);
             }
         }

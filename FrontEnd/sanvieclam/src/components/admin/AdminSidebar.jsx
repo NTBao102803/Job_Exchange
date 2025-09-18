@@ -31,10 +31,10 @@ const AdminSidebar = () => {
   const handleLogout = async () => {
     try {
       await logout();   // gọi API logout + xoá token
-      navigate("/login"); // điều hướng về trang login
+      navigate("/admin"); // điều hướng về trang login
     } catch (err) {
       console.error("Logout error:", err);
-      navigate("/login");
+      navigate("/admin");
     }
   };
 
