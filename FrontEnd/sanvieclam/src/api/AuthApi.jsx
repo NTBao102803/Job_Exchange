@@ -32,20 +32,13 @@ export const login = async (loginData) => {
 // LOGOUT
 export const logout = async () => {
   try {
-    const response = await axiosClient.post("/auth/logout");
-    
-    // Xoá token và user ở localStorage
+    await axiosClient.post("/auth/logout");
+  } catch (error) {
+    console.error("Lỗi khi gọi API logout:", error);
+  } finally {
+    // Dù thành công hay lỗi đều clear
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
-    return response;
-  } catch (error) {
-    if (error.response?.status === 403) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      return { message: "Phiên đăng nhập đã hết hạn. Đã tự động đăng xuất." };
-    }
-    throw error;
   }
 };
 
