@@ -1,10 +1,15 @@
 package iuh.fit.se.job_service.dto;
 
 
+import iuh.fit.se.job_service.model.JobType;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -13,7 +18,12 @@ import lombok.NoArgsConstructor;
 public class JobRequest {
     private String title;
     private String description;
-    private String company;
     private String location;
-    private Double salary;
+    private String salary;
+    private JobType jobType;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String requirements;
+    private String benefits;
+    private LocalDateTime updatedAt;
 }

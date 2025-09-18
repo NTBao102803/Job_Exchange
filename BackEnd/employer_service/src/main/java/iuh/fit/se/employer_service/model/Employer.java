@@ -36,8 +36,6 @@ public class Employer {
     @Column(length = 2000)
     private String companyDescription;
 
-
-
     @Enumerated(EnumType.STRING)
     private EmployerStatus status;
 }

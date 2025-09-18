@@ -3,6 +3,7 @@ package iuh.fit.se.job_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,34 +12,43 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Job {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-    private String description;
-    private String company;
-    private String location;
-    private Double salary;
+    // Tham chiếu đến Employer trong employer-service
+    private Long employerId;
+
+    @Column(nullable = false)
+    private String title; // Tiêu đề công việc
 
     @Enumerated(EnumType.STRING)
-    private JobStatus status;  // trạng thái bài đăng
+    private JobType jobType; // Loại việc (full-time, part-time, internship...)
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String location; // Địa điểm (user nhập trong form)
+
+    private String salary; // Mức lương (có thể lưu String cho dễ biểu diễn, VD: "15 - 20 triệu")
+
+    private LocalDate startDate;
+
+    private LocalDate endDate;
+
+    @Column(length = 5000)
+    private String description; // Mô tả công việc
+
+    @Column(length = 5000)
+    private String requirements; // Yêu cầu ứng viên
+
+    @Column(length = 3000)
+    private String benefits; // Quyền lợi
 
     private String rejectReason;
 
-    @PrePersist
-    public void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        status = JobStatus.PENDING; // mặc định khi tạo mới
-    }
+    @Enumerated(EnumType.STRING)
+    private JobStatus status; // Trạng thái tin (PENDING, APPROVED, EXPIRED...)
 
-    @PreUpdate
-    public void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

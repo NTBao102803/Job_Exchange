@@ -46,7 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Claims claims = jwtUtil.extractAllClaims(token);
                 String username = claims.getSubject();
 
-                // lấy roles từ token
                 List<String> roles = claims.get("roles", List.class);
 
                 if (roles == null || roles.isEmpty()) {
@@ -55,19 +54,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     logger.info("✅ User [{}] authenticated with roles: {}", username, roles);
                 }
 
-                List<SimpleGrantedAuthority> authorities = roles != null
-                        ? roles.stream()
+                List<SimpleGrantedAuthority> authorities = roles.stream()
                         .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r)
                         .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList())
-                        : List.of();
+                        .toList();
 
-                logger.info("🔑 Authorities set for user [{}]: {}", username, authorities);
-
+                // IMPORTANT: set token as credentials so Feign interceptor can forward it
                 UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+                        new UsernamePasswordAuthenticationToken(username, token, authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                logger.debug("Authentication set for user: {} (credentials set)", username);
 
             } else {
                 logger.error("❌ Invalid JWT token for URI: {}", request.getRequestURI());
@@ -75,7 +72,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             logger.error("🔥 JWT processing error at {}: {}", request.getRequestURI(), e.getMessage(), e);
         }
-
 
         filterChain.doFilter(request, response);
     }

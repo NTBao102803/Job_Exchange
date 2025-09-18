@@ -33,7 +33,7 @@ public class CandidateController {
         return ResponseEntity.ok(candidateService.createCandidate(request));
     }
 
-    // 🔹 Lấy profile theo userId (test bằng Postman)
+    // 🔹 Lấy profile theo token
     @GetMapping
     public ResponseEntity<Candidate> getCandidate() {
         return ResponseEntity.ok(candidateService.getCandidate());

@@ -3,6 +3,8 @@ package iuh.fit.se.employer_service.service.impl;
 import iuh.fit.se.employer_service.client.AuthServiceClient;
 import iuh.fit.se.employer_service.client.AuthUserRequest;
 import iuh.fit.se.employer_service.client.AuthUserResponse;
+import iuh.fit.se.employer_service.dto.EmployerDto;
+import iuh.fit.se.employer_service.dto.EmployerMapper;
 import iuh.fit.se.employer_service.dto.EmployerProfileRequest;
 import iuh.fit.se.employer_service.dto.EmployerRegisterRequest;
 import iuh.fit.se.employer_service.model.Employer;
@@ -54,7 +56,7 @@ public class EmployerServiceImpl implements EmployerService {
         Employer employer = employerRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Employer not found"));
         employer.setAuthUserId(authResponse.getId());
-        employer.setStatus(EmployerStatus.PENDING);
+        employer.setStatus(EmployerStatus.WAITING_APPROVAL);
         return employerRepository.save(employer);
     }
 
@@ -92,7 +94,6 @@ public class EmployerServiceImpl implements EmployerService {
         employer.setPhone(profileRequest.getPhone());
         employer.setCompanyName(profileRequest.getCompanyName());
         employer.setCompanyAddress(profileRequest.getCompanyAddress());
-        employer.setStatus(EmployerStatus.WAITING_APPROVAL);
         employer.setPosition(profileRequest.getPosition());
         employer.setCompanySize(profileRequest.getCompanySize());
         employer.setCompanyField(profileRequest.getCompanyField());
@@ -101,6 +102,26 @@ public class EmployerServiceImpl implements EmployerService {
         employer.setCompanyDescription(profileRequest.getCompanyDescription());
         employer.setCompanyWebsite(profileRequest.getCompanyWebsite());
         employer.setCompanySocial(profileRequest.getCompanySocial());
+
+        // ✅ Kiểm tra thông tin đã đủ chưa
+        boolean isComplete =
+                isNotBlank(profileRequest.getFullName()) &&
+                        isNotBlank(profileRequest.getPhone()) &&
+                        isNotBlank(profileRequest.getCompanyName()) &&
+                        isNotBlank(profileRequest.getCompanyAddress()) &&
+                        isNotBlank(profileRequest.getPosition()) &&
+                        profileRequest.getCompanySize() != null &&
+                        isNotBlank(profileRequest.getCompanyField()) &&
+                        isNotBlank(profileRequest.getTaxCode()) &&
+                        isNotBlank(profileRequest.getBusinessLicense()) &&
+                        isNotBlank(profileRequest.getCompanyDescription()) &&
+                        isNotBlank(profileRequest.getCompanyWebsite());
+
+        if (isComplete) {
+            employer.setStatus(EmployerStatus.PENDING); // Pending
+        } else {
+            employer.setStatus(EmployerStatus.WAITING_APPROVAL); // hoặc giữ nguyên employer.getStatus()
+        }
 
         return employerRepository.save(employer);
     }
@@ -111,5 +132,15 @@ public class EmployerServiceImpl implements EmployerService {
 
         return employerRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Employer not found"));
+    }
+
+    @Override
+    public EmployerDto getEmployerByEmail(String email) {
+        Employer employer = employerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Employer not found"));
+        return EmployerMapper.toDto(employer);
+    }
+    private boolean isNotBlank(String str) {
+        return str != null && !str.trim().isEmpty();
     }
 }
