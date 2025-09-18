@@ -66,6 +66,48 @@ const smartJobs = [
     social: "linkedin.com/in/levanc",
     match: "88%",
   },
+  {
+    id: 4,
+    fullName: "Lê Văn C",
+    dob: "22/06/1996",
+    gender: "Nam",
+    email: "levanc@example.com",
+    phone: "0923456789",
+    address: "Đà Nẵng",
+    school: "ĐH FPT",
+    major: "Cloud Computing",
+    gpa: "3.4/4",
+    graduationYear: "2018",
+    experience: "4 năm làm Cloud Architect",
+    projects: "Triển khai hệ thống AWS cho doanh nghiệp",
+    skills: "AWS, Kubernetes, Terraform",
+    certificates: "AWS Solution Architect",
+    careerGoal: "Kiến trúc sư Cloud hàng đầu",
+    hobbies: "Chạy bộ, bóng đá",
+    social: "linkedin.com/in/levanc",
+    match: "88%",
+  },
+  {
+    id: 5,
+    fullName: "Lê Văn C",
+    dob: "22/06/1996",
+    gender: "Nam",
+    email: "levanc@example.com",
+    phone: "0923456789",
+    address: "Đà Nẵng",
+    school: "ĐH FPT",
+    major: "Cloud Computing",
+    gpa: "3.4/4",
+    graduationYear: "2018",
+    experience: "4 năm làm Cloud Architect",
+    projects: "Triển khai hệ thống AWS cho doanh nghiệp",
+    skills: "AWS, Kubernetes, Terraform",
+    certificates: "AWS Solution Architect",
+    careerGoal: "Kiến trúc sư Cloud hàng đầu",
+    hobbies: "Chạy bộ, bóng đá",
+    social: "linkedin.com/in/levanc",
+    match: "88%",
+  },
 ];
 
 const SmartJobSuggestionsList = () => {
@@ -74,7 +116,7 @@ const SmartJobSuggestionsList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
-  const jobsPerPage = 3;
+  const jobsPerPage = 4;
 
   const filteredJobs = smartJobs.filter((job) =>
     job.fullName.toLowerCase().includes(search.toLowerCase())
@@ -105,58 +147,64 @@ const SmartJobSuggestionsList = () => {
     </div>
 
     {/* Danh sách ứng viên */}
-    <div className="space-y-4">
-      {currentJobs.length > 0 ? (
-        currentJobs.map((job) => (
-          <div
-            key={job.id}
-            className="bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 shadow-md p-4 
-                       flex flex-col sm:flex-row justify-between items-start sm:items-center 
-                       hover:shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:scale-[1.01] 
-                       transition transform"
-          >
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  {currentJobs.length > 0 ? (
+    currentJobs.map((job) => (
+      <div
+        key={job.id}
+        className="bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 shadow-md p-6 
+                   flex justify-between items-center 
+                   hover:shadow-[0_0_25px_rgba(255,255,255,0.7)] hover:scale-[1.02] 
+                   transition transform"
+      >
+        {/* Thông tin ứng viên */}
+        <div className="flex-1 pr-4">
+          <h3 className="text-xl md:text-2xl font-bold mb-2 text-yellow-300">
+            {job.fullName}
+          </h3>
+          <span className="text-base opacity-90">{job.major}</span>
+          <div className="mt-2 text-sm md:text-base space-y-1">
             <div>
-              <h3 className="text-lg md:text-xl font-bold mb-1 text-yellow-300">
-                {job.fullName}
-              </h3>
-              <span className="text-sm opacity-90">{job.major}</span>
-              <div className="mt-1 text-xs space-y-0">
-                <div>
-                  <span className="font-semibold">Kỹ năng: </span>
-                  {job.skills}
-                </div>
-                <div>
-                  <span className="font-semibold">Kinh nghiệm: </span>
-                  {job.experience}
-                </div>
-                <div>
-                  <span className="font-semibold">Tốt nghiệp: </span>
-                  {job.graduationYear} ({job.gpa})
-                </div>
-                <div>
-                  <span className="font-semibold">Phù hợp: </span>
-                  <span className="text-green-300 font-bold">
-                    {job.match}
-                  </span>
-                </div>
-              </div>
+              <span className="font-semibold">Kỹ năng: </span>
+              {job.skills}
             </div>
-            <button
-              onClick={() => {
-                setSelectedCandidate(job);
-                setIsModalOpen(true);
-              }}
-              className="mt-3 sm:mt-0 bg-yellow-400 text-gray-900 font-bold px-4 py-2 rounded-lg shadow-md 
-                         hover:bg-yellow-300 transition"
-            >
-              Xem hồ sơ
-            </button>
+            <div>
+              <span className="font-semibold">Kinh nghiệm: </span>
+              {job.experience}
+            </div>
+            <div>
+              <span className="font-semibold">Tốt nghiệp: </span>
+              {job.graduationYear} ({job.gpa})
+            </div>
+            <div>
+              <span className="font-semibold">Phù hợp: </span>
+              <span className="text-green-300 font-bold">{job.match}</span>
+            </div>
           </div>
-        ))
-      ) : (
-        <p className="italic text-white/80">Không tìm thấy ứng viên phù hợp.</p>
-      )}
-    </div>
+        </div>
+
+        {/* Button xem hồ sơ */}
+        <div className="flex-shrink-0">
+          <button
+            onClick={() => {
+              setSelectedCandidate(job);
+              setIsModalOpen(true);
+            }}
+            className="bg-yellow-400 text-gray-900 font-bold px-5 py-2.5 rounded-lg shadow-md 
+                       hover:bg-yellow-300 transition text-sm md:text-base"
+          >
+            Xem hồ sơ
+          </button>
+        </div>
+      </div>
+    ))
+  ) : (
+    <p className="italic text-white/80 col-span-2 text-lg">
+      Không tìm thấy ứng viên phù hợp.
+    </p>
+  )}
+</div>
+
   </div>
 
   {/* Pagination */}

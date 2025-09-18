@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import JobPreviewModal from "./JobPreviewModal";
+import UpdateJobModal from "./UpdateJobModal";
 
 const RecruiterJobPosts = () => {
   const navigate = useNavigate();
@@ -9,6 +10,8 @@ const RecruiterJobPosts = () => {
   const [showPreview, setShowPreview] = useState(false);   // ✅ thêm state cho modal
   const [jobData, setJobData] = useState(null);           // ✅ lưu job đang chọn
   const jobsPerPage = 3;
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   // 👉 Giả lập dữ liệu tin đăng
   const jobPosts = [
@@ -153,7 +156,10 @@ const RecruiterJobPosts = () => {
                     {/* 👉 Nếu job.pending thì hiện nút Chỉnh sửa */}
                     {job.status === "pending" && (
                       <button
-                        onClick={() => alert("Chỉnh sửa tin đăng")}
+                        onClick={() => {
+                          setSelectedJob(job);
+                          setShowUpdateModal(true);
+                        }}
                         className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm shadow hover:bg-gray-200 transition"
                       >
                         Chỉnh sửa
@@ -163,10 +169,9 @@ const RecruiterJobPosts = () => {
                     {/* 👉 Nếu job.approved thì hiện nút Xem ứng viên (bật modal) */}
                     {job.status === "approved" && (
                       <button
-                        onClick={() => {
-                          setJobData(job);       // ✅ lưu job hiện tại
-                          setShowPreview(true);  // ✅ bật modal
-                        }}
+                        onClick={() =>
+                            navigate("/recruiter/dashboard-candidateshaveapplied", { state: { job } })
+                          } 
                         className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm shadow hover:bg-blue-200 transition"
                       >
                         Xem ứng viên
@@ -227,7 +232,7 @@ const RecruiterJobPosts = () => {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Modal xem chi tiết  */}
 {showPreview && (
   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
     <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative overflow-y-scroll max-h-[90vh] scrollbar-hide">
@@ -242,6 +247,19 @@ const RecruiterJobPosts = () => {
     </div>
   </div>
 )}
+
+      {/* Modal chỉnh sửa tin tuyển dụng */}
+{showUpdateModal && selectedJob && (
+  <UpdateJobModal
+    job={selectedJob}
+    onClose={() => setShowUpdateModal(false)}
+    onUpdate={(updatedJob) => {
+      console.log("Tin sau khi cập nhật:", updatedJob);
+      // TODO: gọi API cập nhật database
+    }}
+  />
+)}
+      
 
     </div>
   );
