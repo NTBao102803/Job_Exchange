@@ -244,7 +244,7 @@ const PostJob = () => {
       >
         ✖
       </button>
-      <JobPreviewModal job={jobData} />
+      <JobPreviewModal job={jobData}  onClose={() => setShowPreview(false)} />
     </div>
   </div>
 )}
