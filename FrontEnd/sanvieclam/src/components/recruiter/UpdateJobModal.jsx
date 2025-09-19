@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Save, Calendar, X } from "lucide-react";
 
-const UpdateJobModal = ({ job, onClose, onUpdate }) => {
-  const [jobData, setJobData] = useState(job);
+const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
+  const [jobData, setJobData] = useState({
+    ...job,
+    companyName: employer?.companyName || "", // ✅ gán công ty
+  });
 
   useEffect(() => {
-    setJobData(job);
-  }, [job]);
+    setJobData({ ...job, companyName: employer?.companyName || "" });
+  }, [job, employer]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,10 +70,11 @@ const UpdateJobModal = ({ job, onClose, onUpdate }) => {
               </label>
               <input
                 type="text"
-                name="company"
-                value={jobData.company || ""}
+                name="companyName"
+                value={jobData.companyName || ""}
                 onChange={handleChange}
-                className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                readOnly
+                className="w-full border rounded-xl px-4 py-3 bg-gray-100 shadow-sm cursor-not-allowed"
               />
             </div>
             <div>
@@ -82,7 +86,8 @@ const UpdateJobModal = ({ job, onClose, onUpdate }) => {
                 name="location"
                 value={jobData.location || ""}
                 onChange={handleChange}
-                className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                readOnly
+                className="w-full border rounded-xl px-4 py-3 bg-gray-100 shadow-sm cursor-not-allowed"
               />
             </div>
           </div>
@@ -94,8 +99,8 @@ const UpdateJobModal = ({ job, onClose, onUpdate }) => {
                 Loại việc
               </label>
               <select
-                name="type"
-                value={jobData.type || ""}
+                name="jobType"
+                value={jobData.jobType || ""}
                 onChange={handleChange}
                 className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               >

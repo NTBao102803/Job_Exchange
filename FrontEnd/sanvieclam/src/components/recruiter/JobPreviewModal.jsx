@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   MapPin,
   Clock,
@@ -8,8 +8,15 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getEmployerProfile } from "../../api/RecruiterApi";
 
 const JobPreviewModal = ({ job, onClose }) => {
+  const [employer, setEmployer] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    companyName: "",
+  });
   const displayValue = (val) => (val && val !== "" ? val : "Chưa có thông tin");
 
   const formatDate = (dateStr) => {
@@ -22,6 +29,18 @@ const JobPreviewModal = ({ job, onClose }) => {
       year: "numeric",
     });
   };
+  // ✅ gọi API lấy thông tin employer khi mở modal
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await getEmployerProfile();
+        setEmployer(res);
+      } catch (err) {
+        console.error("❌ Lỗi lấy employer profile:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   if (!job) return null;
 
@@ -57,7 +76,7 @@ const JobPreviewModal = ({ job, onClose }) => {
             </h1>
             <p className="text-lg text-gray-600 mt-1 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-indigo-500" />
-              {displayValue(job.company)}
+              {employer ? employer.companyName : "⏳ Đang tải..."}
             </p>
 
             {/* Thông tin nhanh */}
@@ -68,7 +87,7 @@ const JobPreviewModal = ({ job, onClose }) => {
               </p>
               <p className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-blue-500" />
-                {displayValue(job.type)}
+                {displayValue(job.jobType)}
               </p>
               <p className="flex items-center gap-2 text-green-600 font-medium">
                 <DollarSign className="w-5 h-5" />
@@ -126,29 +145,37 @@ const JobPreviewModal = ({ job, onClose }) => {
                 </p>
               </div>
 
-              {/* Liên hệ */}
+              {/* ✅ Thông tin liên hệ lấy từ employer profile */}
               <div>
                 <h2 className="text-xl font-semibold text-indigo-600">
                   📞 Thông tin liên hệ
                 </h2>
-                <p className="mt-2 whitespace-pre-line">
-                  Người liên hệ:{" "}
-                  <span className="font-medium">
-                    {displayValue(job.contactName)}
-                  </span>
-                </p>
-                <p className="whitespace-pre-line">
-                  Email:{" "}
-                  <span className="font-medium">
-                    {displayValue(job.contactEmail)}
-                  </span>
-                </p>
-                <p className="whitespace-pre-line">
-                  SĐT:{" "}
-                  <span className="font-medium">
-                    {displayValue(job.contactPhone)}
-                  </span>
-                </p>
+                {employer ? (
+                  <>
+                    <p className="mt-2 whitespace-pre-line">
+                      Người liên hệ:{" "}
+                      <span className="font-medium">
+                        {displayValue(employer.fullName)}
+                      </span>
+                    </p>
+                    <p>
+                      Email:{" "}
+                      <span className="font-medium">
+                        {displayValue(employer.email)}
+                      </span>
+                    </p>
+                    <p>
+                      SĐT:{" "}
+                      <span className="font-medium">
+                        {displayValue(employer.phone)}
+                      </span>
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-gray-500 mt-2">
+                    ⏳ Đang tải thông tin liên hệ...
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>

@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Calendar, Eye } from "lucide-react";
 import JobPreviewModal from "./JobPreviewModal";
+import { createJob, getEmployerProfile } from "../../api/RecruiterApi";
 
 const PostJob = () => {
   const navigate = useNavigate();
-
   const today = new Date().toISOString().split("T")[0];
 
   const [jobData, setJobData] = useState({
     title: "",
     company: "",
     location: "",
-    type: "",
+    jobType: "",
     salary: "",
     description: "",
     requirements: "",
@@ -21,24 +21,93 @@ const PostJob = () => {
     endDate: "",
   });
 
+  const [errors, setErrors] = useState({});
   const [showPreview, setShowPreview] = useState(false);
+
+  // 👉 Lấy thông tin employer từ backend
+  useEffect(() => {
+    const fetchEmployer = async () => {
+      try {
+        const employer = await getEmployerProfile();
+        setJobData((prev) => ({
+          ...prev,
+          company: employer.companyName,
+          location: employer.companyAddress,
+        }));
+      } catch (error) {
+        console.error("❌ Lỗi khi lấy employer:", error);
+        alert("Không thể tải thông tin công ty. Vui lòng thử lại!");
+      }
+    };
+    fetchEmployer();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setJobData({ ...jobData, [name]: value });
+
+    // reset lỗi khi user nhập lại
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const validate = () => {
+    let newErrors = {};
 
-    if (jobData.endDate && jobData.endDate < jobData.startDate) {
-      alert("⛔ Ngày kết thúc phải sau ngày bắt đầu!");
-      return;
+    if (!jobData.title || jobData.title.trim().length < 5) {
+      newErrors.title = "⛔ Tiêu đề công việc phải có ít nhất 5 ký tự!";
+    }
+    if (!jobData.company) {
+      newErrors.company = "⛔ Vui lòng nhập tên công ty!";
+    }
+    if (!jobData.location) {
+      newErrors.location = "⛔ Vui lòng nhập địa điểm làm việc!";
+    }
+    if (!jobData.jobType) {
+      newErrors.jobType = "⛔ Vui lòng chọn loại việc!";
+    }
+    if (!jobData.salary || jobData.salary.trim().length < 3) {
+      newErrors.salary = "⛔ Vui lòng nhập mức lương (VD: 15 - 20 triệu)!";
+    }
+    if (!jobData.description || jobData.description.trim().length < 20) {
+      newErrors.description = "⛔ Mô tả công việc phải có ít nhất 20 ký tự!";
+    }
+    if (!jobData.requirements || jobData.requirements.trim().length < 20) {
+      newErrors.requirements = "⛔ Yêu cầu ứng viên phải có ít nhất 15 ký tự!";
+    }
+    if (!jobData.benefits || jobData.benefits.trim().length < 20) {
+      newErrors.benefits = "⛔ Quyền lợi phải có ít nhất 10 ký tự!";
+    }
+    if (!jobData.startDate) {
+      newErrors.startDate = "⛔ Vui lòng chọn ngày bắt đầu!";
+    }
+    if (!jobData.endDate) {
+      newErrors.endDate = "⛔ Vui lòng chọn ngày kết thúc!";
+    } else if (jobData.endDate < jobData.startDate) {
+      newErrors.endDate = "⛔ Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!";
     }
 
-    console.log("Dữ liệu tin tuyển dụng:", jobData);
-    alert("✅ Tin tuyển dụng đang đợi nền tảng kiểm duyệt!");
-    navigate(-1);
+    return newErrors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const formErrors = validate();
+    setErrors(formErrors);
+
+    if (Object.keys(formErrors).length > 0) {
+      return; // Nếu có lỗi thì không submit
+    }
+
+    try {
+      const response = await createJob(jobData);
+      alert("✅ Tin tuyển dụng đã được gửi và đang chờ kiểm duyệt!");
+      console.log("📥 Phản hồi từ server:", response);
+      navigate("/recruiter/dashboard-recruiterjobposts");
+    } catch (error) {
+      console.error("❌ Lỗi khi tạo tin:", error);
+      alert(error.response?.data?.message || "🚨 Đăng tin thất bại!");
+    }
   };
 
   return (
@@ -64,35 +133,42 @@ const PostJob = () => {
                 placeholder="VD: Lập trình viên Backend Java"
                 className="w-full border rounded-xl px-4 py-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
+              {errors.title && (
+                <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+              )}
             </div>
 
             {/* Công ty & Địa điểm */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Công ty <span className="text-red-500">*</span>
+                  Công ty
                 </label>
                 <input
                   type="text"
                   name="company"
                   value={jobData.company}
-                  onChange={handleChange}
-                  placeholder="Tên công ty"
-                  className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  readOnly
+                  className="w-full border rounded-xl px-4 py-3 bg-gray-100 shadow-sm cursor-not-allowed"
                 />
+                {errors.company && (
+                  <p className="text-red-500 text-sm mt-1">{errors.company}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Địa điểm <span className="text-red-500">*</span>
+                  Địa điểm
                 </label>
                 <input
                   type="text"
                   name="location"
                   value={jobData.location}
-                  onChange={handleChange}
-                  placeholder="VD: Hà Nội, TP.HCM"
-                  className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  readOnly
+                  className="w-full border rounded-xl px-4 py-3 bg-gray-100 shadow-sm cursor-not-allowed"
                 />
+                {errors.location && (
+                  <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+                )}
               </div>
             </div>
 
@@ -103,8 +179,8 @@ const PostJob = () => {
                   Loại việc <span className="text-red-500">*</span>
                 </label>
                 <select
-                  name="type"
-                  value={jobData.type}
+                  name="jobType"
+                  value={jobData.jobType}
                   onChange={handleChange}
                   className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
@@ -113,6 +189,9 @@ const PostJob = () => {
                   <option value="Parttime">Parttime</option>
                   <option value="Internship">Internship</option>
                 </select>
+                {errors.jobType && (
+                  <p className="text-red-500 text-sm mt-1">{errors.jobType}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -126,6 +205,9 @@ const PostJob = () => {
                   placeholder="VD: 15 - 20 triệu"
                   className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
+                {errors.salary && (
+                  <p className="text-red-500 text-sm mt-1">{errors.salary}</p>
+                )}
               </div>
             </div>
 
@@ -142,6 +224,11 @@ const PostJob = () => {
                   readOnly
                   className="w-full border rounded-xl px-4 py-3 bg-gray-100 shadow-sm cursor-not-allowed"
                 />
+                {errors.startDate && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.startDate}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
@@ -156,6 +243,9 @@ const PostJob = () => {
                   min={jobData.startDate}
                   className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
+                {errors.endDate && (
+                  <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>
+                )}
               </div>
             </div>
 
@@ -172,6 +262,11 @@ const PostJob = () => {
                 placeholder="Nhập mô tả công việc..."
                 className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
+              {errors.description && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.description}
+                </p>
+              )}
             </div>
 
             {/* Yêu cầu */}
@@ -187,6 +282,11 @@ const PostJob = () => {
                 placeholder="Nhập yêu cầu ứng viên..."
                 className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
+              {errors.requirements && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.requirements}
+                </p>
+              )}
             </div>
 
             {/* Quyền lợi */}
@@ -202,6 +302,9 @@ const PostJob = () => {
                 placeholder="Nhập quyền lợi..."
                 className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
+              {errors.benefits && (
+                <p className="text-red-500 text-sm mt-1">{errors.benefits}</p>
+              )}
             </div>
 
             {/* Nút hành động */}
@@ -236,18 +339,21 @@ const PostJob = () => {
       </div>
 
       {showPreview && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
-      <button
-        onClick={() => setShowPreview(false)}
-        className="absolute top-3 right-3 text-gray-500 hover:text-red-500 transition"
-      >
-        ✖
-      </button>
-      <JobPreviewModal job={jobData}  onClose={() => setShowPreview(false)} />
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
+            <button
+              onClick={() => setShowPreview(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-red-500 transition"
+            >
+              ✖
+            </button>
+            <JobPreviewModal
+              job={jobData}
+              onClose={() => setShowPreview(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

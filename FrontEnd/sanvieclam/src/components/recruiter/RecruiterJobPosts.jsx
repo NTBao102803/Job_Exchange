@@ -1,63 +1,75 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import JobPreviewModal from "./JobPreviewModal";
 import UpdateJobModal from "./UpdateJobModal";
+import {
+  getAllJobs,
+  getEmployerProfile,
+  updateJob,
+} from "../../api/RecruiterApi";
 
 const RecruiterJobPosts = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [showPreview, setShowPreview] = useState(false);   // ✅ thêm state cho modal
-  const [jobData, setJobData] = useState(null);           // ✅ lưu job đang chọn
+  const [showPreview, setShowPreview] = useState(false); // ✅ thêm state cho modal
+  const [jobData, setJobData] = useState(null); // ✅ lưu job đang chọn
   const jobsPerPage = 3;
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
 
-  // 👉 Giả lập dữ liệu tin đăng
-  const jobPosts = [
-    {
-      id: 1,
-      title: "Tuyển Lập trình viên Backend (Java, Spring Boot)",
-      company: "Công ty ABC",
-      location: "Hà Nội",
-      type: "Fulltime",
-      salary: "15 - 20 triệu",
-      status: "pending",
-    },
-    {
-      id: 2,
-      title: "Tuyển Thực tập sinh Frontend ReactJS",
-      company: "Công ty ABC",
-      location: "Đà Nẵng",
-      type: "Parttime",
-      salary: "Hỗ trợ 3 triệu",
-      status: "approved",
-    },
-    {
-      id: 3,
-      title: "Tuyển Data Engineer",
-      company: "Công ty ABC",
-      location: "TP. HCM",
-      type: "Fulltime",
-      salary: "20 - 25 triệu",
-      status: "rejected",
-    },
-    {
-      id: 4,
-      title: "Tuyển Chuyên viên Marketing",
-      company: "Công ty ABC",
-      location: "Hà Nội",
-      type: "Fulltime",
-      salary: "12 - 18 triệu",
-      status: "approved",
-    },
-  ];
+  // ✅ State để lưu job từ API
+  const [jobPosts, setJobPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [employer, setEmployer] = useState({
+    companyName: "",
+  });
+
+  // 👉 Gọi API lấy job list
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const data = await getAllJobs();
+        setJobPosts(data);
+      } catch (err) {
+        console.error("❌ Lỗi khi tải job:", err);
+        setError("Không thể tải danh sách tin tuyển dụng.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, []);
+  // 👉 Lấy thông tin employer từ backend
+  useEffect(() => {
+    const fetchEmployer = async () => {
+      try {
+        const data = await getEmployerProfile();
+        setEmployer(data); // ✅ lưu vào state employer
+      } catch (error) {
+        console.error("❌ Lỗi khi lấy employer:", error);
+        alert("Không thể tải thông tin công ty. Vui lòng thử lại!");
+      }
+    };
+    fetchEmployer();
+  }, []);
 
   // 👉 Map trạng thái ra style + text
   const statusMap = {
-    pending: { text: "⏳ Đang chờ kiểm duyệt", className: "bg-yellow-100 text-yellow-700" },
-    approved: { text: "✅ Kiểm duyệt thành công", className: "bg-green-100 text-green-700" },
-    rejected: { text: "❌ Kiểm duyệt thất bại", className: "bg-red-100 text-red-700" },
+    PENDING: {
+      text: "⏳ Đang chờ kiểm duyệt",
+      className: "bg-yellow-100 text-yellow-700",
+    },
+    APPROVED: {
+      text: "✅ Kiểm duyệt thành công",
+      className: "bg-green-100 text-green-700",
+    },
+    REJECTED: {
+      text: "❌ Kiểm duyệt thất bại",
+      className: "bg-red-100 text-red-700",
+    },
   };
 
   // 👉 Lọc theo trạng thái
@@ -123,11 +135,11 @@ const RecruiterJobPosts = () => {
                   >
                     {job.title}
                   </h3>
-                  <p className="text-sm text-gray-600">{job.company}</p>
-                  <p className="text-sm text-gray-600">
-                    📍 {job.location} | ⏰ {job.type}
+                  <p className="text-s text-gray-600">{employer.companyName}</p>
+                  <p className="text-s text-gray-600">
+                    📍 {job.location} | ⏰ {job.jobType}
                   </p>
-                  <p className="text-sm text-green-600 font-medium">
+                  <p className="text-s text-green-600 font-medium">
                     💰 {job.salary}
                   </p>
                 </div>
@@ -145,19 +157,20 @@ const RecruiterJobPosts = () => {
                     {/* Luôn có nút Xem chi tiết */}
                     <button
                       onClick={() => {
-                          setJobData(job);       // ✅ lưu job hiện tại
-                          setShowPreview(true);  // ✅ bật modal
-                        }}
+                        setJobData(job); // ✅ lưu job hiện tại
+                        setShowPreview(true); // ✅ bật modal
+                      }}
                       className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-3 py-1.5 rounded-lg text-sm shadow-md hover:from-indigo-600 hover:to-purple-600 transition"
                     >
                       Xem chi tiết
                     </button>
 
                     {/* 👉 Nếu job.pending thì hiện nút Chỉnh sửa */}
-                    {job.status === "pending" && (
+                    {job.status === "PENDING" && (
                       <button
                         onClick={() => {
                           setSelectedJob(job);
+
                           setShowUpdateModal(true);
                         }}
                         className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm shadow hover:bg-gray-200 transition"
@@ -167,11 +180,14 @@ const RecruiterJobPosts = () => {
                     )}
 
                     {/* 👉 Nếu job.approved thì hiện nút Xem ứng viên (bật modal) */}
-                    {job.status === "approved" && (
+                    {job.status === "APPROVED" && (
                       <button
                         onClick={() =>
-                            navigate("/recruiter/dashboard-candidateshaveapplied", { state: { job } })
-                          } 
+                          navigate(
+                            "/recruiter/dashboard-candidateshaveapplied",
+                            { state: { job } }
+                          )
+                        }
                         className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm shadow hover:bg-blue-200 transition"
                       >
                         Xem ứng viên
@@ -233,34 +249,45 @@ const RecruiterJobPosts = () => {
       )}
 
       {/* Modal xem chi tiết  */}
-{showPreview && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative overflow-y-scroll max-h-[90vh] scrollbar-hide">
-
-      <button
-        onClick={() => setShowPreview(false)}
-        className="absolute top-3 right-3 text-gray-500 hover:text-red-500 transition"
-      >
-        ✖
-      </button>
-      <JobPreviewModal job={jobData}  onClose={() => setShowPreview(false)} />
-    </div>
-  </div>
-)}
+      {showPreview && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative overflow-y-scroll max-h-[90vh] scrollbar-hide">
+            <button
+              onClick={() => setShowPreview(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-red-500 transition"
+            >
+              ✖
+            </button>
+            <JobPreviewModal
+              job={jobData}
+              onClose={() => setShowPreview(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Modal chỉnh sửa tin tuyển dụng */}
-{showUpdateModal && selectedJob && (
-  <UpdateJobModal
-    job={selectedJob}
-    onClose={() => setShowUpdateModal(false)}
-    onUpdate={(updatedJob) => {
-      console.log("Tin sau khi cập nhật:", updatedJob);
-      // TODO: gọi API cập nhật database
-    }}
-  />
-)}
-      
+      {showUpdateModal && selectedJob && (
+        <UpdateJobModal
+          job={selectedJob}
+          employer={employer}
+          onClose={() => setShowUpdateModal(false)}
+          onUpdate={async (updatedJob) => {
+            try {
+              const result = await updateJob(updatedJob.id, updatedJob);
 
+              // cập nhật lại state để hiển thị ngay
+              setJobPosts((prev) =>
+                prev.map((j) => (j.id === result.id ? result : j))
+              );
+
+              alert("✅ Cập nhật tin tuyển dụng thành công!");
+            } catch (error) {
+              alert("❌ Cập nhật thất bại!");
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
