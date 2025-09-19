@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Eye, Edit, Trash2, User, Search } from "lucide-react";
+import { Eye, Edit, Trash2, User, Search, Lock, Unlock } from "lucide-react";
 import CandidateProfileModal from "../../components/candidate/CandidateProfileModal";
-import UpdateCandidateProfileModal from "../../components/candidate/UpdateCandidateProfileModal";
-
 const AdminCandidate = () => {
   const [candidates, setCandidates] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
   const [searchEmail, setSearchEmail] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Tất cả");
 
   // 👉 Modal state
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [candidateToToggle, setCandidateToToggle] = useState(null);
+
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -24,7 +24,7 @@ const AdminCandidate = () => {
           id: 1,
           fullName: "Nguyễn Văn A",
           email: "vana@example.com",
-          status: "Đang tìm việc",
+          status: "Tạm thời vô hiệu hoá",
           major: "Công nghệ thông tin",
           skills: "React, Node.js, SQL",
           experience: "2 năm",
@@ -45,7 +45,7 @@ const AdminCandidate = () => {
           id: 2,
           fullName: "Trần Thị B",
           email: "thib@example.com",
-          status: "Đang làm việc",
+          status: "Đang hoạt động",
           major: "Quản trị kinh doanh",
           skills: "Excel, PowerBI",
           experience: "1 năm",
@@ -66,7 +66,7 @@ const AdminCandidate = () => {
           id: 3,
           fullName: "Trần Thị B",
           email: "thib@example.com",
-          status: "Đang làm việc",
+          status: "Tạm thời vô hiệu hoá",
           major: "Quản trị kinh doanh",
           skills: "Excel, PowerBI",
           experience: "1 năm",
@@ -87,7 +87,7 @@ const AdminCandidate = () => {
           id: 4,
           fullName: "Trần Thị B",
           email: "thib@example.com",
-          status: "Đang làm việc",
+          status: "Tạm thời vô hiệu hoá",
           major: "Quản trị kinh doanh",
           skills: "Excel, PowerBI",
           experience: "1 năm",
@@ -108,7 +108,7 @@ const AdminCandidate = () => {
           id: 5,
           fullName: "Trần Thị B",
           email: "thib@example.com",
-          status: "Đang làm việc",
+          status: "Đang hoạt động",
           major: "Quản trị kinh doanh",
           skills: "Excel, PowerBI",
           experience: "1 năm",
@@ -133,34 +133,43 @@ const AdminCandidate = () => {
 
   const filteredCandidates = candidates.filter((c) => {
     const matchEmail = c.email.toLowerCase().includes(searchEmail.toLowerCase());
-    const matchStatus = filterStatus === "Tất cả" ? true : c.status === filterStatus;
-    return matchEmail && matchStatus;
+    return matchEmail ;
   });
 
   const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentCandidates = filteredCandidates.slice(startIndex, startIndex + itemsPerPage);
 
-  // 👉 Mở modal xem hồ sơ
-  const handleView = (candidate) => {
-    setSelectedCandidate(candidate);
-    setIsViewModalOpen(true);
+  // Mở modal xác nhận thay đổi trạng thái
+  const handleStatusClick = (candidate) => {
+    setCandidateToToggle(candidate);
+    setIsConfirmModalOpen(true);
   };
 
-  // 👉 Mở modal chỉnh sửa
-  const handleEdit = (candidate) => {
-    setSelectedCandidate(candidate);
-    setIsEditModalOpen(true);
+  const confirmToggleStatus = () => {
+    if (candidateToToggle) {
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === candidateToToggle.id
+            ? {
+                ...c,
+                status:
+                  c.status === "Đang hoạt động"
+                    ? "Tạm thời vô hiệu hóa"
+                    : "Đang hoạt động",
+              }
+            : c
+        )
+      );
+      setCandidateToToggle(null);
+      setIsConfirmModalOpen(false);
+    }
   };
 
-  // 👉 Cập nhật candidate trong state sau khi sửa
-  const handleUpdateCandidate = (updatedCandidate) => {
-    setCandidates((prev) =>
-      prev.map((c) => (c.id === updatedCandidate.id ? updatedCandidate : c))
-    );
-    setIsEditModalOpen(false);
+  const cancelToggleStatus = () => {
+    setCandidateToToggle(null);
+    setIsConfirmModalOpen(false);
   };
-
   return (
     <div className="p-1">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Quản lý ứng viên</h1>
@@ -181,18 +190,6 @@ const AdminCandidate = () => {
           />
         </div>
 
-        <select
-          value={filterStatus}
-          onChange={(e) => {
-            setFilterStatus(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-2 rounded-lg shadow bg-white text-gray-700 border w-full sm:w-1/3"
-        >
-          <option value="Tất cả">Tất cả</option>
-          <option value="Đang tìm việc">Đang tìm việc</option>
-          <option value="Đang làm việc">Đang làm việc</option>
-        </select>
       </div>
 
       {/* Bảng ứng viên */}
@@ -203,7 +200,6 @@ const AdminCandidate = () => {
               <th className="p-4">ID</th>
               <th className="p-4">Ứng viên</th>
               <th className="p-4">Thông tin</th>
-              <th className="p-4">Trạng thái</th>
               <th className="p-4 text-center">Hành động</th>
             </tr>
           </thead>
@@ -225,18 +221,23 @@ const AdminCandidate = () => {
                   <p className="truncate"><span className="font-semibold">Kỹ năng: </span>{c.skills}</p>
                   <p className="truncate"><span className="font-semibold">Tốt nghiệp: </span>{c.graduationYear} ({c.gpa})</p>
                 </td>
-                <td className="p-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${c.status === "Đang tìm việc" ? "bg-yellow-400 text-gray-900" : "bg-green-500 text-white"}`}>{c.status}</span>
-                </td>
                 <td className="p-4 text-center space-x-2">
                   <button onClick={() => handleView(c)} className="p-2 bg-white/30 rounded-lg hover:bg-white/40 text-white transition">
                     <Eye size={18} />
                   </button>
-                  <button onClick={() => handleEdit(c)} className="p-2 bg-yellow-400 rounded-lg hover:bg-yellow-300 text-gray-900 transition">
-                    <Edit size={18} />
-                  </button>
                   <button className="p-2 bg-red-500 rounded-lg hover:bg-red-400 text-white transition">
                     <Trash2 size={18} />
+                  </button>
+                  {/* Nút thay đổi trạng thái */}
+                  <button
+                    onClick={() => handleStatusClick(c)}
+                    className={`p-2 rounded-lg transition ${
+                      c.status === "Đang hoạt động"
+                        ? "bg-green-500 hover:bg-green-400 text-white"
+                        : "bg-red-500 hover:bg-red-400 text-white"
+                    }`}
+                  >
+                    {c.status === "Đang hoạt động" ? <Unlock size={18} /> : <Lock size={18} />}
                   </button>
                 </td>
               </tr>
@@ -263,14 +264,36 @@ const AdminCandidate = () => {
         onClose={() => setIsViewModalOpen(false)}
         candidate={selectedCandidate}
       />
-
-      {/* Modal chỉnh sửa hồ sơ */}
-      <UpdateCandidateProfileModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        candidate={selectedCandidate}
-        onUpdate={handleUpdateCandidate}
-      />
+      {/* Modal xác nhận thay đổi trạng thái */}
+      {isConfirmModalOpen && candidateToToggle && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 text-center">
+            <h2 className="text-lg font-bold mb-4">
+              {candidateToToggle.status === "Đang hoạt động" ? "Vô hiệu hóa tài khoản" : "Kích hoạt tài khoản"}
+            </h2>
+            <p className="mb-6">
+              {candidateToToggle.status === "Đang hoạt động"
+                ? `Bạn có muốn vô hiệu hóa tài khoản của ${candidateToToggle.fullName}?`
+                : `Bạn có muốn kích hoạt lại tài khoản của ${candidateToToggle.fullName}?`}
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={confirmToggleStatus}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400"
+              >
+                Đồng ý
+              </button>
+              <button
+                onClick={cancelToggleStatus}
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-200"
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 };
