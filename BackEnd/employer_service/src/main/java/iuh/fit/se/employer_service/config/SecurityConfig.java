@@ -29,7 +29,10 @@ public class SecurityConfig {
                                 "/api/employer/**",
                                 "/api/employers/by-email/**"
                                 ).hasRole("EMPLOYER")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(
+                                "/api/admin/**",
+                                "/api/admin/employers/**")
+                        .hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

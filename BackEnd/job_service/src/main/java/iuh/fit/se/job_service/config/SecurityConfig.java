@@ -29,7 +29,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/jobs/create", "/api/jobs/my/**").hasRole("USER")
 
                         // Admin
-                        .requestMatchers("/api/jobs/admin/**").hasRole("ADMIN")
+                        .requestMatchers(
+                                "/api/jobs/admin/**" ,
+                                "/api/admin/employers/**")
+                        .hasRole("ADMIN")
 
                         // Ai cũng xem được list job
                         .requestMatchers("/api/jobs", "/api/jobs/**").permitAll()

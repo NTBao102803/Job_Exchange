@@ -12,10 +12,23 @@ public class FeignErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
-        log.error("❌ Feign error [{}]: status={} reason={}", methodKey, response.status(), response.reason());
+        String url = response.request() != null ? response.request().url() : "unknown-url";
+
+        // methodKey có dạng: EmployerClient#approveEmployer(Long)
+        // => ta lấy tên class feignClient = EmployerClient
+        String clientName = methodKey.contains("#") ? methodKey.split("#")[0] : "unknown-client";
+
+        log.error("❌ Feign error [{}]: status={} reason={} url={}",
+                methodKey, response.status(), response.reason(), url);
+
         if (response.status() == 403) {
-            return new RuntimeException("Forbidden: bạn không có quyền gọi API job-service");
+            return new RuntimeException("Forbidden: bạn không có quyền gọi API từ " + clientName);
+        } else if (response.status() == 404) {
+            return new RuntimeException("Not Found: API từ " + clientName + " không tồn tại");
+        } else if (response.status() == 503) {
+            return new RuntimeException("Service Unavailable: " + clientName + " không khả dụng");
         }
+
         return new ErrorDecoder.Default().decode(methodKey, response);
     }
 }

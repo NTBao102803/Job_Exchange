@@ -65,7 +65,7 @@ public class EmployerServiceImpl implements EmployerService {
         Employer employer = employerRepository.findById(employerId)
                 .orElseThrow(() -> new RuntimeException("Employer không tồn tại"));
 
-        if(employer.getStatus() != EmployerStatus.WAITING_APPROVAL) {
+        if(employer.getStatus() != EmployerStatus.PENDING) {
             throw new RuntimeException("Employer chưa hoàn tất hồ sơ");
         }
         employer.setStatus(EmployerStatus.APPROVED);
