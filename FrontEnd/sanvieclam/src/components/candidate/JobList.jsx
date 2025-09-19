@@ -20,6 +20,8 @@ const JobList = () => {
       type: "Fulltime",
       category: "Công nghệ thông tin",
       salary: "15 - 20 triệu",
+      requirements: "Python, SQL, ETL",
+
     },
     {
       id: 2,
@@ -29,6 +31,8 @@ const JobList = () => {
       type: "Parttime",
       category: "Kinh doanh",
       salary: "30k/giờ",
+      requirements: "Python, SQL, ETL",
+
     },
     {
       id: 3,
@@ -38,6 +42,8 @@ const JobList = () => {
       type: "Parttime",
       category: "Công nghệ thông tin",
       salary: "Hỗ trợ 3 triệu",
+      requirements: "Python, SQL, ETL",
+
     },
     {
       id: 4,
@@ -47,6 +53,7 @@ const JobList = () => {
       type: "Fulltime",
       category: "Công nghệ thông tin",
       salary: "20 - 25 triệu",
+      requirements: "Python, SQL, ETL",
     },
     {
       id: 5,
@@ -56,6 +63,8 @@ const JobList = () => {
       type: "Fulltime",
       category: "Marketing",
       salary: "12 - 18 triệu",
+      requirements: "Python, SQL, ETL",
+
     },
     {
       id: 6,
@@ -65,6 +74,8 @@ const JobList = () => {
       type: "Fulltime",
       category: "Kinh doanh",
       salary: "20 - 30 triệu",
+      requirements: "Python, SQL, ETL",
+
     },
     {
       id: 7,
@@ -74,6 +85,8 @@ const JobList = () => {
       type: "Fulltime",
       category: "Kinh doanh",
       salary: "20 - 30 triệu",
+      requirements: "Python, SQL, ETL,aws, kubernetes, terraform,aws, kubernetes, terraform,aws, kubernetes, terraform",
+
     },
   ];
 
@@ -214,8 +227,7 @@ const JobList = () => {
               size={20}
             />
           </div>
-
-          {/* Danh sách job */}
+          {/* Danh sách job */} 
           <div className="space-y-4">
             {currentJobs.length > 0 ? (
               currentJobs.map((job) => (
@@ -223,31 +235,53 @@ const JobList = () => {
                   key={job.id}
                   className="bg-white rounded-xl border border-indigo-200 shadow-md p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:shadow-xl hover:scale-[1.01] transition transform"
                 >
-                  <div>
-                    <h3 className="text-lg font-semibold text-indigo-700"
-                        onClick={() => navigate(`/candidate/jobs/${job.id}`, { state: { job } })}>
+                  {/* Thông tin bên trái */}
+                  <div className="max-w-xl">
+                    <h3
+                      className="text-lg font-semibold text-indigo-700 truncate cursor-pointer"
+                      onClick={() =>
+                        navigate(`/candidate/jobs/${job.id}`, { state: { job } })
+                      }
+                      title={job.title} // hover hiển thị đầy đủ
+                    >
                       {job.title}
                     </h3>
-                    <p className="text-sm text-gray-600">{job.company}</p>
+                    <p className="text-sm text-gray-600 truncate" title={job.company}>
+                      {job.company}
+                    </p>
                     <p className="text-sm text-gray-600">
                       📍 {job.location} | ⏰ {job.type}
                     </p>
-                    <p className="text-sm text-green-600 font-medium">
-                      💰 {job.salary}
-                    </p>
+                    <p className="text-sm text-green-600 font-medium">💰 {job.salary}</p>
+
+                    {/* Thêm kỹ năng */}
+                    {job.requirements && job.requirements.length > 0 && (
+                      <p
+                        className="text-sm text-gray-700 truncate"
+                        title={job.requirements}
+                      >
+                        🛠 {job.requirements}
+                      </p>
+
+                    )}
                   </div>
-                  <button   onClick={() => navigate(`/candidate/jobs/${job.id}`, { state: { job } })}
-                            className="mt-3 sm:mt-0 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg shadow-md hover:from-indigo-600 hover:to-purple-600 transition">
+
+                  {/* Nút ứng tuyển */}
+                  <button
+                    onClick={() =>
+                      navigate(`/candidate/jobs/${job.id}`, { state: { job } })
+                    }
+                    className="mt-3 sm:mt-0 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg shadow-md hover:from-indigo-600 hover:to-purple-600 transition"
+                  >
                     Ứng tuyển
                   </button>
                 </div>
               ))
             ) : (
-              <p className="text-gray-600 italic">
-                Không tìm thấy công việc phù hợp.
-              </p>
+              <p className="text-gray-600 italic">Không tìm thấy công việc phù hợp.</p>
             )}
           </div>
+
         </div>
       </div>
 

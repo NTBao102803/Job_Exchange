@@ -23,7 +23,7 @@ export default function DashboardPostJob() {
     navigate("/recruiter/dashboard-smartcandidatesuggestionslist");
   };
   const goQLBD = () => {  
-    navigate("/recruiter/dashboard-recruiter#quan-ly-bai-dang");
+    navigate("/recruiter/dashboard-recruiterjobposts");
   };
   
 

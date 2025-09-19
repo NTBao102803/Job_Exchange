@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaderRecruiter from "../../components/recruiter/HeaderRecruiter";
-import RecruiterProfile from "../../components/recruiter/RecruiterProfile";
+import CandidatesHaveApplied from "../../components/recruiter/CandidatesHaveApplied";
 import Footer from "../../components/Footer";
 
-export default function DashboardCandidateProfile() {
+export default function DashboardCandidateshaveApplied() {
   const navigate = useNavigate();
   const footerRef = useRef(null);
   
@@ -25,6 +25,7 @@ export default function DashboardCandidateProfile() {
   const goQLBD = () => {  
     navigate("/recruiter/dashboard-recruiterjobposts");
   };
+  
 
   return (
     <div>
@@ -33,7 +34,7 @@ export default function DashboardCandidateProfile() {
                        onSmartCandidate={goSmartCandidate}
                        onQLBD={goQLBD}
                        onFooter={scrollToFooter} />
-      <RecruiterProfile/>
+      <CandidatesHaveApplied/>
       <div ref={footerRef}>
         <Footer/>
       </div>

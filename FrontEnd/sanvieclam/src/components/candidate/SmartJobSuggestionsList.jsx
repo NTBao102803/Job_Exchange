@@ -10,7 +10,7 @@ const smartJobs = [
     location: "Hà Nội",
     type: "Fulltime",
     salary: "25 - 35 triệu",
-    skills: "Python, TensorFlow, ML",
+    skills: "Python, TensorFlow, ML,Python, TensorFlow, ML,Python, TensorFlow, ML,Python, TensorFlow, ML,Python, TensorFlow, ML",
     match: "95%",
   },
   {
@@ -59,7 +59,7 @@ const SmartJobSuggestionsList = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const jobsPerPage = 3;
+  const jobsPerPage = 4;
 
   const filteredJobs = smartJobs.filter((job) =>
     job.title.toLowerCase().includes(search.toLowerCase())
@@ -71,8 +71,8 @@ const SmartJobSuggestionsList = () => {
   const currentJobs = filteredJobs.slice(startIndex, endIndex);
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 pt-32 pb-32 px-6 relative text-white">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 pt-40 pb-32 px-6 relative text-white">
+      <div className="max-w-6xl mx-auto space-y-8">
         {/* Search */}
         <div className="relative">
           <input
@@ -90,7 +90,7 @@ const SmartJobSuggestionsList = () => {
         </div>
 
         {/* Danh sách job */}
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {currentJobs.length > 0 ? (
             currentJobs.map((job) => (
               <div
@@ -102,20 +102,26 @@ const SmartJobSuggestionsList = () => {
               >
                 <div>
                   <h3
-                    className="text-lg font-semibold text-yellow-300 cursor-pointer"
+                    className="text-xl font-semibold text-yellow-300 cursor-pointer"
                     onClick={() => navigate(`/candidate/jobs/${job.id}`, { state: { job } })}
                   >
                     {job.title}
                   </h3>
-                  <p className="text-sm opacity-90">{job.company}</p>
-                  <p className="text-sm opacity-90">
+                  <p className="text-x opacity-90">{job.company}</p>
+                  <p className="text-x opacity-90">
                     📍 {job.location} | ⏰ {job.type}
                   </p>
-                  <p className="text-sm text-green-300 font-medium">💰 {job.salary}</p>
-                  <p className="text-xs mt-1">
-                    <span className="font-semibold">Kỹ năng:</span> {job.skills}
+                  <p className="text-x text-green-300 font-medium">💰 {job.salary}</p>
+                  <p className="text-x mt-1 flex items-center">
+                    <span className="font-semibold mr-1">Kỹ năng:</span>
+                    <span
+                      className="truncate max-w-[220px] whitespace-nowrap"
+                      title={job.skills} // hover để xem đủ nội dung
+                    >
+                      {job.skills}
+                    </span>
                   </p>
-                  <p className="text-xs">
+                  <p className="text-x">
                     <span className="font-semibold">Phù hợp:</span>{" "}
                     <span className="text-green-400 font-bold">{job.match}</span>
                   </p>
@@ -136,7 +142,7 @@ const SmartJobSuggestionsList = () => {
       </div>
 
       {/* Pagination */}
-      <div className="sticky bottom-0 left-0 w-full bg-white/10 backdrop-blur-xl border-t border-white/20 py-3 mt-6 shadow-inner">
+      <div className="sticky bottom-0 left-0 w-full bg-white/10 backdrop-blur-xl border-t border-white/20 py-3 mt-8 shadow-inner">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-white">
           <p className="text-sm mb-2 md:mb-0">
             Đang xem {startIndex + 1} - {endIndex} trên tổng {filteredJobs.length} công việc

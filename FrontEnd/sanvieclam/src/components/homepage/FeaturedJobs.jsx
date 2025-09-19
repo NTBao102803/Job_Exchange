@@ -8,7 +8,7 @@ const jobs = [
     company: "Tech Corp",
     salary: "15 - 20 triệu",
     language: "JavaScript, React",
-    tools: "VSCode, Git",
+    tools: "VSCode, Git,VSCode, Git,VSCode, Git,VSCode, Git,VSCode, Git,VSCode, Git",
     image: "/images/job1.jpg",
     hot: true,
   },
@@ -80,9 +80,26 @@ const FeaturedJobs = ({ onStartClick,onJob }) => {
                 <span className="text-sm">{job.company}</span>
                 <div className="text-sm font-medium mt-2">{job.salary}</div>
                 <div className="mt-2 text-xs space-y-1">
-                  <div><span className="font-semibold">Ngôn ngữ:</span> {job.language}</div>
-                  <div><span className="font-semibold">Công cụ:</span> {job.tools}</div>
+                  <div className="flex">
+                    <span className="font-semibold mr-1">Ngôn ngữ:</span>
+                    <span 
+                      className="truncate max-w-[180px] whitespace-nowrap" 
+                      title={job.language}
+                    >
+                      {job.language}
+                    </span>
+                  </div>
+                  <div className="flex">
+                    <span className="font-semibold mr-1">Công cụ:</span>
+                    <span 
+                      className="truncate max-w-[180px] whitespace-nowrap" 
+                      title={job.tools}
+                    >
+                      {job.tools}
+                    </span>
+                  </div>
                 </div>
+
               </div>
 
               <div className="flex justify-end mt-4">
