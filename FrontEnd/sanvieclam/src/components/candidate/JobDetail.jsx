@@ -110,36 +110,25 @@ const JobDetail = () => {
             </div>
 
             {/* Yêu cầu */}
-            <div>
-              <h2 className="text-xl font-semibold text-indigo-600">
-                ✅ Yêu cầu ứng viên
-              </h2>
-              {job.requirements && job.requirements.length > 0 ? (
-                <ul className="list-disc pl-6 mt-2 space-y-1">
-                  {job.requirements.map((req, idx) => (
-                    <li key={idx}>{req}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-gray-500">Chưa có thông tin</p>
-              )}
-            </div>
+              <div>
+                <h2 className="text-xl font-semibold text-indigo-600">
+                  ✅ Yêu cầu ứng viên
+                </h2>
+                <p className="mt-2">
+                  {displayValue(job.requirements)}
+                </p>
+              </div>
 
-            {/* Quyền lợi */}
-            <div>
-              <h2 className="text-xl font-semibold text-indigo-600">
-                🎁 Quyền lợi
-              </h2>
-              {job.benefits && job.benefits.length > 0 ? (
-                <ul className="list-disc pl-6 mt-2 space-y-1">
-                  {job.benefits.map((benefit, idx) => (
-                    <li key={idx}>{benefit}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-gray-500">Chưa có thông tin</p>
-              )}
-            </div>
+              {/* Quyền lợi */}
+              <div>
+                <h2 className="text-xl font-semibold text-indigo-600">
+                  🎁 Quyền lợi
+                </h2>
+                <p className="mt-2">
+                  {displayValue(job.benefits)}
+                </p>
+              </div>
+
           </div>
           {/* Liên hệ */} 
           <div> 

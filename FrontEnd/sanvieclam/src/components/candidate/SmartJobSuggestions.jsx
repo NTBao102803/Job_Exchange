@@ -16,7 +16,7 @@ const smartJobs = [
     title: "Data Scientist",
     company: "Insight Global",
     salary: "22 - 30 triệu",
-    skills: "R, Python, SQL",
+    skills: "R, Python, SQL,AWS, Kubernetes, Terraform,AWS, Kubernetes, Terraform",
     match: "90%",
     image: "/images/ai-job2.jpg",
   },
@@ -73,12 +73,21 @@ const SmartJobSuggestions = () => {
                 <span className="text-sm opacity-90">{job.company}</span>
                 <div className="text-sm font-medium mt-2 text-yellow-300">{job.salary}</div>
                 <div className="mt-3 text-xs space-y-1">
-                  <div><span className="font-semibold">Kỹ năng:</span> {job.skills}</div>
+                  {/* Kỹ năng */}
+                  <div
+                    className="truncate max-w-[200px] whitespace-nowrap"
+                    title={job.skills} // tooltip hiện đủ khi hover
+                  >
+                    <span className="font-semibold">Kỹ năng: </span> {job.skills}
+                  </div>
+
+                  {/* Phù hợp */}
                   <div>
                     <span className="font-semibold">Phù hợp: </span>
                     <span className="text-green-300 font-bold">{job.match}</span>
                   </div>
                 </div>
+
               </div>
 
               <div className="flex justify-end mt-4">

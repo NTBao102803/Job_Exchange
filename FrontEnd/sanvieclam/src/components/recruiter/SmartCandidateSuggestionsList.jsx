@@ -59,7 +59,7 @@ const smartJobs = [
     graduationYear: "2018",
     experience: "4 năm làm Cloud Architect",
     projects: "Triển khai hệ thống AWS cho doanh nghiệp",
-    skills: "AWS, Kubernetes, Terraform",
+    skills: "AWS, Kubernetes, Terraform,AWS, Kubernetes, Terraform,AWS, Kubernetes, Terraform",
     certificates: "AWS Solution Architect",
     careerGoal: "Kiến trúc sư Cloud hàng đầu",
     hobbies: "Chạy bộ, bóng đá",
@@ -164,23 +164,24 @@ const SmartJobSuggestionsList = () => {
           </h3>
           <span className="text-base opacity-90">{job.major}</span>
           <div className="mt-2 text-sm md:text-base space-y-1">
-            <div>
+            <div className="truncate max-w-[220px]">
               <span className="font-semibold">Kỹ năng: </span>
               {job.skills}
             </div>
-            <div>
+            <div className="truncate max-w-[220px]">
               <span className="font-semibold">Kinh nghiệm: </span>
               {job.experience}
             </div>
-            <div>
+            <div className="truncate max-w-[220px]">
               <span className="font-semibold">Tốt nghiệp: </span>
               {job.graduationYear} ({job.gpa})
             </div>
-            <div>
+            <div className="truncate max-w-[220px]">
               <span className="font-semibold">Phù hợp: </span>
               <span className="text-green-300 font-bold">{job.match}</span>
             </div>
           </div>
+
         </div>
 
         {/* Button xem hồ sơ */}

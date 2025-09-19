@@ -97,25 +97,28 @@ const SmartCandidateSuggestions = () => {
                 </h3>
                 <span className="text-sm opacity-90">{candidate.major}</span>
                 <div className="mt-3 text-xs space-y-1">
-                  <div>
+                  <div className="truncate max-w-[200px]">
                     <span className="font-semibold">Kỹ năng: </span>
                     {candidate.skills}
                   </div>
-                  <div>
+                  <div className="truncate max-w-[200px]">
                     <span className="font-semibold">Kinh nghiệm: </span>
                     {candidate.experience}
                   </div>
-                  <div>
+                  <div className="truncate max-w-[200px]">
                     <span className="font-semibold">Tốt nghiệp: </span>
                     {candidate.graduationYear} ({candidate.gpa})
                   </div>
-                  <div>
+                  <div className="truncate max-w-[200px]">
                     <span className="font-semibold">Phù hợp: </span>
-                    <span className="text-green-300 font-bold">
-                      {candidate.match}
-                    </span>
+                    <span className="text-green-300 font-bold">{candidate.match}</span>
+                  </div>
+                  <div className="truncate max-w-[200px]">
+                    <span className="font-semibold">Social: </span>
+                    {candidate.social}
                   </div>
                 </div>
+
               </div>
 
               {/* Nút mở modal */}

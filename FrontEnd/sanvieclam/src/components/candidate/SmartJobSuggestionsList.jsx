@@ -10,7 +10,7 @@ const smartJobs = [
     location: "Hà Nội",
     type: "Fulltime",
     salary: "25 - 35 triệu",
-    skills: "Python, TensorFlow, ML",
+    skills: "Python, TensorFlow, ML,Python, TensorFlow, ML,Python, TensorFlow, ML,Python, TensorFlow, ML,Python, TensorFlow, ML",
     match: "95%",
   },
   {
@@ -112,8 +112,14 @@ const SmartJobSuggestionsList = () => {
                     📍 {job.location} | ⏰ {job.type}
                   </p>
                   <p className="text-x text-green-300 font-medium">💰 {job.salary}</p>
-                  <p className="text-x mt-1">
-                    <span className="font-semibold">Kỹ năng:</span> {job.skills}
+                  <p className="text-x mt-1 flex items-center">
+                    <span className="font-semibold mr-1">Kỹ năng:</span>
+                    <span
+                      className="truncate max-w-[220px] whitespace-nowrap"
+                      title={job.skills} // hover để xem đủ nội dung
+                    >
+                      {job.skills}
+                    </span>
                   </p>
                   <p className="text-x">
                     <span className="font-semibold">Phù hợp:</span>{" "}
