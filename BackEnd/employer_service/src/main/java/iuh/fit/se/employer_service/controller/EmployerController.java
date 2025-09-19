@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/employers")
 public class EmployerController {
@@ -19,6 +21,13 @@ public class EmployerController {
     public ResponseEntity<String> requestOtp(@RequestBody EmployerRegisterRequest request) {
         employerService.requestOtp(request);
         return ResponseEntity.ok("OTP đã được gửi tới email của bạn");
+    }
+
+    @GetMapping("/id/{id}")
+    public ResponseEntity<Employer> getEmployerById(@PathVariable Long id) {
+        return employerService.getEmployerById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/verify-otp")

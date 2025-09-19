@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   CalendarDays,
 } from "lucide-react";
+import { getEmployerById } from "../../api/JobApi";
 
 const JobDetail = () => {
   const { state } = useLocation();
@@ -15,12 +16,28 @@ const JobDetail = () => {
   const { id } = useParams();
 
   const [job, setJob] = useState(state?.job || null);
+  const [employer, setEmployer] = useState(null);
 
   useEffect(() => {
     if (!job) {
       // fetch(`/api/jobs/${id}`).then(res => res.json()).then(setJob);
     }
   }, [id, job]);
+
+  // 🔥 Lấy employer theo employerId trong job
+  useEffect(() => {
+    if (job?.employerId) {
+      const fetchEmployer = async () => {
+        try {
+          const data = await getEmployerById(job.employerId);
+          setEmployer(data);
+        } catch (err) {
+          console.error("❌ Lỗi khi lấy employer:", err);
+        }
+      };
+      fetchEmployer();
+    }
+  }, [job]);
 
   if (!job) {
     return (
@@ -37,8 +54,7 @@ const JobDetail = () => {
   }
 
   // Helper hiển thị fallback
-  const displayValue = (val) =>
-    val && val !== "" ? val : "Chưa có thông tin";
+  const displayValue = (val) => (val && val !== "" ? val : "Chưa có thông tin");
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "Chưa có thông tin";
@@ -64,7 +80,7 @@ const JobDetail = () => {
           </h1>
           <p className="text-lg text-gray-600 mt-1 flex items-center gap-2">
             <Building2 className="w-5 h-5 text-indigo-500" />
-            {displayValue(job.company)}
+            {displayValue(job.companyName)}
           </p>
 
           {/* Thông tin nhanh */}
@@ -75,7 +91,7 @@ const JobDetail = () => {
             </p>
             <p className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-blue-500" />
-              {displayValue(job.type)}
+              {displayValue(job.jobType)}
             </p>
             <p className="flex items-center gap-2 text-green-600 font-medium">
               <DollarSign className="w-5 h-5" />
@@ -110,50 +126,45 @@ const JobDetail = () => {
             </div>
 
             {/* Yêu cầu */}
-              <div>
-                <h2 className="text-xl font-semibold text-indigo-600">
-                  ✅ Yêu cầu ứng viên
-                </h2>
-                <p className="mt-2">
-                  {displayValue(job.requirements)}
-                </p>
-              </div>
+            <div>
+              <h2 className="text-xl font-semibold text-indigo-600">
+                ✅ Yêu cầu ứng viên
+              </h2>
+              <p className="mt-2">{displayValue(job.requirements)}</p>
+            </div>
 
-              {/* Quyền lợi */}
-              <div>
-                <h2 className="text-xl font-semibold text-indigo-600">
-                  🎁 Quyền lợi
-                </h2>
-                <p className="mt-2">
-                  {displayValue(job.benefits)}
-                </p>
-              </div>
-
+            {/* Quyền lợi */}
+            <div>
+              <h2 className="text-xl font-semibold text-indigo-600">
+                🎁 Quyền lợi
+              </h2>
+              <p className="mt-2">{displayValue(job.benefits)}</p>
+            </div>
           </div>
-          {/* Liên hệ */} 
-          <div> 
+          {/* Liên hệ */}
+          <div>
             <h2 className="text-xl font-semibold text-indigo-600">
-             📞 Thông tin liên hệ
-            </h2> 
-            <p className="mt-2"> 
-            Người liên hệ:{" "} 
-            <span className="font-medium"> 
-              {displayValue(job.contactName)} 
-            </span> 
-            </p> 
-            <p> 
-            Email:{" "} 
-            <span className="font-medium"> 
-              {displayValue(job.contactEmail)} 
-            </span>
-            </p> 
-            <p> 
-            SĐT:{" "} 
-            <span className="font-medium"> 
-              {displayValue(job.contactPhone)} 
-            </span> 
-            </p> 
-            </div> 
+              📞 Thông tin liên hệ
+            </h2>
+            <p className="mt-2">
+              Người liên hệ:{" "}
+              <span className="font-medium">
+                {displayValue(employer?.fullName)}
+              </span>
+            </p>
+            <p>
+              Email:{" "}
+              <span className="font-medium">
+                {displayValue(employer?.email)}
+              </span>
+            </p>
+            <p>
+              SĐT:{" "}
+              <span className="font-medium">
+                {displayValue(employer?.phone)}
+              </span>
+            </p>
+          </div>
 
           {/* Nút hành động */}
           <div className="mt-10 flex justify-between">

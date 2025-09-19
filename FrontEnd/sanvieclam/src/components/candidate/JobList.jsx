@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, Flame, Briefcase, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getAllJobsStatus, getEmployerById } from "../../api/JobApi";
 
 const JobList = () => {
   const navigate = useNavigate();
@@ -9,87 +10,42 @@ const JobList = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedType, setSelectedType] = useState("");
+  const [jobs, setJobs] = useState([]);
   const jobsPerPage = 3;
 
-  const jobs = [
-    {
-      id: 1,
-      title: "Lập trình viên Backend (Java, Spring Boot)",
-      company: "Công ty ABC",
-      location: "Hà Nội",
-      type: "Fulltime",
-      category: "Công nghệ thông tin",
-      salary: "15 - 20 triệu",
-      requirements: "Python, SQL, ETL",
+  // ✅ Lấy job từ API thay vì hardcode
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const jobList = await getAllJobsStatus("APPROVED");
+        console.log("JobList từ API:", jobList);
+        const jobsWithEmployer = await Promise.all(
+          jobList.map(async (job) => {
+            try {
+              const employer = await getEmployerById(job.employerId);
+              console.log("Employer:", employer);
+              return {
+                ...job,
+                companyName: employer.companyName,
+                location: job.location,
+              };
+            } catch (error) {
+              console.error("❌ Lỗi khi lấy employer:", error);
+              return job;
+            }
+          })
+        );
 
-    },
-    {
-      id: 2,
-      title: "Nhân viên Part-time bán hàng",
-      company: "Cửa hàng XYZ",
-      location: "TP. HCM",
-      type: "Parttime",
-      category: "Kinh doanh",
-      salary: "30k/giờ",
-      requirements: "Python, SQL, ETL",
+        setJobs(jobsWithEmployer);
+      } catch (error) {
+        console.error("❌ Lỗi khi lấy danh sách job:", error);
+      }
+    };
 
-    },
-    {
-      id: 3,
-      title: "Thực tập sinh Frontend ReactJS",
-      company: "Startup EFG",
-      location: "Đà Nẵng",
-      type: "Parttime",
-      category: "Công nghệ thông tin",
-      salary: "Hỗ trợ 3 triệu",
-      requirements: "Python, SQL, ETL",
+    fetchJobs();
+  }, []);
 
-    },
-    {
-      id: 4,
-      title: "Data Engineer",
-      company: "Tập đoàn DataTech",
-      location: "TP. HCM",
-      type: "Fulltime",
-      category: "Công nghệ thông tin",
-      salary: "20 - 25 triệu",
-      requirements: "Python, SQL, ETL",
-    },
-    {
-      id: 5,
-      title: "Chuyên viên Marketing",
-      company: "Công ty Quảng Cáo KLM",
-      location: "Hà Nội",
-      type: "Fulltime",
-      category: "Marketing",
-      salary: "12 - 18 triệu",
-      requirements: "Python, SQL, ETL",
-
-    },
-    {
-      id: 6,
-      title: "Chuyên viên Kinh doanh Bất động sản",
-      company: "Tập đoàn SunLand",
-      location: "Hà Nội",
-      type: "Fulltime",
-      category: "Kinh doanh",
-      salary: "20 - 30 triệu",
-      requirements: "Python, SQL, ETL",
-
-    },
-    {
-      id: 7,
-      title: "Chuyên viên Kinh doanh Bất động sản",
-      company: "Tập đoàn SunLand",
-      location: "Hà Nội",
-      type: "Fulltime",
-      category: "Kinh doanh",
-      salary: "20 - 30 triệu",
-      requirements: "Python, SQL, ETL,aws, kubernetes, terraform,aws, kubernetes, terraform,aws, kubernetes, terraform",
-
-    },
-  ];
-
+  // ✅ Lọc job
   const filteredJobs = jobs.filter(
     (job) =>
       job.title.toLowerCase().includes(search.toLowerCase()) &&
@@ -107,7 +63,7 @@ const JobList = () => {
   const categoryIcons = {
     "Công nghệ thông tin": <Flame size={16} className="text-red-500" />,
     "Kinh doanh": <Briefcase size={16} className="text-blue-500" />,
-    "Marketing": <TrendingUp size={16} className="text-green-500" />,
+    Marketing: <TrendingUp size={16} className="text-green-500" />,
   };
 
   return (
@@ -124,7 +80,7 @@ const JobList = () => {
             <h3 className="font-medium text-red-600 mb-3 flex items-center gap-2">
               <Flame className="text-red-500" size={18} /> Ngành nghề HOT
             </h3>
-            <ul className="space-y-2 text-gray-700 text-sm">
+            <ul className="space-y-2 text-gray-700 text-x">
               {["Công nghệ thông tin", "Kinh doanh", "Marketing"].map((cat) => (
                 <li
                   key={cat}
@@ -144,7 +100,7 @@ const JobList = () => {
               ))}
               <button
                 onClick={() => setSelectedCategory("")}
-                className="text-xs text-indigo-600 mt-2 underline"
+                className="text-x text-indigo-600 mt-2 underline"
               >
                 Xóa lọc
               </button>
@@ -154,25 +110,27 @@ const JobList = () => {
           {/* Địa điểm */}
           <div>
             <h3 className="font-medium text-indigo-600 mb-2">Địa điểm</h3>
-            <ul className="space-y-2 text-gray-700 text-sm">
-              {["Hà Nội", "TP. HCM", "Đà Nẵng"].map((loc) => (
-                <li key={loc}>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={selectedLocation === loc}
-                      onChange={() => {
-                        setSelectedLocation(loc);
-                        setPage(1);
-                      }}
-                    />
-                    {loc}
-                  </label>
-                </li>
-              ))}
+            <ul className="space-y-2 text-gray-700 text-x">
+              {Array.from(new Set(jobs.map((job) => job.location))).map(
+                (loc) => (
+                  <li key={loc}>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={selectedLocation === loc}
+                        onChange={() => {
+                          setSelectedLocation(loc);
+                          setPage(1);
+                        }}
+                      />
+                      {loc}
+                    </label>
+                  </li>
+                )
+              )}
               <button
                 onClick={() => setSelectedLocation("")}
-                className="text-xs text-indigo-600 mt-2 underline"
+                className="text-x text-indigo-600 mt-2 underline"
               >
                 Xóa lọc
               </button>
@@ -182,8 +140,8 @@ const JobList = () => {
           {/* Loại hình */}
           <div>
             <h3 className="font-medium text-indigo-600 mb-2">Loại hình</h3>
-            <ul className="space-y-2 text-gray-700 text-sm">
-              {["Fulltime", "Parttime"].map((type) => (
+            <ul className="space-y-2 text-gray-700 text-x">
+              {["Fulltime", "Parttime", "Internship"].map((type) => (
                 <li key={type}>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -200,7 +158,7 @@ const JobList = () => {
               ))}
               <button
                 onClick={() => setSelectedType("")}
-                className="text-xs text-indigo-600 mt-2 underline"
+                className="text-x text-indigo-600 mt-2 underline"
               >
                 Xóa lọc
               </button>
@@ -227,42 +185,46 @@ const JobList = () => {
               size={20}
             />
           </div>
-          {/* Danh sách job */} 
+          {/* Danh sách job */}
           <div className="space-y-4">
             {currentJobs.length > 0 ? (
               currentJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="bg-white rounded-xl border border-indigo-200 shadow-md p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:shadow-xl hover:scale-[1.01] transition transform"
+                  className="bg-white rounded-xl border border-indigo-200 shadow-md p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:shadow-xl hover:scale-[1.01] transition transform"
                 >
                   {/* Thông tin bên trái */}
                   <div className="max-w-xl">
                     <h3
                       className="text-lg font-semibold text-indigo-700 truncate cursor-pointer"
                       onClick={() =>
-                        navigate(`/candidate/jobs/${job.id}`, { state: { job } })
+                        navigate(`/candidate/jobs/${job.id}`, {
+                          state: { job },
+                        })
                       }
-                      title={job.title} // hover hiển thị đầy đủ
+                      title={job.title}
                     >
                       {job.title}
                     </h3>
-                    <p className="text-sm text-gray-600 truncate" title={job.company}>
-                      {job.company}
+                    <p
+                      className="text-x text-gray-600 truncate"
+                      title={job.companyName}
+                    >
+                      {job.companyName}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      📍 {job.location} | ⏰ {job.type}
+                    <p className="text-x text-gray-600">
+                      📍 {job.location} | ⏰ {job.jobType}
                     </p>
-                    <p className="text-sm text-green-600 font-medium">💰 {job.salary}</p>
-
-                    {/* Thêm kỹ năng */}
-                    {job.requirements && job.requirements.length > 0 && (
+                    <p className="text-x text-green-600 font-medium">
+                      💰 {job.salary}
+                    </p>
+                    {job.requirements && (
                       <p
-                        className="text-sm text-gray-700 truncate"
+                        className="text-x text-gray-700 truncate"
                         title={job.requirements}
                       >
                         🛠 {job.requirements}
                       </p>
-
                     )}
                   </div>
 
@@ -278,22 +240,21 @@ const JobList = () => {
                 </div>
               ))
             ) : (
-              <p className="text-gray-600 italic">Không tìm thấy công việc phù hợp.</p>
+              <p className="text-gray-600 italic">
+                Không tìm thấy công việc phù hợp.
+              </p>
             )}
           </div>
-
         </div>
       </div>
 
       {/* Pagination */}
       <div className="sticky bottom-0 left-0 w-full bg-white border-t border-gray-200 py-3 mt-6 shadow-inner">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
-          {/* Thông tin xem */}
           <p className="text-sm text-gray-600 mb-2 md:mb-0">
-            Đang xem {startIndex + 1} - {endIndex} trên tổng {filteredJobs.length} công việc
+            Đang xem {startIndex + 1} - {endIndex} trên tổng{" "}
+            {filteredJobs.length} công việc
           </p>
-
-          {/* Nút phân trang */}
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}

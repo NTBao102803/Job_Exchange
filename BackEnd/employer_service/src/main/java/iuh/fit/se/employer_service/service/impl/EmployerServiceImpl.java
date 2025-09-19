@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class EmployerServiceImpl implements EmployerService {
     @Autowired
@@ -22,8 +24,6 @@ public class EmployerServiceImpl implements EmployerService {
 
     @Autowired
     private AuthServiceClient authServiceClient;
-
-
 
     @Override
     public void requestOtp(EmployerRegisterRequest request) {
@@ -140,6 +140,12 @@ public class EmployerServiceImpl implements EmployerService {
                 .orElseThrow(() -> new RuntimeException("Employer not found"));
         return EmployerMapper.toDto(employer);
     }
+
+    @Override
+    public Optional<Employer> getEmployerById(Long id) {
+        return employerRepository.findById(id);
+    }
+
     private boolean isNotBlank(String str) {
         return str != null && !str.trim().isEmpty();
     }

@@ -52,6 +52,7 @@ public class JobController {
         return ResponseEntity.noContent().build();
     }
 
+
     // Admin APIs
     @GetMapping("/status/{status}")
     public List<JobDto> getJobsByStatus(@PathVariable JobStatus status) {
