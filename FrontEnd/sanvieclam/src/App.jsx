@@ -21,6 +21,7 @@ import DashboardPostJob from "./page/recruiter/DashboardPostJob";
 import DashboardSmartCandidateSuggestionsList from "./page/recruiter/DashboardSmartCandidateSuggestionsList";
 import DashboardRecruiterJobPosts from "./page/recruiter/DashboardRecruiterJobPosts";
 import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidatesHaveApplied";
+import UpdateJobModal from "./components/recruiter/UpdateJobModal";
 
 function App() {
   return (
@@ -55,6 +56,8 @@ function App() {
         <Route path="/recruiter/dashboard-smartcandidatesuggestionslist" element={<DashboardSmartCandidateSuggestionsList />} />
         <Route path="/recruiter/dashboard-recruiterjobposts" element={<DashboardRecruiterJobPosts />} />
         <Route path="/recruiter/dashboard-candidateshaveapplied" element={<DashboardCandidateshaveApplied />} />
+
+        <Route path="/testMH" element={<UpdateJobModal />} />
       </Routes>
     </Router>
   );

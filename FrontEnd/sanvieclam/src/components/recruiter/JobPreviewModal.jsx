@@ -135,6 +135,38 @@ const JobPreviewModal = ({ job, onClose }) => {
                 </p>
               </div>
 
+
+                {/* Yêu cầu bắt buộc */}
+              {(job.skills || job.experience || job.education) && (
+                <div className="mt-6">
+                  <h2 className="text-lg font-semibold text-red-600 ml-4">
+                    ⚠️ Yêu cầu bắt buộc
+                  </h2>
+                  <div className="mt-2 ml-6 space-y-2 text-gray-700">
+                    {job.skills && (
+                      <p>
+                        <span className="font-medium">Kỹ năng: </span>
+                        {displayValue(job.skills)}
+                      </p>
+                    )}
+                    {job.experience && (
+                      <p>
+                        <span className="font-medium">Kinh nghiệm: </span>
+                        {displayValue(job.experience)}
+                      </p>
+                    )}
+                    {job.education && (
+                      <p>
+                        <span className="font-medium">Trình độ học vấn: </span>
+                        {displayValue(job.education)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+
+
               {/* Quyền lợi */}
               <div>
                 <h2 className="text-xl font-semibold text-indigo-600">

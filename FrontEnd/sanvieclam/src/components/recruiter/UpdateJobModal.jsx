@@ -4,7 +4,7 @@ import { Save, Calendar, X } from "lucide-react";
 const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
   const [jobData, setJobData] = useState({
     ...job,
-    companyName: employer?.companyName || "", // ✅ gán công ty
+    companyName: employer?.companyName || "",
   });
 
   useEffect(() => {
@@ -24,7 +24,15 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
       return;
     }
 
-    onUpdate(jobData);
+    // tách skills thành mảng như bên PostJob
+    const payload = {
+      ...jobData,
+      skills: jobData.skills
+        ? jobData.skills.split(",").map((s) => s.trim()).filter(Boolean)
+        : [],
+    };
+
+    onUpdate(payload);
     onClose();
   };
 
@@ -72,7 +80,6 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
                 type="text"
                 name="companyName"
                 value={jobData.companyName || ""}
-                onChange={handleChange}
                 readOnly
                 className="w-full border rounded-xl px-4 py-3 bg-gray-100 shadow-sm cursor-not-allowed"
               />
@@ -85,7 +92,6 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
                 type="text"
                 name="location"
                 value={jobData.location || ""}
-                onChange={handleChange}
                 readOnly
                 className="w-full border rounded-xl px-4 py-3 bg-gray-100 shadow-sm cursor-not-allowed"
               />
@@ -96,7 +102,7 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Loại việc
+                Loại việc <span className="text-red-500">*</span>
               </label>
               <select
                 name="jobType"
@@ -112,7 +118,7 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Mức lương
+                Mức lương<span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -140,7 +146,7 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-indigo-500" /> Ngày kết thúc
+                <Calendar className="w-4 h-4 text-indigo-500" /> Ngày kết thúc<span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -156,7 +162,7 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
           {/* Mô tả */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Mô tả công việc
+              Mô tả công việc<span className="text-red-500">*</span>
             </label>
             <textarea
               name="description"
@@ -170,7 +176,7 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
           {/* Yêu cầu */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Yêu cầu ứng viên
+              Yêu cầu ứng viên<span className="text-red-500">*</span>
             </label>
             <textarea
               name="requirements"
@@ -181,10 +187,74 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
             />
           </div>
 
+          {/* Kỹ năng */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Kỹ năng (cách nhau bằng dấu phẩy)
+            </label>
+            <input
+              type="text"
+              name="skills"
+              value={Array.isArray(jobData.skills) ? jobData.skills.join(", ") : jobData.skills || ""}
+              onChange={handleChange}
+              placeholder="VD: Java, Spring Boot, SQL"
+              className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          {/* Kinh nghiệm */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Kinh nghiệm (năm)
+            </label>
+            <input
+              type="text"
+              name="experience"
+              value={jobData.experience || ""}
+              onChange={handleChange}
+              placeholder="VD: 2 năm, 3-5 năm..."
+              className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          {/* Trình độ học vấn */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Trình độ học vấn
+            </label>
+            <select
+              name="education"
+              value={jobData.education || ""}
+              onChange={handleChange}
+              className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            >
+              <option value="">-- Chọn trình độ --</option>
+              <option value="Đại học">Đại học</option>
+              <option value="Thạc sĩ">Thạc sĩ</option>
+              <option value="Tiến sĩ">Tiến sĩ</option>
+              <option value="Cao đẳng">Cao đẳng</option>
+            </select>
+          </div>
+
+          {/* Nghề nghiệp */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Nghề nghiệp / Vị trí
+            </label>
+            <input
+              type="text"
+              name="career"
+              value={jobData.career || ""}
+              onChange={handleChange}
+              placeholder="VD: Backend Developer"
+              className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            />
+          </div>
+
           {/* Quyền lợi */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Quyền lợi
+              Quyền lợi<span className="text-red-500">*</span>
             </label>
             <textarea
               name="benefits"

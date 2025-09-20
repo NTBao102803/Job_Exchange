@@ -11,6 +11,11 @@ const smartJobs = [
     skills: "Python, TensorFlow, ML",
     match: "95%",
     image: "/images/ai-job1.jpg",
+    location: "Hà Nội",
+    jobType: "Fulltime",
+    experience: "",
+    education: "hhh",
+    career: "",
   },
   {
     title: "Data Scientist",
@@ -19,6 +24,11 @@ const smartJobs = [
     skills: "R, Python, SQL,AWS, Kubernetes, Terraform,AWS, Kubernetes, Terraform",
     match: "90%",
     image: "/images/ai-job2.jpg",
+    experience: "",
+    location: "Hà Nội",
+    jobType: "Fulltime",
+    education: "",
+    career: "",
   },
   {
     title: "Cloud Architect",
@@ -27,6 +37,11 @@ const smartJobs = [
     skills: "AWS, Kubernetes, Terraform",
     match: "88%",
     image: "/images/ai-job3.jpg",
+    experience: "",
+    education: "",
+    career: "",
+    location: "Hà Nội",
+    jobType: "Fulltime",
   },
   {
     title: "Product Manager",
@@ -35,6 +50,11 @@ const smartJobs = [
     skills: "Agile, Jira, Leadership",
     match: "85%",
     image: "/images/ai-job4.jpg",
+    experience: "",
+    education: "",
+    career: "",
+    location: "Hà Nội",
+    jobType: "Fulltime",
   },
 ];
 
@@ -73,6 +93,9 @@ const SmartJobSuggestions = () => {
                 <span className="text-sm opacity-90">{job.company}</span>
                 <div className="text-sm font-medium mt-2 text-yellow-300">{job.salary}</div>
                 <div className="mt-3 text-xs space-y-1">
+                <p className="truncate max-w-[200px] whitespace-nowrap">
+                      📍 {job.location} | ⏰ {job.jobType}
+                    </p>
                   {/* Kỹ năng */}
                   <div
                     className="truncate max-w-[200px] whitespace-nowrap"
