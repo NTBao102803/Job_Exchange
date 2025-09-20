@@ -208,7 +208,7 @@ const AdminRecruiter = () => {
         {/* Phân trang */}
         <div className="flex flex-col sm:flex-row justify-between items-center mt-4 text-white">
           <span className="text-sm mb-2 sm:mb-0">
-            Hiển thị {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredRecruiters.length)} trong {filteredRecruiters.length} recruiter
+            Hiển thị {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredRecruiters.length)} trong {filteredRecruiters.length} nhà tuyển dụng
           </span>
           <div className="flex gap-2">
             <button
