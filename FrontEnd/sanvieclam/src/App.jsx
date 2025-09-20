@@ -10,6 +10,7 @@ import DashboardRecruiter from "./page/recruiter/DashboardRecruiter";
 import AdminLayout from "./layout/AdminLayout";
 import AdminCandidate from "./page/admin/AdminCandidate";
 import AdminDashboard from "./page/admin/AdminDashboad";
+import AdminRecruiter from "./page/admin/AdminRecruiter";
 import DashboardCandidateProfile from "./page/candidate/DashboardCandidateProfile";
 import DashboardRecruiterProfile from "./page/recruiter/DashboardRecruiterProfile";
 import DashboardJobList from "./page/candidate/DashboardJobList";
@@ -21,6 +22,7 @@ import DashboardPostJob from "./page/recruiter/DashboardPostJob";
 import DashboardSmartCandidateSuggestionsList from "./page/recruiter/DashboardSmartCandidateSuggestionsList";
 import DashboardRecruiterJobPosts from "./page/recruiter/DashboardRecruiterJobPosts";
 import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidatesHaveApplied";
+
 import UpdateJobModal from "./components/recruiter/UpdateJobModal";
 
 function App() {
@@ -36,6 +38,7 @@ function App() {
         <Route path="/admin/dashboard" element={< AdminLayout/>} >
           <Route index element={<AdminDashboard />} />
           <Route path="candidates" element={<AdminCandidate />} />
+          <Route path="recruiters" element={<AdminRecruiter />} />
         </Route>
 
           {/* Trang login ứng viên và nhà tuyển dụng */}
