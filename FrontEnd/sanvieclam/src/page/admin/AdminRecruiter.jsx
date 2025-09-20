@@ -259,29 +259,35 @@ const AdminRecruiter = () => {
           </div>
         </div>
       )}
-        {/* Modal xét duyệt recruiter */}
-      {selectedRecruiter && (
+       {/* Modal xét duyệt recruiter */}
+{selectedRecruiter && (
   <RecruiterActiveModal
     recruiter={selectedRecruiter}
     onClose={() => setSelectedRecruiter(null)}
-    onApprove={(id) => {
-      setRecruiters(prev =>
-        prev.map(r =>
-          r.id === id ? { ...r, status: "Đã xác minh" } : r
+    onApprove={({ id, active }) => {
+      setRecruiters((prev) =>
+        prev.map((r) =>
+          r.id === id
+            ? { ...r, status: "Đã xác minh", active }
+            : r
         )
       );
       setSelectedRecruiter(null);
     }}
-    onReject={(id) => {
-      setRecruiters(prev =>
-        prev.map(r =>
-          r.id === id ? { ...r, status: "Xác minh thất bại" } : r
+    onReject={({ id, active }) => {
+      setRecruiters((prev) =>
+        prev.map((r) =>
+          r.id === id
+            ? { ...r, status: "Xác minh thất bại", active }
+            : r
         )
       );
       setSelectedRecruiter(null);
     }}
   />
 )}
+
+
     </div>
   );
 };
