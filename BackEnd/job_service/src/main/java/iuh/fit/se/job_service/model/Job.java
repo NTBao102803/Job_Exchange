@@ -1,5 +1,7 @@
 package iuh.fit.se.job_service.model;
 
+import iuh.fit.se.job_service.dto.JobRequirements;
+import iuh.fit.se.job_service.service.impl.JobRequirementsConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -39,7 +41,8 @@ public class Job {
     private String description; // Mô tả công việc
 
     @Column(length = 5000)
-    private String requirements; // Yêu cầu ứng viên
+    @Convert(converter = JobRequirementsConverter.class)
+    private JobRequirements requirements; // Yêu cầu ứng viên
 
     @Column(length = 3000)
     private String benefits; // Quyền lợi

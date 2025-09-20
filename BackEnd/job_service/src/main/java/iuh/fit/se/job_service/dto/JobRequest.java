@@ -23,7 +23,7 @@ public class JobRequest {
     private JobType jobType;
     private LocalDate startDate;
     private LocalDate endDate;
-    private String requirements;
+    private JobRequirements requirements;
     private String benefits;
     private LocalDateTime updatedAt;
 }

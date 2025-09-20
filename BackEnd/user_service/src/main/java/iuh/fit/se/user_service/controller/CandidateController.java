@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/candidate")
 public class CandidateController {
@@ -31,6 +33,10 @@ public class CandidateController {
     @PostMapping("/internal")
     public ResponseEntity<Candidate> createCandidateInternal(@Valid @RequestBody CandidateRequest request) {
         return ResponseEntity.ok(candidateService.createCandidate(request));
+    }
+    @GetMapping("/all")
+    public ResponseEntity<List<Candidate>> getCandidates() {
+        return ResponseEntity.ok(candidateService.getCandidates());
     }
 
     // 🔹 Lấy profile theo token

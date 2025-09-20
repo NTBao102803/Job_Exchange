@@ -1,32 +1,30 @@
-package iuh.fit.se.job_service.dto;
+package iuh.fit.se.match_candidate_service.dto;
 
-import iuh.fit.se.job_service.model.JobStatus;
-import iuh.fit.se.job_service.model.JobType;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class JobDto {
     private Long id;
     private Long employerId;
     private String title;
-    private String description;
+    private JobType jobType;   // FULL_TIME, PART_TIME, INTERNSHIP
     private String location;
     private String salary;
-    private JobType jobType;
     private LocalDate startDate;
     private LocalDate endDate;
+    private String description;
+
+    // CHỈNH: từ String -> JobRequirements
     private JobRequirements requirements;
+
     private String benefits;
-    private JobStatus status;
     private String rejectReason;
+    private String status;   // PENDING, APPROVED, EXPIRED
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

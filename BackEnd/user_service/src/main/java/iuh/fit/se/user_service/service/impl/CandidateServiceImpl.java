@@ -24,7 +24,7 @@ public class CandidateServiceImpl implements CandidateService {
 
     @Override
     public List<Candidate> getCandidates() {
-        return List.of();
+        return candidateRepository.findAll();
     }
 
     @Override

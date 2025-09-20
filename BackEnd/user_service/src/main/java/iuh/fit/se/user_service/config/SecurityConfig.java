@@ -3,6 +3,7 @@ package iuh.fit.se.user_service.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -26,10 +27,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/candidate/internal/**").permitAll()
-                        .requestMatchers(
-                                "/api/user/**",
-                                "/api/candidate/**"
-                                ).hasRole("USER")
+                        .requestMatchers("/api/user/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.GET, "/api/candidate/**").hasAnyRole("EMPLOYER", "ADMIN") // employer gọi để match
+                        .requestMatchers(HttpMethod.POST, "/api/candidate/**").hasRole("USER") // user tự tạo profile
+                        .requestMatchers(HttpMethod.PUT, "/api/candidate/**").hasRole("USER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

@@ -7,12 +7,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="ai_matching_service" />
         <module name="admin_service" />
+        <module name="recommendation_service" />
+        <module name="ai_matching_service" />
+        <module name="match_candidate_service" />
         <module name="storage_service" />
         <module name="messaging_service" />
         <module name="notification_service" />
-        <module name="recommendation_service" />
         <module name="chatbot_service" />
         <module name="discovery_service" />
         <module name="job_service" />
@@ -20,7 +21,7 @@
         <module name="employer_service" />
         <module name="search_service" />
       </profile>
-      <profile name="Annotation profile for api_gateway" enabled="true">
+      <profile name="Annotation profile for user_service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -28,10 +29,13 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
         </processorPath>
         <module name="user_service" />
-        <module name="api_gateway" />
         <module name="auth_service" />
+        <module name="api_gateway" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="candidate_matching_service" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
@@ -39,11 +43,13 @@
       <module name="ai_matching_service" options="-parameters" />
       <module name="api_gateway" options="-parameters" />
       <module name="auth_service" options="-parameters" />
+      <module name="candidate_matching_service" options="-parameters" />
       <module name="chatbot_service" options="-parameters" />
       <module name="config_service" options="-parameters" />
       <module name="discovery_service" options="-parameters" />
       <module name="employer_service" options="-parameters" />
       <module name="job_service" options="-parameters" />
+      <module name="match_candidate_service" options="-parameters" />
       <module name="messaging_service" options="-parameters" />
       <module name="notification_service" options="-parameters" />
       <module name="recommendation_service" options="-parameters" />
