@@ -1,5 +1,7 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+
 import HomePage from "./page/homepage/HomePage";
 import LoginPage from "./page/admin/LoginPage";
 import Login from "./page/login/Login"; 
@@ -24,9 +26,15 @@ import DashboardSmartCandidateSuggestionsList from "./page/recruiter/DashboardSm
 import DashboardRecruiterJobPosts from "./page/recruiter/DashboardRecruiterJobPosts";
 import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidatesHaveApplied";
 
-function App() {
+import ChatboxAI from "./page/chatboxAI/ChatBoxAI";
+
+function AppContent() {
+  // useLocation MUST be used inside a Router
+  const location = useLocation();
+  const isCandidateRoute = location.pathname.startsWith("/candidate/");
+
   return (
-    <Router>
+    <>
       <Routes>
         {/* Trang chủ */}
         <Route path="/" element={<HomePage />} />
@@ -34,25 +42,28 @@ function App() {
         {/* Trang login admin */}
         <Route path="/admin" element={<LoginPage />} />
         
-        <Route path="/admin/dashboard" element={< AdminLayout/>} >
+        <Route path="/admin/dashboard" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="candidates" element={<AdminCandidate />} />
           <Route path="recruiters" element={<AdminRecruiter />} />
           <Route path="jobs" element={<AdminJob />} />
         </Route>
 
-          {/* Trang login ứng viên và nhà tuyển dụng */}
+        {/* Trang login ứng viên và nhà tuyển dụng */}
         <Route path="/login" element={<Login />} />
         <Route path="/register-candidate" element={<RegisterCandidate />} />
         <Route path="/register-recruiter" element={<RegisterRecruiter />} />
-          {/* Dashboard ứng viên */}
+
+        {/* Dashboard ứng viên */}
         <Route path="/candidate/dashboard-candidate" element={<DashboardCandidate />} />
         <Route path="/candidate/candidateprofile" element={<DashboardCandidateProfile />} />
         <Route path="/candidate/dashboard-joblist" element={<DashboardJobList />} />
         <Route path="/candidate/jobs/:id" element={<DashboardJobDetail />} />
         <Route path="/candidate/dashboard-smartjobsuggestionslist" element={<DashboardSmartJobSuggestionsList />} />
         <Route path="/candidate/dashboard-appliedjobslist" element={<DashboardAppliedJobsList />} />
-          {/* Dashboard nhà tuyển dụng */}
+
+
+        {/* Dashboard nhà tuyển dụng */}
         <Route path="/recruiter/dashboard-recruiter" element={<DashboardRecruiter />} />
         <Route path="/recruiter/recruiterprofile" element={<DashboardRecruiterProfile />} />
         <Route path="/recruiter/dashboard-postjob" element={<DashboardPostJob />} />
@@ -60,6 +71,17 @@ function App() {
         <Route path="/recruiter/dashboard-recruiterjobposts" element={<DashboardRecruiterJobPosts />} />
         <Route path="/recruiter/dashboard-candidateshaveapplied" element={<DashboardCandidateshaveApplied />} />
       </Routes>
+
+      {/* Chatbox floating / global: chỉ render khi ở route của candidate */}
+      {isCandidateRoute && <ChatboxAI />}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
