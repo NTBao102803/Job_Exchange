@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from "react";
+// src/components/admin/JobActiveModal.js
+import React from "react";
 import {
   MapPin,
   Clock,
   DollarSign,
   Building2,
   CalendarDays,
-  X,User,Mail,Phone
+  X,
+  Mail,
+  Phone,
+  Globe,
+  User,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getEmployerProfile } from "../../api/RecruiterApi";
 
-const JobPreviewModal = ({ job, onClose }) => {
-  const [employer, setEmployer] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    companyName: "",
-  });
+const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
+  if (!job) return null;
+
   const displayValue = (val) => (val && val !== "" ? val : "Chưa có thông tin");
 
   const formatDate = (dateStr) => {
@@ -29,20 +29,6 @@ const JobPreviewModal = ({ job, onClose }) => {
       year: "numeric",
     });
   };
-  // ✅ gọi API lấy thông tin employer khi mở modal
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await getEmployerProfile();
-        setEmployer(res);
-      } catch (err) {
-        console.error("❌ Lỗi lấy employer profile:", err);
-      }
-    };
-    fetchProfile();
-  }, []);
-
-  if (!job) return null;
 
   return (
     <AnimatePresence>
@@ -52,7 +38,7 @@ const JobPreviewModal = ({ job, onClose }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose} // 👉 click ra ngoài để đóng
+          onClick={onClose}
         >
           <motion.div
             className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-hide bg-white shadow-2xl rounded-2xl p-10 border border-gray-200"
@@ -60,7 +46,7 @@ const JobPreviewModal = ({ job, onClose }) => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            onClick={(e) => e.stopPropagation()} // 👉 chặn đóng khi click bên trong
+            onClick={(e) => e.stopPropagation()}
           >
             {/* ❌ Nút đóng */}
             <button
@@ -76,7 +62,7 @@ const JobPreviewModal = ({ job, onClose }) => {
             </h1>
             <p className="text-lg text-gray-600 mt-1 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-indigo-500" />
-              {employer ? employer.companyName : "⏳ Đang tải..."}
+              {displayValue(job.company)}
             </p>
 
             {/* Thông tin nhanh */}
@@ -113,7 +99,7 @@ const JobPreviewModal = ({ job, onClose }) => {
               </p>
             </div>
 
-            {/* Nội dung */}
+            {/* Nội dung công việc */}
             <div className="mt-8 space-y-6 text-gray-700 leading-relaxed">
               {/* Mô tả */}
               <div>
@@ -135,14 +121,13 @@ const JobPreviewModal = ({ job, onClose }) => {
                 </p>
               </div>
 
-
-                {/* Yêu cầu bắt buộc */}
+              {/* Yêu cầu bắt buộc */}
               {(job.skills || job.experience || job.education) && (
                 <div className="mt-6">
                   <h2 className="text-lg font-semibold text-red-600 ml-4">
                     ⚠️ Yêu cầu bắt buộc
                   </h2>
-                  <div className="mt-2 ml-6 space-y-2 text-gray-700">
+                  <div className="mt-2 ml-3 space-y-2 text-gray-700 ml-4">
                     {job.skills && (
                       <p>
                         <span className="font-medium">Kỹ năng: </span>
@@ -165,8 +150,6 @@ const JobPreviewModal = ({ job, onClose }) => {
                 </div>
               )}
 
-
-
               {/* Quyền lợi */}
               <div>
                 <h2 className="text-xl font-semibold text-indigo-600">
@@ -176,35 +159,55 @@ const JobPreviewModal = ({ job, onClose }) => {
                   {displayValue(job.benefits)}
                 </p>
               </div>
+            </div>
 
-              {/* ✅ Thông tin liên hệ lấy từ employer profile */}
-              <div className="mt-10 border-t pt-6 " >
-                <h2 className="text-xl font-semibold text-indigo-600">
-                  📞 Thông tin liên hệ
-                </h2>
-                {employer ? (
-                  <>
-                    <div className="mt-4 space-y-3 text-gray-700">
+            {/* Thông tin liên hệ */}
+            <div className="mt-10 border-t pt-6">
+              <h2 className="text-2xl font-bold text-indigo-700">
+                📞 Thông tin liên hệ
+              </h2>
+              <div className="mt-4 space-y-3 text-gray-700">
                 <p className="flex items-center gap-2"> 
                   <User className="w-5 h-5 text-pink-500" />Người liên hệ: 
-                  {displayValue(employer.fullName)}
+                  {displayValue(job.fullName)}
                 </p>
                 <p className="flex items-center gap-2">
                   <Mail className="w-5 h-5 text-pink-500" />Email: 
-                  {displayValue(employer.email)}
+                  {displayValue(job.email)}
                 </p>
                 <p className="flex items-center gap-2">
                   <Phone className="w-5 h-5 text-green-500" />SĐT: 
-                  {displayValue(employer.phone)}
+                  {displayValue(job.phone)}
                 </p>
               </div>
-                  </>
-                ) : (
-                  <p className="text-gray-500 mt-2">
-                    ⏳ Đang tải thông tin liên hệ...
-                  </p>
-                )}
-              </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div className="flex justify-center gap-4 mt-10">
+              <button
+                onClick={() =>
+                  onApprove({ id: job.id, status: "Đã xét duyệt" })
+                }
+                className="px-6 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition"
+              >
+                ✅ Đồng ý xét duyệt
+              </button>
+
+              <button
+                onClick={() =>
+                  onReject({ id: job.id, status: "Xét duyệt thất bại" })
+                }
+                className="px-6 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
+              >
+                ❌ Xét duyệt thất bại
+              </button>
+
+              <button
+                onClick={onClose}
+                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg shadow hover:bg-gray-400 transition"
+              >
+                🔙 Hủy
+              </button>
             </div>
           </motion.div>
         </motion.div>
@@ -213,4 +216,4 @@ const JobPreviewModal = ({ job, onClose }) => {
   );
 };
 
-export default JobPreviewModal;
+export default JobActiveModal;

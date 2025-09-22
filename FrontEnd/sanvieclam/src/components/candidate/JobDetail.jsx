@@ -6,7 +6,7 @@ import {
   DollarSign,
   Building2,
   ArrowLeft,
-  CalendarDays,
+  CalendarDays,User,Mail,Phone
 } from "lucide-react";
 import { getEmployerById } from "../../api/JobApi";
 
@@ -162,7 +162,7 @@ const JobDetail = () => {
               )}
 
             {/* Quyền lợi */}
-            <div>
+            <div >
               <h2 className="text-xl font-semibold text-indigo-600">
                 🎁 Quyền lợi
               </h2>
@@ -170,28 +170,24 @@ const JobDetail = () => {
             </div>
           </div>
           {/* Liên hệ */}
-          <div>
+          <div className="mt-10 border-t pt-6 ">
             <h2 className="text-xl font-semibold text-indigo-600">
               📞 Thông tin liên hệ
             </h2>
-            <p className="mt-2">
-              Người liên hệ:{" "}
-              <span className="font-medium">
-                {displayValue(employer?.fullName)}
-              </span>
-            </p>
-            <p>
-              Email:{" "}
-              <span className="font-medium">
-                {displayValue(employer?.email)}
-              </span>
-            </p>
-            <p>
-              SĐT:{" "}
-              <span className="font-medium">
-                {displayValue(employer?.phone)}
-              </span>
-            </p>
+              <div className="mt-4 space-y-3 text-gray-700">
+                <p className="flex items-center gap-2"> 
+                  <User className="w-5 h-5 text-pink-500" />Người liên hệ: 
+                  {displayValue(employer?.fullName)}
+                </p>
+                <p className="flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-pink-500" />Email: 
+                  {displayValue(employer?.email)}
+                </p>
+                <p className="flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-green-500" />SĐT: 
+                  {displayValue(employer?.phone)}
+                </p>
+            </div>
           </div>
 
           {/* Nút hành động */}
