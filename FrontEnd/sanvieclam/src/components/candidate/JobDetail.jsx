@@ -17,7 +17,7 @@ const JobDetail = () => {
 
   const [job, setJob] = useState(state?.job || null);
   const [employer, setEmployer] = useState(null);
-
+  
   useEffect(() => {
     if (!job) {
       // fetch(`/api/jobs/${id}`).then(res => res.json()).then(setJob);

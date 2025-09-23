@@ -28,6 +28,7 @@ import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidates
 
 import ChatboxAI from "./page/chatboxAI/ChatBoxAI";
 
+import ScrollToTop from "./components/ScrollToTop";
 function AppContent() {
   // useLocation MUST be used inside a Router
   const location = useLocation();
@@ -35,6 +36,7 @@ function AppContent() {
 
   return (
     <>
+    < ScrollToTop />
       <Routes>
         {/* Trang chủ */}
         <Route path="/" element={<HomePage />} />
