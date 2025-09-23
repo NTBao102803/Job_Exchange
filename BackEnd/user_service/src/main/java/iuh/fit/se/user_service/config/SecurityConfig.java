@@ -28,7 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/candidate/internal/**").permitAll()
                         .requestMatchers("/api/user/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/api/candidate/**").hasAnyRole("EMPLOYER", "ADMIN") // employer gọi để match
+                        .requestMatchers(HttpMethod.GET, "/api/candidate/**").hasAnyRole("EMPLOYER", "ADMIN", "USER") // employer gọi để match
                         .requestMatchers(HttpMethod.POST, "/api/candidate/**").hasRole("USER") // user tự tạo profile
                         .requestMatchers(HttpMethod.PUT, "/api/candidate/**").hasRole("USER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

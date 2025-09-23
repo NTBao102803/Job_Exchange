@@ -5,41 +5,51 @@ const jobs = [
   { 
     id:1,
     title: "Frontend Developer",
-    company: "Tech Corp",
+    companyName: "Tech Corp",
+    location: "Hà Nội",
+    requirements: "React, JavaScript, CSS",
     salary: "15 - 20 triệu",
-    language: "JavaScript, React",
-    tools: "VSCode, Git,VSCode, Git,VSCode, Git,VSCode, Git,VSCode, Git,VSCode, Git",
     image: "/images/job1.jpg",
+    experience: "",
+    education: "hhh",
+    career: "",
+    jobType: "Toàn thời gian",
     hot: true,
   },
   {
     id:2,
     title: "Backend Developer",
-    company: "Innovatech",
+    companyName: "Innovatech",
     salary: "18 - 25 triệu",
-    language: "Java, Spring Boot",
-    tools: "IntelliJ, Docker",
     image: "/images/job2.jpg",
+    location: "Hà Nội",
+    jobType: "Toàn thời gian",
+    requirements: "React, JavaScript, CSS",
     hot: false,
   },
   {
     id:3,
     title: "UI/UX Designer",
-    company: "Creative Studio",
+    companyName: "Creative Studio",
     salary: "12 - 18 triệu",
-    language: "Figma, Adobe XD",
-    tools: "Photoshop, Illustrator",
     image: "/images/job3.jpg",
+    experience: "",
+    education: "hhh",
+    career: "",
+    location: "Hà Nội",
+    jobType: "Toàn thời gian",
+    requirements: "React, JavaScript, CSS",
     hot: true,
   },
   {
     id:4,
     title: "Fullstack Developer",
-    company: "NextGen Tech",
+    companyName: "NextGen Tech",
     salary: "20 - 30 triệu",
-    language: "React, Node.js",
-    tools: "Postman, Git",
     image: "/images/job4.jpg",
+    location: "Hà Nội",
+    jobType: "Toàn thời gian",
+    requirements: "React, JavaScript, CSS",
     hot: false,
   },
 ];
@@ -66,7 +76,7 @@ const FeaturedJobs = ({ onStartClick,onJob }) => {
               </div>
             )}
 
-            <div className="h-40 w-full overflow-hidden">
+            <div className="h-44 w-full overflow-hidden">
               <img
                 src={job.image}
                 alt={job.title}
@@ -77,28 +87,21 @@ const FeaturedJobs = ({ onStartClick,onJob }) => {
             <div className="p-4 flex flex-col flex-1 justify-between">
               <div>
                 <h3 className="text-lg md:text-xl font-semibold mb-1">{job.title}</h3>
-                <span className="text-sm">{job.company}</span>
-                <div className="text-sm font-medium mt-2">{job.salary}</div>
-                <div className="mt-2 text-xs space-y-1">
-                  <div className="flex">
-                    <span className="font-semibold mr-1">Ngôn ngữ:</span>
-                    <span 
-                      className="truncate max-w-[180px] whitespace-nowrap" 
-                      title={job.language}
-                    >
-                      {job.language}
-                    </span>
-                  </div>
-                  <div className="flex">
-                    <span className="font-semibold mr-1">Công cụ:</span>
-                    <span 
-                      className="truncate max-w-[180px] whitespace-nowrap" 
-                      title={job.tools}
-                    >
-                      {job.tools}
-                    </span>
-                  </div>
-                </div>
+                <span className="text-sm opacity-90">{job.companyName}</span>
+                <p className="text-x text-gray-600">
+                      📍 {job.location} | ⏰ {job.jobType}
+                    </p>
+                    <p className="text-x text-green-600 font-medium">
+                      💰 {job.salary}
+                    </p>
+                    {job.requirements && (
+                      <p
+                        className="text-x text-gray-700 truncate"
+                        title={job.requirements}
+                      >
+                        🛠 {job.requirements}
+                      </p>
+                    )}
 
               </div>
 

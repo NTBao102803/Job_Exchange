@@ -1,10 +1,17 @@
 import React, { useState } from "react";
-import { Search } from "lucide-react";
+import { Search ,Briefcase} from "lucide-react";
 import CandidateProfileModal from "../candidate/CandidateProfileModal";
 
-const smartJobs = [
+const jobs = [
+  { id: 1, title: "AI Engineer" },
+  { id: 2, title: "Data Scientist" },
+  { id: 3, title: "Cloud Architect" },
+];
+
+const smartCandidates = [
   {
     id: 1,
+    jobId:1,
     fullName: "Nguyễn Văn A",
     dob: "01/01/1998",
     gender: "Nam",
@@ -26,6 +33,7 @@ const smartJobs = [
   },
   {
     id: 2,
+    jobId:1,
     fullName: "Trần Thị B",
     dob: "15/03/1997",
     gender: "Nữ",
@@ -47,6 +55,7 @@ const smartJobs = [
   },
   {
     id: 3,
+    jobId:1,
     fullName: "Lê Văn C",
     dob: "22/06/1996",
     gender: "Nam",
@@ -68,6 +77,7 @@ const smartJobs = [
   },
   {
     id: 4,
+    jobId:1,
     fullName: "Lê Văn C",
     dob: "22/06/1996",
     gender: "Nam",
@@ -89,6 +99,7 @@ const smartJobs = [
   },
   {
     id: 5,
+    jobId:2,
     fullName: "Lê Văn C",
     dob: "22/06/1996",
     gender: "Nam",
@@ -110,48 +121,52 @@ const smartJobs = [
   },
 ];
 
-const SmartJobSuggestionsList = () => {
+const SmartCandidateSuggestionsList = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
-  const jobsPerPage = 4;
-
-  const filteredJobs = smartJobs.filter((job) =>
-    job.fullName.toLowerCase().includes(search.toLowerCase())
+  const [selectedJob, setSelectedJob] = useState(jobs[0].id);
+   // Lọc ứng viên theo job đã chọn
+  const filteredCandidates = smartCandidates.filter(
+    (candidate) => candidate.jobId === selectedJob
   );
 
-  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
-  const startIndex = (page - 1) * jobsPerPage;
-  const endIndex = Math.min(startIndex + jobsPerPage, filteredJobs.length);
-  const currentJobs = filteredJobs.slice(startIndex, endIndex);
+
+  const candidatesPerPage = 4;
+
+
+  const totalPages = Math.ceil(filteredCandidates.length / candidatesPerPage);
+  const startIndex = (page - 1) * candidatesPerPage;
+  const endIndex = Math.min(startIndex + candidatesPerPage, filteredCandidates.length);
+  const currentCandidates = filteredCandidates.slice(startIndex, endIndex);
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-500 pt-32 pb-32 px-6 relative text-white">
   <div className="max-w-6xl mx-auto space-y-6">
-    {/* Search */}
-    <div className="relative">
-      <input
-        type="text"
-        placeholder="🔍 Tìm kiếm ứng viên nổi bật..."
-        value={search}
-        onChange={(e) => {
-          setPage(1);
-          setSearch(e.target.value);
-        }}
-        className="w-full rounded-full border border-white/30 bg-white/20 text-white px-5 py-3 shadow-md 
-                   placeholder-white/70 focus:ring-2 focus:ring-yellow-300 focus:outline-none"
-      />
-      <Search className="absolute right-4 top-3.5 text-yellow-300" size={20} />
-    </div>
-
+    {/* Select chọn job */}
+        <div className="relative">
+          <select
+            value={selectedJob}
+            onChange={(e) => setSelectedJob(Number(e.target.value))}
+            className="w-full rounded-lg border border-white/30 bg-white/20 text-white px-5 py-3 shadow-md 
+                       focus:ring-2 focus:ring-yellow-300 focus:outline-none appearance-none"
+          >
+            {jobs.map((job) => (
+              <option key={job.id} value={job.id} className="text-black">
+                {job.title}
+              </option>
+            ))}
+          </select>
+          <Briefcase className="absolute right-4 top-3.5 text-yellow-300" size={20} />
+        </div>
     {/* Danh sách ứng viên */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  {currentJobs.length > 0 ? (
-    currentJobs.map((job) => (
+  {currentCandidates.length > 0 ? (
+    currentCandidates.map((candidate) => (
       <div
-        key={job.id}
+        key={candidate.id}
         className="bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 shadow-md p-6 
                    flex justify-between items-center 
                    hover:shadow-[0_0_25px_rgba(255,255,255,0.7)] hover:scale-[1.02] 
@@ -160,25 +175,25 @@ const SmartJobSuggestionsList = () => {
         {/* Thông tin ứng viên */}
         <div className="flex-1 pr-4">
           <h3 className="text-xl md:text-2xl font-bold mb-2 text-yellow-300">
-            {job.fullName}
+            {candidate.fullName}
           </h3>
-          <span className="text-base opacity-90">{job.major}</span>
+          <span className="text-base opacity-90">{candidate.major}</span>
           <div className="mt-2 text-sm md:text-base space-y-1">
             <div className="truncate max-w-[220px]">
               <span className="font-semibold">Kỹ năng: </span>
-              {job.skills}
+              {candidate.skills}
             </div>
             <div className="truncate max-w-[220px]">
               <span className="font-semibold">Kinh nghiệm: </span>
-              {job.experience}
+              {candidate.experience}
             </div>
             <div className="truncate max-w-[220px]">
               <span className="font-semibold">Tốt nghiệp: </span>
-              {job.graduationYear} ({job.gpa})
+              {candidate.graduationYear} ({candidate.gpa})
             </div>
             <div className="truncate max-w-[220px]">
               <span className="font-semibold">Phù hợp: </span>
-              <span className="text-green-300 font-bold">{job.match}</span>
+              <span className="text-green-300 font-bold">{candidate.match}</span>
             </div>
           </div>
 
@@ -188,7 +203,7 @@ const SmartJobSuggestionsList = () => {
         <div className="flex-shrink-0">
           <button
             onClick={() => {
-              setSelectedCandidate(job);
+              setSelectedCandidate(candidate);
               setIsModalOpen(true);
             }}
             className="bg-yellow-400 text-gray-900 font-bold px-5 py-2.5 rounded-lg shadow-md 
@@ -212,7 +227,7 @@ const SmartJobSuggestionsList = () => {
   <div className="sticky bottom-0 left-0 w-full bg-white/10 backdrop-blur-xl border-t border-white/20 py-3 mt-6 shadow-inner">
     <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-white">
       <p className="text-sm mb-2 md:mb-0">
-        Đang xem {startIndex + 1} - {endIndex} trên tổng {filteredJobs.length} ứng viên
+        Đang xem {startIndex + 1} - {endIndex} trên tổng {filteredCandidates.length} ứng viên
       </p>
 
       <div className="flex items-center space-x-2">
@@ -266,4 +281,4 @@ const SmartJobSuggestionsList = () => {
   );
 };
 
-export default SmartJobSuggestionsList;
+export default SmartCandidateSuggestionsList;

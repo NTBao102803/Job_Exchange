@@ -16,6 +16,9 @@ const AppliedJobsList = () => {
       location: "Hà Nội",
       type: "Fulltime",
       salary: "15 - 20 triệu",
+      experience: "",
+    education: "hhh",
+    career: "",
       status: "applied", // đã ứng tuyển
     },
     {

@@ -24,7 +24,7 @@ const AdminCandidate = () => {
           id: 1,
           fullName: "Nguyễn Văn A",
           email: "vana@example.com",
-          status: "Tạm thời vô hiệu hoá",
+          active: "Tạm thời vô hiệu hoá",
           major: "Công nghệ thông tin",
           skills: "React, Node.js, SQL",
           experience: "2 năm",
@@ -45,7 +45,7 @@ const AdminCandidate = () => {
           id: 2,
           fullName: "Trần Thị B",
           email: "thib@example.com",
-          status: "Đang hoạt động",
+          active: "Đang hoạt động",
           major: "Quản trị kinh doanh",
           skills: "Excel, PowerBI",
           experience: "1 năm",
@@ -66,7 +66,7 @@ const AdminCandidate = () => {
           id: 3,
           fullName: "Trần Thị B",
           email: "thib@example.com",
-          status: "Tạm thời vô hiệu hoá",
+          active: "Tạm thời vô hiệu hoá",
           major: "Quản trị kinh doanh",
           skills: "Excel, PowerBI",
           experience: "1 năm",
@@ -87,7 +87,7 @@ const AdminCandidate = () => {
           id: 4,
           fullName: "Trần Thị B",
           email: "thib@example.com",
-          status: "Tạm thời vô hiệu hoá",
+          active: "Tạm thời vô hiệu hoá",
           major: "Quản trị kinh doanh",
           skills: "Excel, PowerBI",
           experience: "1 năm",
@@ -108,7 +108,7 @@ const AdminCandidate = () => {
           id: 5,
           fullName: "Trần Thị B",
           email: "thib@example.com",
-          status: "Đang hoạt động",
+          active: "Đang hoạt động",
           major: "Quản trị kinh doanh",
           skills: "Excel, PowerBI",
           experience: "1 năm",
@@ -141,10 +141,16 @@ const AdminCandidate = () => {
   const currentCandidates = filteredCandidates.slice(startIndex, startIndex + itemsPerPage);
 
   // Mở modal xác nhận thay đổi trạng thái
-  const handleStatusClick = (candidate) => {
+  const handleActiveClick = (candidate) => {
     setCandidateToToggle(candidate);
     setIsConfirmModalOpen(true);
   };
+  // Hàm mở modal xem hồ sơ
+const handleView = (candidate) => {
+  setSelectedCandidate(candidate);
+  setIsViewModalOpen(true);
+};
+
 
   const confirmToggleStatus = () => {
     if (candidateToToggle) {
@@ -153,8 +159,8 @@ const AdminCandidate = () => {
           c.id === candidateToToggle.id
             ? {
                 ...c,
-                status:
-                  c.status === "Đang hoạt động"
+                active:
+                  c.active === "Đang hoạt động"
                     ? "Tạm thời vô hiệu hóa"
                     : "Đang hoạt động",
               }
@@ -172,7 +178,10 @@ const AdminCandidate = () => {
   };
   return (
     <div className="p-1">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Quản lý ứng viên</h1>
+      <h1 className="flex items-center gap-3 text-3xl font-extrabold mb-8 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-sm">
+        <User className="w-9 h-9 text-indigo-600 drop-shadow-sm" />
+        Quản lý ứng viên
+      </h1>
 
       {/* Thanh tìm kiếm và lọc */}
       <div className="flex flex-col sm:flex-row gap-4 mb-4 items-center mt-10">
@@ -230,9 +239,9 @@ const AdminCandidate = () => {
                   </button>
                   {/* Nút thay đổi trạng thái */}
                   <button
-                    onClick={() => handleStatusClick(c)}
+                    onClick={() => handleActiveClick(c)}
                     className={`p-2 rounded-lg transition ${
-                      c.status === "Đang hoạt động"
+                      c.active === "Đang hoạt động"
                         ? "bg-green-500 hover:bg-green-400 text-white"
                         : "bg-red-500 hover:bg-red-400 text-white"
                     }`}

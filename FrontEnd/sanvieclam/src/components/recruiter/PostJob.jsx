@@ -19,6 +19,10 @@ const PostJob = () => {
     benefits: "",
     startDate: today,
     endDate: "",
+    skills: "",
+    experience: "",
+    education: "",
+    career: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -85,6 +89,19 @@ const PostJob = () => {
     } else if (jobData.endDate < jobData.startDate) {
       newErrors.endDate = "⛔ Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!";
     }
+    if (!jobData.skills || jobData.skills.trim().length < 2) {
+      newErrors.skills = "⛔ Vui lòng nhập ít nhất 1 kỹ năng!";
+    }
+    if (!jobData.experience || jobData.experience <= 0) {
+      newErrors.experience = "⛔ Vui lòng nhập số năm kinh nghiệm hợp lệ!";
+    }
+    if (!jobData.education) {
+      newErrors.education = "⛔ Vui lòng chọn trình độ học vấn!";
+    }
+    if (!jobData.career || jobData.career.trim().length < 2) {
+      newErrors.career = "⛔ Vui lòng nhập nghề nghiệp/vị trí!";
+    }
+
 
     return newErrors;
   };
@@ -100,14 +117,20 @@ const PostJob = () => {
     }
 
     try {
-      const response = await createJob(jobData);
-      alert("✅ Tin tuyển dụng đã được gửi và đang chờ kiểm duyệt!");
-      console.log("📥 Phản hồi từ server:", response);
-      navigate("/recruiter/dashboard-recruiterjobposts");
-    } catch (error) {
-      console.error("❌ Lỗi khi tạo tin:", error);
-      alert(error.response?.data?.message || "🚨 Đăng tin thất bại!");
-    }
+        const payload = {
+          ...jobData,
+          skills: jobData.skills.split(",").map((s) => s.trim()).filter(Boolean), // tách mảng
+        };
+
+        const response = await createJob(payload);
+        alert("✅ Tin tuyển dụng đã được gửi và đang chờ kiểm duyệt!");
+        console.log("📥 Phản hồi từ server:", response);
+        navigate("/recruiter/dashboard-recruiterjobposts");
+      } catch (error) {
+        console.error("❌ Lỗi khi tạo tin:", error);
+        alert(error.response?.data?.message || "🚨 Đăng tin thất bại!");
+      }
+
   };
 
   return (
@@ -195,7 +218,7 @@ const PostJob = () => {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Mức lương
+                  Mức lương<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -252,7 +275,7 @@ const PostJob = () => {
             {/* Mô tả */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Mô tả công việc
+                Mô tả công việc<span className="text-red-500">*</span>
               </label>
               <textarea
                 name="description"
@@ -272,7 +295,7 @@ const PostJob = () => {
             {/* Yêu cầu */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Yêu cầu ứng viên
+                Yêu cầu ứng viên<span className="text-red-500">*</span>
               </label>
               <textarea
                 name="requirements"
@@ -288,11 +311,75 @@ const PostJob = () => {
                 </p>
               )}
             </div>
+            {/* Kỹ năng */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Kỹ năng (cách nhau bằng dấu phẩy) 
+              </label>
+              <input
+                type="text"
+                name="skills"
+                value={jobData.skills}
+                onChange={handleChange}
+                placeholder="VD: Java, Spring Boot, SQL"
+                className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Kinh nghiệm */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Kinh nghiệm (năm)
+                </label>
+                <input
+                  type="text"
+                  name="experience"
+                  value={jobData.experience}
+                  onChange={handleChange}
+                  placeholder="VD: 2 năm, 3-5 năm..."
+                  className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+              </div>
+
+            {/* Trình độ học vấn */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Trình độ học vấn 
+              </label>
+              <select
+                name="education"
+                value={jobData.education}
+                onChange={handleChange}
+                className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="">-- Chọn trình độ --</option>
+                <option value="Đại học">Đại học</option>
+                <option value="Thạc sĩ">Thạc sĩ</option>
+                <option value="Tiến sĩ">Tiến sĩ</option>
+                <option value="Cao đẳng">Cao đẳng</option>
+              </select>
+            </div>
+
+            {/* Nghề nghiệp */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Nghề nghiệp / Vị trí 
+              </label>
+              <input
+                type="text"
+                name="career"
+                value={jobData.career}
+                onChange={handleChange}
+                placeholder="VD: Backend Developer"
+                className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+
 
             {/* Quyền lợi */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Quyền lợi
+                Quyền lợi <span className="text-red-500">*</span>
               </label>
               <textarea
                 name="benefits"
