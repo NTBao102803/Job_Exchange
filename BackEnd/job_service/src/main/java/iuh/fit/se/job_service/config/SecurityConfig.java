@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .hasRole("ADMIN")
 
                         // Ai cũng xem được list job
-                        .requestMatchers("/api/jobs", "/api/jobs/**").permitAll()
+                        .requestMatchers("/api/jobs/**").permitAll()
 
                         .anyRequest().authenticated()
                 )

@@ -5,10 +5,28 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
   const [jobData, setJobData] = useState({
     ...job,
     companyName: employer?.companyName || "",
+    // ép về phẳng để dễ xử lý form
+    skills: Array.isArray(job?.requirements?.skills)
+      ? job.requirements.skills.join(", ")
+      : job?.skills || "",
+    experience: job?.requirements?.experience || "",
+    certificates: job?.requirements?.certificates || "",
+    career: job?.requirements?.career || "",
+    descriptionRequirements: job?.requirements?.descriptionRequirements || "",
   });
 
   useEffect(() => {
-    setJobData({ ...job, companyName: employer?.companyName || "" });
+    setJobData({ 
+      ...job, 
+      companyName: employer?.companyName || "",
+      skills: Array.isArray(job?.requirements?.skills)
+        ? job.requirements.skills.join(", ")
+        : job?.skills || "",
+      experience: job?.requirements?.experience || "",
+      certificates: job?.requirements?.certificates || "",
+      career: job?.requirements?.career || "",
+      descriptionRequirements: job?.requirements?.descriptionRequirements || "",
+    });
   }, [job, employer]);
 
   const handleChange = (e) => {
@@ -27,9 +45,24 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
     // tách skills thành mảng như bên PostJob
     const payload = {
       ...jobData,
-      skills: jobData.skills
-        ? jobData.skills.split(",").map((s) => s.trim()).filter(Boolean)
-        : [],
+        title: jobData.title,
+        location: jobData.location,
+        jobType: jobData.jobType,
+        salary: jobData.salary,
+        startDate: jobData.startDate,
+        endDate: jobData.endDate,
+        description: jobData.description,
+        benefits: jobData.benefits,
+        requirements: {
+          skills: jobData.skills
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+          experience: jobData.experience,
+          certificates: jobData.certificates,
+          career: jobData.career,
+          descriptionRequirements: jobData.descriptionRequirements,
+        },
     };
 
     onUpdate(payload);
@@ -179,8 +212,8 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
               Yêu cầu ứng viên<span className="text-red-500">*</span>
             </label>
             <textarea
-              name="requirements"
-              value={jobData.requirements || ""}
+              name="descriptionRequirements"
+              value={jobData.descriptionRequirements || ""}
               onChange={handleChange}
               rows="3"
               className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -195,7 +228,8 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
             <input
               type="text"
               name="skills"
-              value={Array.isArray(jobData.skills) ? jobData.skills.join(", ") : jobData.skills || ""}
+              // value={Array.isArray(jobData.skills) ? jobData.skills.join(", ") : jobData.skills || ""}
+              value={jobData.skills || ""}
               onChange={handleChange}
               placeholder="VD: Java, Spring Boot, SQL"
               className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -217,24 +251,20 @@ const UpdateJobModal = ({ job, employer, onClose, onUpdate }) => {
             />
           </div>
 
-          {/* Trình độ học vấn */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Trình độ học vấn
-            </label>
-            <select
-              name="education"
-              value={jobData.education || ""}
-              onChange={handleChange}
-              className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            >
-              <option value="">-- Chọn trình độ --</option>
-              <option value="Đại học">Đại học</option>
-              <option value="Thạc sĩ">Thạc sĩ</option>
-              <option value="Tiến sĩ">Tiến sĩ</option>
-              <option value="Cao đẳng">Cao đẳng</option>
-            </select>
-          </div>
+            {/* Chứng chỉ */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Chứng chỉ
+              </label>
+              <input
+                type="text"
+                name="certificates"
+                value={jobData.certificates}
+                onChange={handleChange}
+                placeholder="VD: AWS, IELTS..."
+                className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
 
           {/* Nghề nghiệp */}
           <div>

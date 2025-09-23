@@ -5,7 +5,10 @@ import {
   DollarSign,
   Building2,
   CalendarDays,
-  X,User,Mail,Phone
+  X,
+  User,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getEmployerProfile } from "../../api/RecruiterApi";
@@ -17,6 +20,10 @@ const JobPreviewModal = ({ job, onClose }) => {
     phone: "",
     companyName: "",
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const displayValue = (val) => (val && val !== "" ? val : "Chưa có thông tin");
 
   const formatDate = (dateStr) => {
@@ -31,16 +38,23 @@ const JobPreviewModal = ({ job, onClose }) => {
   };
   // ✅ gọi API lấy thông tin employer khi mở modal
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchEmployer = async () => {
       try {
+        setLoading(true);
         const res = await getEmployerProfile();
         setEmployer(res);
       } catch (err) {
         console.error("❌ Lỗi lấy employer profile:", err);
+        setError("Không thể tải thông tin công ty");
+      } finally {
+        setLoading(false);
       }
     };
-    fetchProfile();
-  }, []);
+
+    if (job) {
+      fetchEmployer();
+    }
+  }, [job]);
 
   if (!job) return null;
 
@@ -76,7 +90,11 @@ const JobPreviewModal = ({ job, onClose }) => {
             </h1>
             <p className="text-lg text-gray-600 mt-1 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-indigo-500" />
-              {employer ? employer.companyName : "⏳ Đang tải..."}
+              {loading
+                ? "⏳ Đang tải..."
+                : error
+                ? error
+                : displayValue(employer?.companyName)}
             </p>
 
             {/* Thông tin nhanh */}
@@ -130,42 +148,50 @@ const JobPreviewModal = ({ job, onClose }) => {
                 <h2 className="text-xl font-semibold text-indigo-600">
                   ✅ Yêu cầu ứng viên
                 </h2>
-                <p className="mt-2 whitespace-pre-line">
-                  {displayValue(job.requirements)}
-                </p>
+                {job.requirements ? (
+                  <p className="mt-2 whitespace-pre-line">
+                    {displayValue(job.requirements.descriptionRequirements)}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-gray-500 italic">
+                    Chưa có thông tin yêu cầu
+                  </p>
+                )}
               </div>
 
-
-                {/* Yêu cầu bắt buộc */}
-              {(job.skills || job.experience || job.education) && (
-                <div className="mt-6">
-                  <h2 className="text-lg font-semibold text-red-600 ml-4">
-                    ⚠️ Yêu cầu bắt buộc
-                  </h2>
-                  <div className="mt-2 ml-6 space-y-2 text-gray-700">
-                    {job.skills && (
-                      <p>
-                        <span className="font-medium">Kỹ năng: </span>
-                        {displayValue(job.skills)}
-                      </p>
-                    )}
-                    {job.experience && (
-                      <p>
-                        <span className="font-medium">Kinh nghiệm: </span>
-                        {displayValue(job.experience)}
-                      </p>
-                    )}
-                    {job.education && (
-                      <p>
-                        <span className="font-medium">Trình độ học vấn: </span>
-                        {displayValue(job.education)}
-                      </p>
-                    )}
+              {/* Yêu cầu bắt buộc */}
+              {job.requirements &&
+                (job.requirements.skills ||
+                  job.requirements.experience ||
+                  job.requirements.certificates) && (
+                  <div className="mt-6">
+                    <h2 className="text-lg font-semibold text-red-600 ml-4">
+                      ⚠️ Yêu cầu bắt buộc
+                    </h2>
+                    <div className="mt-2 ml-6 space-y-2 text-gray-700">
+                      {job.requirements.skills && (
+                        <p>
+                          <span className="font-medium">Kỹ năng: </span>
+                          {displayValue(job.requirements.skills)}
+                        </p>
+                      )}
+                      {job.requirements.experience && (
+                        <p>
+                          <span className="font-medium">Kinh nghiệm: </span>
+                          {displayValue(job.requirements.experience)}
+                        </p>
+                      )}
+                      {job.requirements.certificates && (
+                        <p>
+                          <span className="font-medium">
+                            Trình độ học vấn:{" "}
+                          </span>
+                          {displayValue(job.requirements.certificates)}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-
-
+                )}
 
               {/* Quyền lợi */}
               <div>
@@ -178,26 +204,29 @@ const JobPreviewModal = ({ job, onClose }) => {
               </div>
 
               {/* ✅ Thông tin liên hệ lấy từ employer profile */}
-              <div className="mt-10 border-t pt-6 " >
+              <div className="mt-10 border-t pt-6 ">
                 <h2 className="text-xl font-semibold text-indigo-600">
                   📞 Thông tin liên hệ
                 </h2>
                 {employer ? (
                   <>
                     <div className="mt-4 space-y-3 text-gray-700">
-                <p className="flex items-center gap-2"> 
-                  <User className="w-5 h-5 text-pink-500" />Người liên hệ: 
-                  {displayValue(employer.fullName)}
-                </p>
-                <p className="flex items-center gap-2">
-                  <Mail className="w-5 h-5 text-pink-500" />Email: 
-                  {displayValue(employer.email)}
-                </p>
-                <p className="flex items-center gap-2">
-                  <Phone className="w-5 h-5 text-green-500" />SĐT: 
-                  {displayValue(employer.phone)}
-                </p>
-              </div>
+                      <p className="flex items-center gap-2">
+                        <User className="w-5 h-5 text-pink-500" />
+                        Người liên hệ:
+                        {displayValue(employer.fullName)}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <Mail className="w-5 h-5 text-pink-500" />
+                        Email:
+                        {displayValue(employer.email)}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <Phone className="w-5 h-5 text-green-500" />
+                        SĐT:
+                        {displayValue(employer.phone)}
+                      </p>
+                    </div>
                   </>
                 ) : (
                   <p className="text-gray-500 mt-2">
