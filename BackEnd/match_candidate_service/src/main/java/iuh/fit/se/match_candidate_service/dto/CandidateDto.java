@@ -1,6 +1,11 @@
 package iuh.fit.se.match_candidate_service.dto;
 
+import jakarta.persistence.Column;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -22,4 +27,8 @@ public class CandidateDto {
     private String certificates;
     private String projects;
     private String careerGoal;
+    private LocalDate dob;
+    private String gender;
+    private String hobbies;
+    private String social;
 }

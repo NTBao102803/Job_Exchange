@@ -77,3 +77,15 @@ export const updateJob = async (id, jobData) => {
     throw error;
   }
 };
+
+// danh sách job theo status
+export const getJobsByStatus = async (status) => {
+  try {
+    const response = await axiosClient.get(`/jobs/status/${status}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi gọi API getJobsByStatus:", error);
+    throw error;
+  }
+};
+

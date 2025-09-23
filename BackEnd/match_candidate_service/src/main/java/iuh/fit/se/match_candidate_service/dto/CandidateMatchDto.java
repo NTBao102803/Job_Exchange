@@ -7,6 +7,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CandidateMatchDto {
-    private CandidateIndex candidate;
+    private CandidateDto candidate;
     private float score;
 }

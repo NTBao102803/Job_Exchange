@@ -100,11 +100,24 @@ public class CandidateIndexServiceImpl implements CandidateIndexService {
                 .withPageable(PageRequest.of(0, topN))
                 .build();
 
-        // execute
+        // execute search
         SearchHits<CandidateIndex> hits = elasticsearchOperations.search(query, CandidateIndex.class);
 
-        return hits.stream()
-                .map(hit -> new CandidateMatchDto(hit.getContent(), hit.getScore()))
+        // Lấy danh sách id + score
+        Map<Long, Float> scoredIds = hits.stream()
+                .collect(Collectors.toMap(
+                        hit -> hit.getContent().getId(),
+                        SearchHit::getScore
+                ));
+
+        // Fetch CandidateDto từ UserClient
+        List<CandidateDto> dtos = userClient.getCandidates();
+
+        // Ghép score + CandidateDto thành CandidateMatchDto
+        return dtos.stream()
+                .filter(dto -> scoredIds.containsKey(dto.getId()))
+                .map(dto -> new CandidateMatchDto(dto, scoredIds.get(dto.getId())))
+                .sorted((a, b) -> Float.compare(b.getScore(), a.getScore())) // sort theo score desc
                 .collect(Collectors.toList());
     }
 

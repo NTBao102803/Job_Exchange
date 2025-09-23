@@ -52,12 +52,11 @@ public class JobController {
         return ResponseEntity.noContent().build();
     }
 
-
-    // Admin APIs
     @GetMapping("/status/{status}")
     public List<JobDto> getJobsByStatus(@PathVariable JobStatus status) {
         return jobService.getJobsByStatus(status);
     }
+    // Admin APIs
     @GetMapping("/pending")
     public List<JobDto> getPendingJobs() {
         return jobService.getJobsByStatus(JobStatus.PENDING);
