@@ -9,7 +9,8 @@ import java.util.List;
 @Builder
 public class JobRequirements {
     private List<String> skills;
-    private Integer experience; // số năm yêu cầu
-    private String education;
+    private String experience; // số năm yêu cầu
+    private String certificates;
     private String career;
+    private String descriptionRequirements;
 }

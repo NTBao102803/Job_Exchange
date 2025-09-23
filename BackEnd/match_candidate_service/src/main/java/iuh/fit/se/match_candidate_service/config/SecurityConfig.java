@@ -20,7 +20,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**", "/error").permitAll()
                         .requestMatchers(
-                                "/api/match/**"
+                                "/api/match/**",
+                                "/api/candidate/all"
                         ).hasRole("EMPLOYER")
                         .anyRequest().authenticated()
                 )
