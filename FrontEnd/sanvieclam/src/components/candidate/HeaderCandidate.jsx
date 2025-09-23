@@ -179,7 +179,7 @@ const HeaderCandidate = ({ onHomeClick,onJobClick,onCVAIClick,onJobSmartClick,on
           {menuOpen && (
             <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-48 bg-white text-gray-800 rounded-xl shadow-lg py-2 z-50">
               <button
-                onClick={() => navigate("/recruiter/recruiterprofile")}
+                onClick={() => navigate("/candidate/candidateprofile")}
                 className="block px-4 py-2 w-full text-left hover:bg-gray-100"
               >
                 Hồ sơ của tôi
