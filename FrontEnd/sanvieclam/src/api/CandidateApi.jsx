@@ -19,3 +19,13 @@ export const updateCandidateProfile = async (data) => {
     throw error;
   }
 };
+
+// lấy danh sách ứng viên 
+export const getCandidates = async () => {
+  try {
+    const response = await axiosClient.get("/candidate/all");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

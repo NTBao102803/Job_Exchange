@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Eye, Edit, Trash2, User, Search, Lock, Unlock } from "lucide-react";
 import CandidateProfileModal from "../../components/candidate/CandidateProfileModal";
+import {getCandidates} from "../../api/CandidateApi";
 const AdminCandidate = () => {
   const [candidates, setCandidates] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,115 +19,12 @@ const AdminCandidate = () => {
 
   useEffect(() => {
     const fetchCandidates = async () => {
-      // Fake API data
-      const data = [
-        {
-          id: 1,
-          fullName: "Nguyễn Văn A",
-          email: "vana@example.com",
-          active: "Tạm thời vô hiệu hoá",
-          major: "Công nghệ thông tin",
-          skills: "React, Node.js, SQL",
-          experience: "2 năm",
-          graduationYear: 2022,
-          gpa: 3.4,
-          dob: "1999-05-12",
-          gender: "Nam",
-          phone: "0901234567",
-          address: "Hà Nội",
-          school: "ĐH Bách Khoa",
-          projects: "Website thương mại điện tử",
-          certificates: "IELTS 6.5",
-          careerGoal: "Trở thành fullstack developer",
-          hobbies: "Đọc sách, chơi bóng đá",
-          social: "linkedin.com/in/nguyenvana",
-        },
-        {
-          id: 2,
-          fullName: "Trần Thị B",
-          email: "thib@example.com",
-          active: "Đang hoạt động",
-          major: "Quản trị kinh doanh",
-          skills: "Excel, PowerBI",
-          experience: "1 năm",
-          graduationYear: 2021,
-          gpa: 3.6,
-          dob: "2000-01-10",
-          gender: "Nữ",
-          phone: "0909876543",
-          address: "TP.HCM",
-          school: "ĐH Kinh tế",
-          projects: "Quản lý bán hàng",
-          certificates: "MOS Excel",
-          careerGoal: "Quản lý dự án",
-          hobbies: "Du lịch, nấu ăn",
-          social: "facebook.com/tranthib",
-        },
-        {
-          id: 3,
-          fullName: "Trần Thị B",
-          email: "thib@example.com",
-          active: "Tạm thời vô hiệu hoá",
-          major: "Quản trị kinh doanh",
-          skills: "Excel, PowerBI",
-          experience: "1 năm",
-          graduationYear: 2021,
-          gpa: 3.6,
-          dob: "2000-01-10",
-          gender: "Nữ",
-          phone: "0909876543",
-          address: "TP.HCM",
-          school: "ĐH Kinh tế",
-          projects: "Quản lý bán hàng",
-          certificates: "MOS Excel",
-          careerGoal: "Quản lý dự án",
-          hobbies: "Du lịch, nấu ăn",
-          social: "facebook.com/tranthib",
-        },
-        {
-          id: 4,
-          fullName: "Trần Thị B",
-          email: "thib@example.com",
-          active: "Tạm thời vô hiệu hoá",
-          major: "Quản trị kinh doanh",
-          skills: "Excel, PowerBI",
-          experience: "1 năm",
-          graduationYear: 2021,
-          gpa: 3.6,
-          dob: "2000-01-10",
-          gender: "Nữ",
-          phone: "0909876543",
-          address: "TP.HCM",
-          school: "ĐH Kinh tế",
-          projects: "Quản lý bán hàng",
-          certificates: "MOS Excel",
-          careerGoal: "Quản lý dự án",
-          hobbies: "Du lịch, nấu ăn",
-          social: "facebook.com/tranthib",
-        },
-        {
-          id: 5,
-          fullName: "Trần Thị B",
-          email: "thib@example.com",
-          active: "Đang hoạt động",
-          major: "Quản trị kinh doanh",
-          skills: "Excel, PowerBI",
-          experience: "1 năm",
-          graduationYear: 2021,
-          gpa: 3.6,
-          dob: "2000-01-10",
-          gender: "Nữ",
-          phone: "0909876543",
-          address: "TP.HCM",
-          school: "ĐH Kinh tế",
-          projects: "Quản lý bán hàng",
-          certificates: "MOS Excel",
-          careerGoal: "Quản lý dự án",
-          hobbies: "Du lịch, nấu ăn",
-          social: "facebook.com/tranthib",
-        },
-      ];
-      setCandidates(data);
+      try {
+        const data = await getCandidates(); // gọi API backend
+        setCandidates(data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách ứng viên:", error);
+      }
     };
     fetchCandidates();
   }, []);

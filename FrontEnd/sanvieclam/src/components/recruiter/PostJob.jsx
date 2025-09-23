@@ -15,13 +15,13 @@ const PostJob = () => {
     jobType: "",
     salary: "",
     description: "",
-    requirements: "",
+    requirements: "", // mô tả yêu cầu → map với descriptionRequirements
     benefits: "",
     startDate: today,
     endDate: "",
     skills: "",
     experience: "",
-    education: "",
+    certificates: "", // đổi education -> certificates
     career: "",
   });
 
@@ -95,14 +95,9 @@ const PostJob = () => {
     if (!jobData.experience || jobData.experience <= 0) {
       newErrors.experience = "⛔ Vui lòng nhập số năm kinh nghiệm hợp lệ!";
     }
-    if (!jobData.education) {
-      newErrors.education = "⛔ Vui lòng chọn trình độ học vấn!";
-    }
     if (!jobData.career || jobData.career.trim().length < 2) {
       newErrors.career = "⛔ Vui lòng nhập nghề nghiệp/vị trí!";
     }
-
-
     return newErrors;
   };
 
@@ -117,20 +112,35 @@ const PostJob = () => {
     }
 
     try {
-        const payload = {
-          ...jobData,
-          skills: jobData.skills.split(",").map((s) => s.trim()).filter(Boolean), // tách mảng
-        };
+      const payload = {
+        title: jobData.title,
+        location: jobData.location,
+        jobType: jobData.jobType,
+        salary: jobData.salary,
+        startDate: jobData.startDate,
+        endDate: jobData.endDate,
+        description: jobData.description,
+        benefits: jobData.benefits,
+        requirements: {
+          skills: jobData.skills
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+          experience: jobData.experience,
+          certificates: jobData.certificates,
+          career: jobData.career,
+          descriptionRequirements: jobData.requirements,
+        },
+      };
 
-        const response = await createJob(payload);
-        alert("✅ Tin tuyển dụng đã được gửi và đang chờ kiểm duyệt!");
-        console.log("📥 Phản hồi từ server:", response);
-        navigate("/recruiter/dashboard-recruiterjobposts");
-      } catch (error) {
-        console.error("❌ Lỗi khi tạo tin:", error);
-        alert(error.response?.data?.message || "🚨 Đăng tin thất bại!");
-      }
-
+      const response = await createJob(payload);
+      alert("✅ Tin tuyển dụng đã được gửi và đang chờ kiểm duyệt!");
+      console.log("📥 Phản hồi từ server:", response);
+      navigate("/recruiter/dashboard-recruiterjobposts");
+    } catch (error) {
+      console.error("❌ Lỗi khi tạo tin:", error);
+      alert(error.response?.data?.message || "🚨 Đăng tin thất bại!");
+    }
   };
 
   return (
@@ -314,7 +324,7 @@ const PostJob = () => {
             {/* Kỹ năng */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Kỹ năng (cách nhau bằng dấu phẩy) 
+                Kỹ năng (cách nhau bằng dấu phẩy)
               </label>
               <input
                 type="text"
@@ -327,43 +337,39 @@ const PostJob = () => {
             </div>
 
             {/* Kinh nghiệm */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Kinh nghiệm (năm)
-                </label>
-                <input
-                  type="text"
-                  name="experience"
-                  value={jobData.experience}
-                  onChange={handleChange}
-                  placeholder="VD: 2 năm, 3-5 năm..."
-                  className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                />
-              </div>
-
-            {/* Trình độ học vấn */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Trình độ học vấn 
+                Kinh nghiệm (năm)
               </label>
-              <select
-                name="education"
-                value={jobData.education}
+              <input
+                type="text"
+                name="experience"
+                value={jobData.experience}
                 onChange={handleChange}
+                placeholder="VD: 2 năm, 3-5 năm..."
                 className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              >
-                <option value="">-- Chọn trình độ --</option>
-                <option value="Đại học">Đại học</option>
-                <option value="Thạc sĩ">Thạc sĩ</option>
-                <option value="Tiến sĩ">Tiến sĩ</option>
-                <option value="Cao đẳng">Cao đẳng</option>
-              </select>
+              />
+            </div>
+
+            {/* Chứng chỉ */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Chứng chỉ
+              </label>
+              <input
+                type="text"
+                name="certificates"
+                value={jobData.certificates}
+                onChange={handleChange}
+                placeholder="VD: AWS, IELTS..."
+                className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
             </div>
 
             {/* Nghề nghiệp */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Nghề nghiệp / Vị trí 
+                Nghề nghiệp / Vị trí
               </label>
               <input
                 type="text"
@@ -374,7 +380,6 @@ const PostJob = () => {
                 className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
-
 
             {/* Quyền lợi */}
             <div>
