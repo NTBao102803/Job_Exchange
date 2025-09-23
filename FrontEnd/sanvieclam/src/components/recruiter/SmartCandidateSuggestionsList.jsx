@@ -49,7 +49,7 @@ const SmartCandidateSuggestionsList = () => {
           const matchValue =
             item.score != null
               ? item.score.toFixed
-                ? item.score.toFixed(2)
+                ? item.score.toFixed(2) + "%"
                 : String(item.score)
               : "N/A";
 

@@ -17,7 +17,7 @@ public class User {
     private String email;
     @Column(nullable = false)
     private String password;
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = false, length = 50)
     private String fullName;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)

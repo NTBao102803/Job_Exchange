@@ -16,25 +16,28 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @EnableWebSecurity
 public class SecurityConfig {
+
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // Vô hiệu hóa CSRF cho API
                 .authorizeHttpRequests(auth -> auth
+                        // Cho phép truy cập tự do đến các endpoint đăng ký, xác thực
                         .requestMatchers(
                                 "/api/auth/**",
-                                "/api/employer/id/{id}").permitAll()
-                        .requestMatchers(
-                                "/api/employer/**",
-                                "/api/employers/by-email/**"
-                                ).hasRole("EMPLOYER")
-                        .requestMatchers(
-                                "/api/admin/**",
-                                "/api/admin/employers/**")
-                        .hasRole("ADMIN")
+                                "/api/employers/request-otp",
+                                "/api/employers/verify-otp").permitAll()
+
+                        // Yêu cầu vai trò ADMIN cho các endpoint admin
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Yêu cầu vai trò EMPLOYER cho các endpoint employer
+                        .requestMatchers("/api/employers/**").hasRole("EMPLOYER")
+
+                        // Tất cả các request khác yêu cầu xác thực
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

@@ -15,6 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -24,6 +28,8 @@ public class EmployerServiceImpl implements EmployerService {
 
     @Autowired
     private AuthServiceClient authServiceClient;
+
+    private static final Logger logger = LoggerFactory.getLogger(EmployerServiceImpl.class);
 
     @Override
     public void requestOtp(EmployerRegisterRequest request) {
@@ -64,6 +70,7 @@ public class EmployerServiceImpl implements EmployerService {
     public Employer approveEmployer(Long employerId, Long authUserId) {
         Employer employer = employerRepository.findById(employerId)
                 .orElseThrow(() -> new RuntimeException("Employer không tồn tại"));
+
 
         if(employer.getStatus() != EmployerStatus.PENDING) {
             throw new RuntimeException("Employer chưa hoàn tất hồ sơ");
@@ -144,6 +151,11 @@ public class EmployerServiceImpl implements EmployerService {
     @Override
     public Optional<Employer> getEmployerById(Long id) {
         return employerRepository.findById(id);
+    }
+
+    @Override
+    public List<Employer> getAllEmployers() {
+        return employerRepository.findAll();
     }
 
     private boolean isNotBlank(String str) {

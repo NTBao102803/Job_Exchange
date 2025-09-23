@@ -6,6 +6,7 @@ import iuh.fit.se.employer_service.dto.EmployerProfileRequest;
 import iuh.fit.se.employer_service.dto.EmployerRegisterRequest;
 import iuh.fit.se.employer_service.model.Employer;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface EmployerService {
@@ -15,6 +16,8 @@ public interface EmployerService {
     public Employer getMyEmployer();
     public EmployerDto getEmployerByEmail( String email);
     public Optional<Employer> getEmployerById(Long id);
+
+    List<Employer> getAllEmployers();
 
 
 //    admin duyệt

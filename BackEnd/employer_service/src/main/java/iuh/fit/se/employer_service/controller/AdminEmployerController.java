@@ -8,11 +8,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin/employers")
 public class AdminEmployerController {
     @Autowired
     private EmployerService employerService;
+
+    @GetMapping("/all")
+    public ResponseEntity<List<Employer>> getAllEmployers() {
+        return ResponseEntity.ok(employerService.getAllEmployers());
+    }
 
     // Admin duyệt employer
     @PutMapping("/{id}/approve")
