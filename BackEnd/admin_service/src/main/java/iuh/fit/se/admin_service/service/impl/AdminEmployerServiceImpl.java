@@ -6,6 +6,9 @@ import iuh.fit.se.admin_service.service.AdminEmployerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @Service
@@ -21,5 +24,8 @@ public class AdminEmployerServiceImpl implements AdminEmployerService {
     @Override
     public EmployerDto approveEmployer(Long employerId, Long authUserId) {
         return employerClient.approveEmployer(employerId, authUserId);
+    }
+    public List<EmployerDto> getAllEmployers() {
+        return employerClient.getAllEmployers().getBody();
     }
 }

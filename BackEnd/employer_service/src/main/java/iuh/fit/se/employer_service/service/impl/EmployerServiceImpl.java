@@ -1,17 +1,13 @@
 package iuh.fit.se.employer_service.service.impl;
 
 import iuh.fit.se.employer_service.client.AuthServiceClient;
-import iuh.fit.se.employer_service.client.AuthUserRequest;
-import iuh.fit.se.employer_service.client.AuthUserResponse;
-import iuh.fit.se.employer_service.dto.EmployerDto;
-import iuh.fit.se.employer_service.dto.EmployerMapper;
-import iuh.fit.se.employer_service.dto.EmployerProfileRequest;
-import iuh.fit.se.employer_service.dto.EmployerRegisterRequest;
+import iuh.fit.se.employer_service.dto.*;
 import iuh.fit.se.employer_service.model.Employer;
 import iuh.fit.se.employer_service.model.EmployerStatus;
 import iuh.fit.se.employer_service.repository.EmployerRepository;
 import iuh.fit.se.employer_service.service.EmployerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployerServiceImpl implements EmployerService {
@@ -94,9 +91,20 @@ public class EmployerServiceImpl implements EmployerService {
     @Override
     public Employer updateEmployer(EmployerProfileRequest profileRequest) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
         Employer employer = employerRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Employer không tồn tại"));
 
+        // Call sang authServiceClient và log kết quả
+        UserResponse userResponse = authServiceClient.getUserByEmail(email).getBody();
+        if (userResponse != null) {
+            logger.info("Successfully fetched user details from auth service. User ID: {}", userResponse.getId());
+            employer.setAuthUserId(userResponse.getId());
+        } else {
+            logger.warn("Could not fetch user details from auth service for email: {}", email);
+        }
+
+        employer.setAuthUserId(userResponse.getId());
         employer.setFullName(profileRequest.getFullName());
         employer.setPhone(profileRequest.getPhone());
         employer.setCompanyName(profileRequest.getCompanyName());
@@ -154,8 +162,19 @@ public class EmployerServiceImpl implements EmployerService {
     }
 
     @Override
-    public List<Employer> getAllEmployers() {
-        return employerRepository.findAll();
+    public List<EmployerDto> getAllEmployers() {
+        logger.info("Attempting to fetch all employers from the database.");
+        List<Employer> employers = employerRepository.findAll();
+        logger.info("Found {} employers in the database.", employers.size());
+        List<EmployerDto> employerDtos = employers.stream()
+                .map(employer -> {
+                    // Log the ID of each employer being converted
+                    logger.debug("Converting employer with ID: {}", employer.getId());
+                    return EmployerMapper.toDto(employer);
+                })
+                .collect(Collectors.toList());
+        logger.info("Successfully converted {} employers to DTOs.", employerDtos.size());
+        return employerDtos;
     }
 
     private boolean isNotBlank(String str) {

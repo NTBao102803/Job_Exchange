@@ -1,6 +1,7 @@
 package iuh.fit.se.employer_service.controller;
 
 
+import iuh.fit.se.employer_service.dto.EmployerDto;
 import iuh.fit.se.employer_service.model.Employer;
 import iuh.fit.se.employer_service.repository.EmployerRepository;
 import iuh.fit.se.employer_service.service.EmployerService;
@@ -17,7 +18,7 @@ public class AdminEmployerController {
     private EmployerService employerService;
 
     @GetMapping("/all")
-    public ResponseEntity<List<Employer>> getAllEmployers() {
+    public ResponseEntity<List<EmployerDto>> getAllEmployers() {
         return ResponseEntity.ok(employerService.getAllEmployers());
     }
 

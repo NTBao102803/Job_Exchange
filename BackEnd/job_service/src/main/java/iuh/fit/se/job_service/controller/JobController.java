@@ -56,6 +56,10 @@ public class JobController {
     public List<JobDto> getJobsByStatus(@PathVariable JobStatus status) {
         return jobService.getJobsByStatus(status);
     }
+    @GetMapping("/public")
+    public List<JobDto> getAllPublicJobs() {
+        return jobService.getJobsByStatus(JobStatus.APPROVED);
+    }
     // Admin APIs
     @GetMapping("/pending")
     public List<JobDto> getPendingJobs() {

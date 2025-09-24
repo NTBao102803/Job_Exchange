@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "job-service", path = "/api/jobs")
+@FeignClient(name = "job-service", path = "/api/admin/jobs")
 public interface JobClient {
     @GetMapping("/pending")
     List<JobDto> getPending();

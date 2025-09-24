@@ -35,7 +35,8 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/refresh-token",
                                 "/api/user/**",
-                                "/api/candidate/**"
+                                "/api/candidate/**",
+                                "/api/auth/by-email"
                         ).permitAll()
                         // Cho phép cả /error (tránh vòng lặp 403 khi fail)
                         .requestMatchers("/error").permitAll()

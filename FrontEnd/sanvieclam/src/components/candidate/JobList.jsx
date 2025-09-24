@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Flame, Briefcase, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getAllJobsStatus, getEmployerById } from "../../api/JobApi";
+import { getAllPublicJobs, getEmployerById } from "../../api/JobApi";
 
 const JobList = () => {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const JobList = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const jobList = await getAllJobsStatus("APPROVED");
+        const jobList = await getAllPublicJobs();
         console.log("JobList từ API:", jobList);
         const jobsWithEmployer = await Promise.all(
           jobList.map(async (job) => {

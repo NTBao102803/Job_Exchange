@@ -30,7 +30,7 @@ public class SecurityConfig {
 
                         // Admin
                         .requestMatchers(
-                                "/api/jobs/admin/**" ,
+                                "/api/admin/jobs/**" ,
                                 "/api/admin/employers/**")
                         .hasRole("ADMIN")
 

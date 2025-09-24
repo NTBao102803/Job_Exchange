@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/jobs/admin")
+@RequestMapping("/api/admin/jobs")
 public class AdminJobController {
     @Autowired
     private JobService jobService;
@@ -33,5 +33,9 @@ public class AdminJobController {
     @PostMapping("/{id}/reject")
     public ResponseEntity<JobDto> rejectJob(@PathVariable Long id, @RequestBody(required = false) RejectRequest body) {
         return ResponseEntity.ok(jobService.rejectJob(id, body != null ? body.getReason() : null));
+    }
+    @GetMapping
+    public List<JobDto> getAllJobs() {
+        return jobService.getAllJobs();
     }
 }

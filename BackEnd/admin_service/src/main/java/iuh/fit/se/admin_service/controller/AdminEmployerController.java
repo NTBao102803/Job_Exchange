@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin/employers")
 public class AdminEmployerController {
@@ -20,5 +22,9 @@ public class AdminEmployerController {
     @PutMapping("/{id}/reject")
     public ResponseEntity<EmployerDto> reject(@PathVariable Long id) {
         return ResponseEntity.ok(adminEmployerService.rejectEmployer(id));
+    }
+    @GetMapping("/all")
+    public ResponseEntity<List<EmployerDto>> getAllEmployers() {
+        return ResponseEntity.ok(adminEmployerService.getAllEmployers());
     }
 }

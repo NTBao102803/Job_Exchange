@@ -17,7 +17,9 @@ public interface EmployerService {
     public EmployerDto getEmployerByEmail( String email);
     public Optional<Employer> getEmployerById(Long id);
 
-    List<Employer> getAllEmployers();
+    List<EmployerDto> getAllEmployers();
+
+//    public Optional<User> getUserByEmail(String email);
 
 
 //    admin duyệt

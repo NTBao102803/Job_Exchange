@@ -25,17 +25,20 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Vô hiệu hóa CSRF cho API
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép truy cập tự do đến các endpoint đăng ký, xác thực
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/api/employers/request-otp",
-                                "/api/employers/verify-otp").permitAll()
+                                "/api/employers/verify-otp"
+                        ).permitAll()
+
+                        // Endpoint lấy thông tin employer cho USER/EMPLOYER/ADMIN
+                        .requestMatchers("/api/employers/id/**").hasAnyRole("USER", "EMPLOYER", "ADMIN")
 
                         // Yêu cầu vai trò ADMIN cho các endpoint admin
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/employers/**").hasRole("ADMIN")
 
-                        // Yêu cầu vai trò EMPLOYER cho các endpoint employer
-                        .requestMatchers("/api/employers/**").hasRole("EMPLOYER")
+                        // Yêu cầu vai trò EMPLOYER hoặc ADMIN cho các endpoint employer khác
+                        .requestMatchers("/api/employers/**").hasAnyRole("EMPLOYER", "ADMIN")
 
                         // Tất cả các request khác yêu cầu xác thực
                         .anyRequest().authenticated()

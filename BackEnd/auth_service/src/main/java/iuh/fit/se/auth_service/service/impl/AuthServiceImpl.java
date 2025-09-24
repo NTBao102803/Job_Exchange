@@ -13,6 +13,7 @@ import iuh.fit.se.auth_service.repository.UserRepository;
 import iuh.fit.se.auth_service.repository.VerificationTokenRepository;
 import iuh.fit.se.auth_service.service.AuthService;
 import iuh.fit.se.auth_service.service.EmailService;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.mail.MailException;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -164,6 +166,12 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResponse(accessToken, refreshToken, user);
     }
 
+    @Override
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getRole().getRoleName(), user.getIsActive());
+    }
 
 
     @Override

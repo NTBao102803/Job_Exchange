@@ -4,6 +4,8 @@ import iuh.fit.se.auth_service.config.JwtService;
 import iuh.fit.se.auth_service.dto.AuthRequest;
 import iuh.fit.se.auth_service.dto.AuthResponse;
 import iuh.fit.se.auth_service.dto.RegisterRequest;
+import iuh.fit.se.auth_service.dto.UserResponse;
+import iuh.fit.se.auth_service.model.User;
 import iuh.fit.se.auth_service.repository.RoleRepository;
 import iuh.fit.se.auth_service.repository.UserRepository;
 import iuh.fit.se.auth_service.repository.VerificationTokenRepository;
@@ -18,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -80,6 +84,10 @@ public class AuthController {
         response.addCookie(refreshCookie);
 
         return ResponseEntity.ok("Logged out successfully");
+    }
+    @GetMapping("/by-email")
+    public ResponseEntity<UserResponse> getUserByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(authService.getUserByEmail(email));
     }
 
 

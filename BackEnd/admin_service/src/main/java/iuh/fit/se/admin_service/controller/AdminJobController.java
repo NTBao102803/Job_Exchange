@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/jobs/admin")
+@RequestMapping("/api/admin/jobs")
 public class AdminJobController {
 
     @Autowired

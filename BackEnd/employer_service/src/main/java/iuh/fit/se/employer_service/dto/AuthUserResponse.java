@@ -1,6 +1,8 @@
-package iuh.fit.se.employer_service.client;
+package iuh.fit.se.employer_service.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
