@@ -99,4 +99,3 @@ export const getAllEmployer = async () => {
     throw error;
   }
 };
-

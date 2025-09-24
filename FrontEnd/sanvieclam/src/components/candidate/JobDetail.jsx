@@ -6,7 +6,7 @@ import {
   DollarSign,
   Building2,
   ArrowLeft,
-  CalendarDays,User,Mail,Phone
+  CalendarDays,User,Mail,Phone,X
 } from "lucide-react";
 import { getEmployerById } from "../../api/JobApi";
 
@@ -17,6 +17,10 @@ const JobDetail = () => {
 
   const [job, setJob] = useState(state?.job || null);
   const [employer, setEmployer] = useState(null);
+
+    // State cho modal
+  const [showModal, setShowModal] = useState(false);
+  const [cvFile, setCvFile] = useState(null);
   
   useEffect(() => {
     if (!job) {
@@ -69,6 +73,16 @@ const JobDetail = () => {
 
   const startDate = formatDate(job.startDate);
   const endDate = formatDate(job.endDate);
+
+    // Xử lý nộp CV
+  const handleApply = () => {
+    if (!cvFile) {
+      alert("⚠️ Vui lòng chọn file CV trước khi ứng tuyển!");
+      return;
+    }
+    setShowModal(false);
+    alert("✅ Ứng tuyển thành công! Chúng tôi sẽ liên hệ bạn sớm.");
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen pt-32 pb-20 px-6">
@@ -198,12 +212,49 @@ const JobDetail = () => {
             >
               <ArrowLeft className="w-4 h-4" /> Quay lại
             </button>
-            <button className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg shadow hover:from-indigo-600 hover:to-purple-600 transition font-medium">
+            <button onClick={() => setShowModal(true)}
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg shadow hover:from-indigo-600 hover:to-purple-600 transition font-medium">
               Ứng tuyển ngay
             </button>
           </div>
         </div>
       </div>
+      {/* Modal Upload CV */}
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-indigo-600 mb-4">
+              📄 Nộp CV ứng tuyển
+            </h2>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => setCvFile(e.target.files[0])}
+              className="block w-full border p-2 rounded-md mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleApply}
+                className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                Ứng tuyển
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
