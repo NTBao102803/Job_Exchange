@@ -1,5 +1,5 @@
 // src/components/admin/JobActiveModal.js
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   MapPin,
   Clock,
@@ -9,12 +9,22 @@ import {
   X,
   Mail,
   Phone,
-  Globe,
   User,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getEmployerById } from "../../api/RecruiterApi";
 
 const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
+  const [employer, setEmployer] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    companyName: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   if (!job) return null;
 
   const displayValue = (val) => (val && val !== "" ? val : "Chưa có thông tin");
@@ -29,6 +39,25 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
       year: "numeric",
     });
   };
+
+  // ✅ Gọi API lấy employer khi mở modal
+  useEffect(() => {
+    const fetchEmployer = async () => {
+      if (!job?.employerId) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getEmployerById(job.employerId);
+        setEmployer(data);
+      } catch (err) {
+        console.error("❌ Lỗi lấy employer:", err);
+        setError("Không thể tải thông tin nhà tuyển dụng");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEmployer();
+  }, [job?.employerId]);
 
   return (
     <AnimatePresence>
@@ -62,7 +91,11 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
             </h1>
             <p className="text-lg text-gray-600 mt-1 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-indigo-500" />
-              {displayValue(job.company)}
+              {loading
+                ? "⏳ Đang tải..."
+                : error
+                ? error
+                : displayValue(employer?.companyName)}
             </p>
 
             {/* Thông tin nhanh */}
@@ -116,39 +149,48 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
                 <h2 className="text-xl font-semibold text-indigo-600">
                   ✅ Yêu cầu ứng viên
                 </h2>
-                <p className="mt-2 whitespace-pre-line">
-                  {displayValue(job.requirements)}
-                </p>
+                {job.requirements ? (
+                  <p className="mt-2 whitespace-pre-line">
+                    {displayValue(job.requirements.descriptionRequirements)}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-gray-500 italic">
+                    Chưa có thông tin yêu cầu
+                  </p>
+                )}
               </div>
 
               {/* Yêu cầu bắt buộc */}
-              {(job.skills || job.experience || job.education) && (
-                <div className="mt-6">
-                  <h2 className="text-lg font-semibold text-red-600 ml-4">
-                    ⚠️ Yêu cầu bắt buộc
-                  </h2>
-                  <div className="mt-2 ml-3 space-y-2 text-gray-700 ml-4">
-                    {job.skills && (
-                      <p>
-                        <span className="font-medium">Kỹ năng: </span>
-                        {displayValue(job.skills)}
-                      </p>
-                    )}
-                    {job.experience && (
-                      <p>
-                        <span className="font-medium">Kinh nghiệm: </span>
-                        {displayValue(job.experience)}
-                      </p>
-                    )}
-                    {job.education && (
-                      <p>
-                        <span className="font-medium">Trình độ học vấn: </span>
-                        {displayValue(job.education)}
-                      </p>
-                    )}
+              {job.requirements &&
+                (job.requirements.skills ||
+                  job.requirements.experience ||
+                  job.requirements.certificates) && (
+                  <div className="mt-6">
+                    <h2 className="text-lg font-semibold text-red-600 ml-4">
+                      ⚠️ Yêu cầu bắt buộc
+                    </h2>
+                    <div className="mt-2 ml-3 space-y-2 text-gray-700 ml-4">
+                      {job.requirements.skills && (
+                        <p>
+                          <span className="font-medium">Kỹ năng: </span>
+                          {displayValue(job.requirements.skills)}
+                        </p>
+                      )}
+                      {job.requirements.experience && (
+                        <p>
+                          <span className="font-medium">Kinh nghiệm: </span>
+                          {displayValue(job.requirements.experience)}
+                        </p>
+                      )}
+                      {job.requirements.certificates && (
+                        <p>
+                          <span className="font-medium">Chứng chỉ: </span>
+                          {displayValue(job.requirements.certificates)}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Quyền lợi */}
               <div>
@@ -161,23 +203,23 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
               </div>
             </div>
 
-            {/* Thông tin liên hệ */}
+            {/* Thông tin liên hệ (lấy từ employer profile) */}
             <div className="mt-10 border-t pt-6">
               <h2 className="text-2xl font-bold text-indigo-700">
                 📞 Thông tin liên hệ
               </h2>
               <div className="mt-4 space-y-3 text-gray-700">
-                <p className="flex items-center gap-2"> 
-                  <User className="w-5 h-5 text-pink-500" />Người liên hệ: 
-                  {displayValue(job.fullName)}
+                <p className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-pink-500" />
+                  Người liên hệ: {displayValue(employer.fullName)}
                 </p>
                 <p className="flex items-center gap-2">
-                  <Mail className="w-5 h-5 text-pink-500" />Email: 
-                  {displayValue(job.email)}
+                  <Mail className="w-5 h-5 text-pink-500" />
+                  Email: {displayValue(employer.email)}
                 </p>
                 <p className="flex items-center gap-2">
-                  <Phone className="w-5 h-5 text-green-500" />SĐT: 
-                  {displayValue(job.phone)}
+                  <Phone className="w-5 h-5 text-green-500" />
+                  SĐT: {displayValue(employer.phone)}
                 </p>
               </div>
             </div>
@@ -185,9 +227,7 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
             {/* Footer buttons */}
             <div className="flex justify-center gap-4 mt-10">
               <button
-                onClick={() =>
-                  onApprove({ id: job.id, status: "Đã xét duyệt" })
-                }
+                onClick={() => onApprove({ id: job.id, status: "Đã xét duyệt" })}
                 className="px-6 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition"
               >
                 ✅ Đồng ý xét duyệt

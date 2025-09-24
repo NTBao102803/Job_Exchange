@@ -36,6 +36,17 @@ export const getEmployerProfile = async () => {
   }
 };
 
+// Lấy employer theo ID
+export const getEmployerById = async (id) => {
+  try {
+    const res = await axiosClient.get(`/employers/id/${id}`, id);
+    return res.data; // trả về object Employer
+  } catch (err) {
+    console.error("❌ Lỗi lấy employer theo id:", err);
+    throw err;
+  }
+};
+
 // update hồ sơ
 export const updateEmployerProfile = async (data) => {
   try {

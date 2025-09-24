@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Trash2,
-  Building2,
-  Lock,
-  Unlock,
-} from "lucide-react";
+import { Search, Trash2, Building2, Lock, Unlock } from "lucide-react";
 import RecruiterActiveModal from "../../components/admin/RecruiterActiveModal";
 import { approveEmployer, rejectEmployer } from "../../api/AdminApi";
 import { getAllEmployer } from "../../api/RecruiterApi";
@@ -56,8 +50,7 @@ const AdminRecruiter = () => {
       .toLowerCase()
       .includes(searchEmail.toLowerCase());
     const normalizedStatus = backendToLabel[r.status] || r.status;
-    const matchStatus =
-      filterStatus === "ALL" || r.status === filterStatus;
+    const matchStatus = filterStatus === "ALL" || r.status === filterStatus;
     return matchEmail && matchStatus;
   });
 
@@ -207,7 +200,9 @@ const AdminRecruiter = () => {
                   </td>
                   <td className="p-4 text-center space-x-2">
                     <button
-                      disabled={r.status === "APPROVED" || r.status === "REJECTED"}
+                      disabled={
+                        r.status === "APPROVED" || r.status === "REJECTED"
+                      }
                       onClick={() => setSelectedRecruiter(r)}
                       title={
                         r.status === "APPROVED" || r.status === "REJECTED"
@@ -317,7 +312,9 @@ const AdminRecruiter = () => {
           onClose={() => setSelectedRecruiter(null)}
           onApprove={async ({ id, active }) => {
             try {
-              await approveEmployer(id, 1); // authUserId = 1 (demo)
+              // ✅ lấy đúng authUserId từ recruiter
+              await approveEmployer(id, selectedRecruiter.authUserId);
+
               setRecruiters((prev) =>
                 prev.map((r) =>
                   r.id === id ? { ...r, status: "APPROVED", active } : r
