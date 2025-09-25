@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+import ReactMarkdown from "react-markdown";
 
 const ChatBoxAI = () => {
   const [messages, setMessages] = useState([
     {
       sender: "ai",
-      text: "Xin chào 👋 Tôi là trợ lý AI tuyển dụng. Bạn muốn tôi chia sẻ mẹo phỏng vấn hay viết CV?",
+      text: "Xin chào 👋 Tôi là trợ lý AI tuyển dụng.\nBạn muốn tôi chia sẻ **mẹo phỏng vấn** hay **viết CV**?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -23,27 +21,17 @@ const ChatBoxAI = () => {
     setLoading(true);
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const response = await fetch("http://localhost:8080/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: input }),
+      });
 
-      // ✅ Thêm system prompt để AI trả lời đúng trọng tâm
-      const prompt = `
-        Bạn là trợ lý AI tuyển dụng.
-        - Luôn trả lời bằng tiếng Việt.
-        - Trả lời ngắn gọn, rõ ràng, tập trung vào mẹo tuyển dụng.
-        - Không thêm ký tự thừa, không lan man.
-        Câu hỏi của ứng viên: ${input}
-      `;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
-
-      const aiMessage = { sender: "ai", text };
+      const data = await response.json();
+      const aiMessage = { sender: "ai", text: data.reply };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
-      console.error("Gemini error:", error);
-      const errorMessage = { sender: "ai", text: "❌ Lỗi: Không thể gọi Gemini API." };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, { sender: "ai", text: "❌ Lỗi server." }]);
     } finally {
       setLoading(false);
     }
@@ -51,14 +39,13 @@ const ChatBoxAI = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); // ✅ Ngăn chèn ký tự lạ
+      e.preventDefault();
       handleSend();
     }
   };
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      {/* Nút toggle mở/đóng */}
       {!open ? (
         <button
           onClick={() => setOpen(true)}
@@ -68,7 +55,6 @@ const ChatBoxAI = () => {
         </button>
       ) : (
         <div className="w-80 h-96 bg-white rounded-xl shadow-2xl flex flex-col border border-gray-300">
-          {/* Header */}
           <div className="bg-green-600 text-white p-3 flex justify-between items-center rounded-t-xl">
             <span className="font-semibold">💬 Trợ lý tuyển dụng AI</span>
             <button
@@ -84,16 +70,18 @@ const ChatBoxAI = () => {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`p-2 rounded-lg max-w-[75%] leading-relaxed ${
+                className={`p-2 rounded-lg max-w-[75%] leading-relaxed whitespace-pre-line ${
                   msg.sender === "user"
                     ? "bg-blue-500 text-white ml-auto"
                     : "bg-gray-200 text-gray-800 mr-auto"
                 }`}
               >
-                {msg.text}
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
               </div>
             ))}
-            {loading && <div className="text-gray-500 italic">⏳ Đang suy nghĩ...</div>}
+            {loading && (
+              <div className="text-gray-500 italic">⏳ Đang suy nghĩ...</div>
+            )}
           </div>
 
           {/* Ô nhập */}
