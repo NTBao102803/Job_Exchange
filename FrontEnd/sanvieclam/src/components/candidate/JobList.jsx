@@ -219,12 +219,15 @@ const JobList = () => {
                       💰 {job.salary}
                     </p>
                     {job.requirements && (
-                      <p
-                        className="text-x text-gray-700 truncate"
-                        title={job.requirements}
-                      >
-                        🛠 {job.requirements}
-                      </p>
+                      <div className="text-x text-gray-700 truncate">
+                        {/* Mô tả yêu cầu chính */}
+                        {/* Kỹ năng */}
+                        {job.requirements.skills && (
+                          <p title={job.requirements.skills}>
+                            🛠 {job.requirements.skills}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
 

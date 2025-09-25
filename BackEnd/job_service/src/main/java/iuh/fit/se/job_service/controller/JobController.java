@@ -29,6 +29,11 @@ public class JobController {
         return jobService.getAllJobs();
     }
 
+    @GetMapping("/jobByEmployer")
+    public List<JobDto> getAllJobsByEmail() {
+        return jobService.getAllJobsByEmail();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<JobDto> getJobById(@PathVariable Long id) {
         return jobService.getJobById(id)
@@ -56,6 +61,12 @@ public class JobController {
     public List<JobDto> getJobsByStatus(@PathVariable JobStatus status) {
         return jobService.getJobsByStatus(status);
     }
+
+    @GetMapping("/statusByEmployer/{status}")
+    public List<JobDto> getJobsByStatusByEmployer(@PathVariable JobStatus status) {
+        return jobService.getJobsByStatusByEmployer(status);
+    }
+
     @GetMapping("/public")
     public List<JobDto> getAllPublicJobs() {
         return jobService.getJobsByStatus(JobStatus.APPROVED);

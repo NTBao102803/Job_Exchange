@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Briefcase } from "lucide-react";
 import CandidateProfileModal from "../candidate/CandidateProfileModal";
-import { getJobsByStatus } from "../../api/RecruiterApi";
+import { getJobsByStatusByEmployer } from "../../api/RecruiterApi";
 import { getCandidatesForJob } from "../../api/MachCandidateApi";
 
 const SmartCandidateSuggestionsList = () => {
@@ -17,7 +17,7 @@ const SmartCandidateSuggestionsList = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await getJobsByStatus("APPROVED"); // ví dụ lấy job đang mở
+        const res = await getJobsByStatusByEmployer("APPROVED"); // ví dụ lấy job đang mở
         setJobs(res);
         if (res.length > 0) {
           setSelectedJob(res[0].id); // chọn job đầu tiên

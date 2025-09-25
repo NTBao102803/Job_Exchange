@@ -6,6 +6,7 @@ import {
   getAllJobs,
   getEmployerProfile,
   updateJob,
+  getAllJobsByEmail
 } from "../../api/RecruiterApi";
 
 const RecruiterJobPosts = () => {
@@ -31,7 +32,7 @@ const RecruiterJobPosts = () => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const data = await getAllJobs();
+        const data = await getAllJobsByEmail();
         setJobPosts(data);
       } catch (err) {
         console.error("❌ Lỗi khi tải job:", err);

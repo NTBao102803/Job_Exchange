@@ -144,31 +144,31 @@ const JobDetail = () => {
               <h2 className="text-xl font-semibold text-indigo-600">
                 ✅ Yêu cầu ứng viên
               </h2>
-              <p className="mt-2">{displayValue(job.requirements)}</p>
+              <p className="mt-2">{displayValue(job.requirements.descriptionRequirements)}</p>
             </div>
             {/* Yêu cầu bắt buộc */}
-              {(job.skills || job.experience || job.education) && (
+              {(job.requirements.skills || job.requirements.experience || job.requirements.certificates) && (
                 <div className="mt-6">
                   <h2 className="text-lg font-semibold text-red-600 ml-4">
                     ⚠️ Yêu cầu bắt buộc
                   </h2>
                   <div className="mt-2 ml-6 space-y-2 text-gray-700">
-                    {job.skills && (
+                    {job.requirements.skills && (
                       <p>
                         <span className="font-medium">Kỹ năng: </span>
-                        {displayValue(job.skills)}
+                        {displayValue(job.requirements.skills)}
                       </p>
                     )}
-                    {job.experience && (
+                    {job.requirements.experience && (
                       <p>
                         <span className="font-medium">Kinh nghiệm: </span>
-                        {displayValue(job.experience)}
+                        {displayValue(job.requirements.experience)}
                       </p>
                     )}
-                    {job.education && (
+                    {job.requirements.certificates && (
                       <p>
                         <span className="font-medium">Trình độ học vấn: </span>
-                        {displayValue(job.education)}
+                        {displayValue(job.requirements.certificates)}
                       </p>
                     )}
                   </div>

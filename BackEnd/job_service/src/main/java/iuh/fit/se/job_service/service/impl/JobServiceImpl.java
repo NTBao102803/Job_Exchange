@@ -8,6 +8,7 @@ import iuh.fit.se.job_service.model.JobStatus;
 import iuh.fit.se.job_service.repository.JobRepository;
 import iuh.fit.se.job_service.service.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.kafka.support.LoggingProducerListener;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -120,9 +121,46 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    public List<JobDto> getAllJobsByEmail() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        logger.info("Fetching all jobs with email: {}", email);
+
+        EmployerDto employer = employerClient.getEmployerByEmail(email);
+
+        // 3. Kiem tra xem Employer co ton tai khong
+        if (employer == null) {
+            logger.warn("Employer not found with email: {}", email);
+            return List.of();
+        }
+
+        List<Job> jobs = jobRepository.findByEmployerId(employer.getId());
+
+        logger.info("Found {} jobs for employer ID: {}", jobs.size(), employer.getId());
+
+        return jobs.stream().map(JobMapper::toDto).toList();
+    }
+
+    @Override
+    public List<JobDto> getJobsByStatusByEmployer(JobStatus status) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        logger.info("Fetching all jobs with email: {}", email);
+
+        EmployerDto employer = employerClient.getEmployerByEmail(email);
+
+        // 3. Kiem tra xem Employer co ton tai khong
+        if (employer == null) {
+            logger.warn("Employer not found with email: {}", email);
+            return List.of();
+        }
+        List<Job> jobs = jobRepository.findByEmployerIdAndStatus(employer.getId(),  status, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        logger.info("Found {} jobs with status {}.", jobs.size(), status);
+        return jobs.stream().map(JobMapper::toDto).toList();
+    }
+
+    @Override
     public List<JobDto> getJobsByStatus(JobStatus status) {
         logger.info("Fetching jobs with status: {}", status);
-        List<Job> jobs = jobRepository.findByStatus(status);
+        List<Job> jobs = jobRepository.findByStatusOrderByUpdatedAtDesc (status);
         logger.info("Found {} jobs with status {}.", jobs.size(), status);
         return jobs.stream().map(JobMapper::toDto).toList();
     }

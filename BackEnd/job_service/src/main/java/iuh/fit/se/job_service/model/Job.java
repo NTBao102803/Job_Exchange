@@ -4,6 +4,8 @@ import iuh.fit.se.job_service.dto.JobRequirements;
 import iuh.fit.se.job_service.service.impl.JobRequirementsConverter;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -52,6 +54,10 @@ public class Job {
     @Enumerated(EnumType.STRING)
     private JobStatus status; // Trạng thái tin (PENDING, APPROVED, EXPIRED...)
 
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
