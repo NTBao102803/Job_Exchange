@@ -78,6 +78,17 @@ export const getAllJobs = async () => {
   }
 };
 
+// danh sách job theo employer
+export const getAllJobsByEmail = async () => {
+  try {
+    const response = await axiosClient.get("/jobs/jobByEmployer");
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi gọi API getAllJobsByEmail:", error);
+    throw error;
+  }
+};
+
 // cập nhật job theo id
 export const updateJob = async (id, jobData) => {
   try {
@@ -93,6 +104,17 @@ export const updateJob = async (id, jobData) => {
 export const getJobsByStatus = async (status) => {
   try {
     const response = await axiosClient.get(`/jobs/status/${status}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi gọi API getJobsByStatus:", error);
+    throw error;
+  }
+};
+
+// danh sách job theo status and employer
+export const getJobsByStatusByEmployer = async (status) => {
+  try {
+    const response = await axiosClient.get(`/jobs/statusByEmployer/${status}`);
     return response.data;
   } catch (error) {
     console.error("Lỗi khi gọi API getJobsByStatus:", error);
