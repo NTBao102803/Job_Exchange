@@ -1,4 +1,4 @@
-package iuh.fit.se.user_service.config;
+package iuh.fit.se.storage_service.config;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;

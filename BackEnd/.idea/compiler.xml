@@ -8,6 +8,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="admin_service" />
+        <module name="application_service" />
         <module name="recommendation_service" />
         <module name="ai_matching_service" />
         <module name="match_candidate_service" />
@@ -42,6 +43,7 @@
       <module name="admin_service" options="-parameters" />
       <module name="ai_matching_service" options="-parameters" />
       <module name="api_gateway" options="-parameters" />
+      <module name="application_service" options="-parameters" />
       <module name="auth_service" options="-parameters" />
       <module name="candidate_matching_service" options="-parameters" />
       <module name="chatbot_service" options="-parameters" />

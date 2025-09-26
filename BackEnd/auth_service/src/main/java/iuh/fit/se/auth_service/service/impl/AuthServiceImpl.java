@@ -15,6 +15,9 @@ import iuh.fit.se.auth_service.service.AuthService;
 import iuh.fit.se.auth_service.service.EmailService;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.mail.MailException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,7 +25,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -141,19 +147,35 @@ public class AuthServiceImpl implements AuthService {
         // 4. Gọi user-service để tạo profile (chỉ khi KHÔNG phải EMPLOYER)
         if (!"EMPLOYER".equalsIgnoreCase(role.getRoleName())) {
             RestTemplate restTemplate = new RestTemplate();
+
+            // 1. Gọi user-service tạo Candidate
             CandidateRequest candidateRequest = new CandidateRequest();
-//            ProfileRequest profileRequest = new ProfileRequest();
             candidateRequest.setUserId(user.getId());
             candidateRequest.setEmail(user.getEmail());
             candidateRequest.setRole(role.getRoleName());
             candidateRequest.setFullName(user.getFullName());
 
+            restTemplate.postForObject(
+                    "http://localhost:8082/api/candidate/internal",
+                    candidateRequest,
+                    Void.class);
+
+            // 2. Gọi storage-service tạo storage profile cho Candidate
+            // (b) Gọi storage-service tạo storage profile rỗng
             try {
                 restTemplate.postForObject(
-                        "http://localhost:8082/api/candidate/internal",
-                        candidateRequest,
-                        Void.class);            } catch (Exception ex) {
-                throw new RuntimeException("Không thể tạo profile cho user trong user-service", ex);
+                        "http://localhost:8083/api/storage/init?userId=" + user.getId() + "&category=AVATAR",
+                        null,
+                        Void.class
+                );
+
+                restTemplate.postForObject(
+                        "http://localhost:8083/api/storage/init?userId=" + user.getId() + "&category=CV",
+                        null,
+                        Void.class
+                );
+            } catch (Exception ex) {
+                throw new RuntimeException("Không thể tạo storage profile cho user trong storage-service", ex);
             }
         }
 

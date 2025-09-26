@@ -79,4 +79,32 @@ public class CandidateServiceImpl implements CandidateService {
 
         return candidateRepository.save(candidate);
     }
+
+    @Override
+    public CandidateDto getCandidateByEmail() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Candidate candidate = candidateRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Candidate not found with email: " + email));
+        return CandidateDto.builder()
+                .id(candidate.getId())
+                .fullName(candidate.getFullName())
+                .dob(candidate.getDob())
+                .gender(candidate.getGender())
+                .email(candidate.getEmail())
+                .phone(candidate.getPhone())
+                .role(candidate.getRole())
+                .address(candidate.getAddress())
+                .school(candidate.getSchool())
+                .major(candidate.getMajor())
+                .gpa(candidate.getGpa())
+                .graduationYear(candidate.getGraduationYear())
+                .experience(candidate.getExperience())
+                .projects(candidate.getProjects())
+                .skills(candidate.getSkills())
+                .certificates(candidate.getCertificates())
+                .careerGoal(candidate.getCareerGoal())
+                .hobbies(candidate.getHobbies())
+                .social(candidate.getSocial())
+                .build();
+    }
 }

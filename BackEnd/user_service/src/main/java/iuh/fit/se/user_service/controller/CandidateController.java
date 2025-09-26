@@ -45,6 +45,12 @@ public class CandidateController {
         return ResponseEntity.ok(candidateService.getCandidate());
     }
 
+    @GetMapping("/email")
+    public ResponseEntity<CandidateDto> getCandidateByEmail() {
+        return ResponseEntity.ok(candidateService.getCandidateByEmail());
+    }
+
+
     @PutMapping
     public ResponseEntity<Candidate> updateCandidate(@RequestBody CandidateDto candidateDto) {
         Candidate updateCandidate = candidateService.updateCandidate(candidateDto);

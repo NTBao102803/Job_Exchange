@@ -4,6 +4,7 @@
     <file url="file://$PROJECT_DIR$/admin_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/ai_matching_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/api_gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/application_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/auth_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/candidate_matching_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/chatbot_service/src/main/java" charset="UTF-8" />

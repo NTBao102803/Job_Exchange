@@ -1,4 +1,4 @@
-package iuh.fit.se.match_candidate_service.config;
+package iuh.fit.se.application_service.config;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -9,12 +9,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+@Component
 public class FeignClientInterceptor implements RequestInterceptor {
-
     private static final Logger logger = LoggerFactory.getLogger(FeignClientInterceptor.class);
 
     @Override
