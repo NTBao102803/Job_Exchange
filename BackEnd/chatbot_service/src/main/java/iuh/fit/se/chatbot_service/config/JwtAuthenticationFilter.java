@@ -1,4 +1,4 @@
-package iuh.fit.se.job_service.config;
+package iuh.fit.se.chatbot_service.config;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -17,7 +17,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {

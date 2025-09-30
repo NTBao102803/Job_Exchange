@@ -31,9 +31,15 @@ public class SecurityConfig {
                                 "/api/auth/request-otp",
                                 "/api/auth/verify-otp",
                                 "/api/auth/login",
+                                "/api/auth/logout",
                                 "/api/auth/register",
-                                "/api/auth/refresh-token"
+                                "/api/auth/refresh-token",
+                                "/api/user/**",
+                                "/api/candidate/**",
+                                "/api/auth/by-email"
                         ).permitAll()
+                        // Cho phép cả /error (tránh vòng lặp 403 khi fail)
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated() // All other requests require authentication
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

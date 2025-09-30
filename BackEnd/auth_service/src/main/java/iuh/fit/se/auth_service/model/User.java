@@ -17,12 +17,12 @@ public class User {
     private String email;
     @Column(nullable = false)
     private String password;
-    @Column(nullable = false, unique = true, length = 50)
-    private String userName;
+    @Column(nullable = false, unique = false, length = 50)
+    private String fullName;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
     @Column(name = "active", nullable = false)
-    private Boolean isActive = false;
+    private Boolean isActive;
 }

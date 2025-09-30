@@ -1,4 +1,4 @@
-package iuh.fit.se.chatbot_service.config;
+package iuh.fit.se.ai_matching_service.config;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;

@@ -11,10 +11,16 @@ import lombok.Setter;
 @Setter
 @Data
 public class RegisterRequest {
-    @NotNull(message = "Username không được null")
-    @NotBlank(message = "Username không được để trống")
-    @Size(min = 3, max = 50, message = "Username phải có độ dài từ 3 đến 50 ký tự")
-    private String userName;
+    @NotNull(message = "fullName không được null")
+    @NotBlank(message = "fullName không được để trống")
+    @Size(min = 3, max = 50, message = "fullName phải có độ dài từ 3 đến 50 ký tự")
+    private String fullName;
+
+    @NotNull(message = "Email không được null")
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không hợp lệ")
+    @Size(max = 100, message = "Email không được dài quá 100 ký tự")
+    private String email;
 
     @NotNull(message = "Password không được null")
     @NotBlank(message = "Password không được để trống")
@@ -24,13 +30,6 @@ public class RegisterRequest {
             message = "Password phải chứa ít nhất 1 chữ thường, 1 chữ hoa, 1 số và 1 ký tự đặc biệt, tối thiểu 8 ký tự"
     )
     private String passWord;
-
-
-    @NotNull(message = "Email không được null")
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không hợp lệ")
-    @Size(max = 100, message = "Email không được dài quá 100 ký tự")
-    private String email;
 
     @NotNull(message = "Role không được null")
     @NotBlank(message = "Role không được để trống")

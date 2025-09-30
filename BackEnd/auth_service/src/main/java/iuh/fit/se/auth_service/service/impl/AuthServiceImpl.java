@@ -3,9 +3,8 @@ package iuh.fit.se.auth_service.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.se.auth_service.config.JwtService;
-import iuh.fit.se.auth_service.dto.AuthRequest;
-import iuh.fit.se.auth_service.dto.AuthResponse;
-import iuh.fit.se.auth_service.dto.RegisterRequest;
+import iuh.fit.se.auth_service.dto.*;
+import iuh.fit.se.auth_service.event.UserCreatedEvent;
 import iuh.fit.se.auth_service.model.Role;
 import iuh.fit.se.auth_service.model.User;
 import iuh.fit.se.auth_service.model.VerificationToken;
@@ -14,15 +13,19 @@ import iuh.fit.se.auth_service.repository.UserRepository;
 import iuh.fit.se.auth_service.repository.VerificationTokenRepository;
 import iuh.fit.se.auth_service.service.AuthService;
 import iuh.fit.se.auth_service.service.EmailService;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.mail.MailException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -53,6 +56,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private VerificationTokenRepository verificationTokenRepository;
+
+    @Autowired
+    private KafkaTemplate<String, UserCreatedEvent> kafkaTemplate;
 
     public AuthServiceImpl(JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
@@ -92,7 +98,7 @@ public class AuthServiceImpl implements AuthService {
 
         VerificationToken token = new VerificationToken();
 
-        token.setTempUserName(request.getUserName());
+        token.setTempFullName(request.getFullName());
         token.setTempPassword(passwordEncoder.encode(request.getPassWord()));
         token.setEmail(request.getEmail());
         token.setRoleName(role.getRoleName());
@@ -112,14 +118,14 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse verifyOtp(String email, String otp) {
+        // 1. Kiểm tra OTP hợp lệ
         VerificationToken token = verificationTokenRepository.findByEmailAndOtp(email, otp)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy mã OTP"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy mã OTP hoặc OTP không hợp lệ"));
 
-
-        // Tạo user từ thông tin tạm
+        // 2. Tạo user từ thông tin tạm
         User user = new User();
-        user.setUserName(token.getTempUserName());
-        user.setPassword(token.getTempPassword());
+        user.setFullName(token.getTempFullName());
+        user.setPassword(token.getTempPassword()); // đã được mã hoá
         user.setEmail(token.getEmail());
         user.setIsActive(true);
 
@@ -129,16 +135,44 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        // Xóa token sau khi xác thực thành công
+        // 3. Xóa token sau khi xác thực thành công
         verificationTokenRepository.delete(token);
 
-        // Tạo token
+        // 4. Gọi user-service để tạo profile (chỉ khi KHÔNG phải EMPLOYER)
+        if (!"EMPLOYER".equalsIgnoreCase(role.getRoleName())) {
+            RestTemplate restTemplate = new RestTemplate();
+            CandidateRequest candidateRequest = new CandidateRequest();
+//            ProfileRequest profileRequest = new ProfileRequest();
+            candidateRequest.setUserId(user.getId());
+            candidateRequest.setEmail(user.getEmail());
+            candidateRequest.setRole(role.getRoleName());
+            candidateRequest.setFullName(user.getFullName());
+
+            try {
+                restTemplate.postForObject(
+                        "http://localhost:8082/api/candidate/internal",
+                        candidateRequest,
+                        Void.class);            } catch (Exception ex) {
+                throw new RuntimeException("Không thể tạo profile cho user trong user-service", ex);
+            }
+        }
+
+        // 5. Sinh JWT Token
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
         String accessToken = jwtService.generateToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
 
+        // 6. Trả về response
         return new AuthResponse(accessToken, refreshToken, user);
     }
+
+    @Override
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getRole().getRoleName(), user.getIsActive());
+    }
+
 
     @Override
     public AuthResponse login(AuthRequest loginRequest) {
