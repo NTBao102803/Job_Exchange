@@ -17,6 +17,7 @@ import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.mail.MailException;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.time.LocalDateTime;
@@ -193,6 +195,60 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
         return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getRole().getRoleName(), user.getIsActive());
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
+
+        String otp = String.format("%06d", new Random().nextInt(999999));
+
+        VerificationToken token = new VerificationToken();
+        token.setEmail(email);
+        token.setOtp(otp);
+        token.setExpiryDate(LocalDateTime.now().plusMinutes(3));
+        verificationTokenRepository.save(token);
+
+        String content = "<p>Mã OTP khôi phục mật khẩu của bạn là: <strong>" + otp + "</strong></p>";
+        emailService.sendEmail(email, "Khôi phục mật khẩu", content);
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        VerificationToken token = verificationTokenRepository
+                .findByEmailAndOtp(request.getEmail(), request.getOtp())
+                .orElseThrow(() -> new RuntimeException("OTP không hợp lệ hoặc đã hết hạn"));
+
+        if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("OTP đã hết hạn");
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // Xóa OTP sau khi dùng
+        verificationTokenRepository.delete(token);
+    }
+
+    @Override
+    public void changePassword(String usernameOrEmail, ChangePasswordRequest request) {
+        // Tìm user theo username/email
+        User user = userRepository.findByEmail(usernameOrEmail)
+                .or(() -> userRepository.findByEmail(usernameOrEmail))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Người dùng không tồn tại"));
+
+        // So sánh mật khẩu cũ
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu cũ không đúng");
+        }
+
+        // Gán mật khẩu mới đã mã hoá
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
 

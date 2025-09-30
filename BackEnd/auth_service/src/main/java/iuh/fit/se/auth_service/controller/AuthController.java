@@ -1,10 +1,7 @@
 package iuh.fit.se.auth_service.controller;
 
 import iuh.fit.se.auth_service.config.JwtService;
-import iuh.fit.se.auth_service.dto.AuthRequest;
-import iuh.fit.se.auth_service.dto.AuthResponse;
-import iuh.fit.se.auth_service.dto.RegisterRequest;
-import iuh.fit.se.auth_service.dto.UserResponse;
+import iuh.fit.se.auth_service.dto.*;
 import iuh.fit.se.auth_service.model.User;
 import iuh.fit.se.auth_service.repository.RoleRepository;
 import iuh.fit.se.auth_service.repository.UserRepository;
@@ -18,9 +15,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Optional;
 
 @RestController
@@ -88,6 +87,26 @@ public class AuthController {
     @GetMapping("/by-email")
     public ResponseEntity<UserResponse> getUserByEmail(@RequestParam String email) {
         return ResponseEntity.ok(authService.getUserByEmail(email));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok("OTP đã được gửi về email của bạn");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok("Đổi mật khẩu thành công");
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@Valid @RequestBody  ChangePasswordRequest request,
+                                                 Principal principal) {
+        authService.changePassword(principal.getName(), request);
+        return ResponseEntity.ok("Đổi mật khẩu thành công");
     }
 
 
