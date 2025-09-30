@@ -24,11 +24,11 @@ public class Application {
     private ApplicationStatus status;
 
     @Column(columnDefinition = "TEXT")
-    private String coverLetter;
-
-    @Column(columnDefinition = "TEXT")
     private String rejectReason;
 
+    // Metadata CV
+    private String cvFileName;     // tên gốc
+    private String cvObjectName;   // objectName trong MinIO
 
     private LocalDateTime appliedAt;
 }

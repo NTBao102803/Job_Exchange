@@ -15,7 +15,8 @@ public class ApplicationDto {
     private Long candidateId;
     private Long jobId;
     private ApplicationStatus status;
-    private String coverLetter;
     private String rejectReason;
+    private String cvFileName;
+    private String cvUrl;   // lấy từ storage-service
     private LocalDateTime appliedAt;
 }

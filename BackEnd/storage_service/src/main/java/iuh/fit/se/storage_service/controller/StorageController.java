@@ -34,6 +34,11 @@ public class StorageController {
         return ResponseEntity.ok(fileStorageService.storeFile(file, userId, category));
     }
 
+    @GetMapping("/file")
+    public FileResponse getFileByObjectName(@RequestParam String objectName) {
+        return fileStorageService.getFileByObjectName(objectName);
+    }
+
     // API lấy file theo userId + category
     @GetMapping("/user/{userId}/file")
     public ResponseEntity<FileResponse> getFile(

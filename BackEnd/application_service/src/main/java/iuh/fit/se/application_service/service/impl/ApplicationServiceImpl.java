@@ -2,8 +2,10 @@ package iuh.fit.se.application_service.service.impl;
 
 import iuh.fit.se.application_service.client.CandidateClient;
 import iuh.fit.se.application_service.client.JobClient;
+import iuh.fit.se.application_service.client.StorageClient;
 import iuh.fit.se.application_service.dto.ApplicationDto;
 import iuh.fit.se.application_service.dto.ApplicationRequest;
+import iuh.fit.se.application_service.dto.StorageResponse;
 import iuh.fit.se.application_service.model.Application;
 import iuh.fit.se.application_service.model.ApplicationStatus;
 import iuh.fit.se.application_service.repository.ApplicationRepository;
@@ -23,6 +25,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final JobClient jobClient;
     private final CandidateClient candidateClient;
+    private final StorageClient storageClient;
 
     @Value("${application.check-remote:true}")
     private boolean checkRemote;
@@ -30,37 +33,49 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public ApplicationDto apply(ApplicationRequest request) {
         if (checkRemote) {
-            // check job tồn tại
             jobClient.getJobById(request.getJobId());
-
-            // check candidate tồn tại từ token
             CandidateClient.CandidateDto candidate = candidateClient.getCandidateByEmail();
-
-            // nếu muốn lấy candidateId từ DB user-service thì dùng candidate.id()
             request.setCandidateId(candidate.id());
         }
+
         applicationRepository.findByCandidateIdAndJobId(request.getCandidateId(), request.getJobId())
                 .ifPresent(a -> { throw new IllegalStateException("Bạn đã ứng tuyển công việc này rồi"); });
 
+        // upload file sang storage-service
+        StorageResponse stored = storageClient.uploadFile(
+                request.getFile(),
+                request.getCandidateId(),
+                "CV"
+        );
+
+        // tạo application
         Application app = Application.builder()
                 .candidateId(request.getCandidateId())
                 .jobId(request.getJobId())
-                .coverLetter(request.getCoverLetter())
                 .status(ApplicationStatus.PENDING)
+                .cvFileName(stored.getFileName())   // lấy từ response
+                .cvObjectName(stored.getObjectName())
                 .appliedAt(LocalDateTime.now())
                 .build();
+
         Application saved = applicationRepository.save(app);
-        return map(saved);
+        return map(saved, stored.getFileUrl());
     }
 
     @Override
     public List<ApplicationDto> getByCandidate(Long candidateId) {
-        return applicationRepository.findByCandidateId(candidateId).stream().map(this::map).collect(Collectors.toList());
+        return applicationRepository.findByCandidateId(candidateId)
+                .stream()
+                .map(this::mapWithLookup)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ApplicationDto> getByJob(Long jobId) {
-        return applicationRepository.findByJobId(jobId).stream().map(this::map).collect(Collectors.toList());
+        return applicationRepository.findByJobId(jobId)
+                .stream()
+                .map(this::mapWithLookup)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -68,20 +83,38 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application app = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
         app.setStatus(status);
-        if (status == ApplicationStatus.REJECTED) app.setRejectReason(rejectReason);
+        if (status == ApplicationStatus.REJECTED) {
+            app.setRejectReason(rejectReason);
+        }
         Application saved = applicationRepository.save(app);
-        return map(saved);
+        return mapWithLookup(saved);
     }
 
-    private ApplicationDto map(Application a) {
+    // Map khi đã có fileUrl (trong lúc apply)
+    private ApplicationDto map(Application a, String fileUrl) {
         return ApplicationDto.builder()
                 .id(a.getId())
                 .candidateId(a.getCandidateId())
                 .jobId(a.getJobId())
                 .status(a.getStatus())
-                .coverLetter(a.getCoverLetter())
                 .rejectReason(a.getRejectReason())
+                .cvFileName(a.getCvFileName())
+                .cvUrl(fileUrl)
                 .appliedAt(a.getAppliedAt())
                 .build();
+    }
+
+    // Map khi chỉ có objectName -> gọi storage-service để lấy fileUrl
+    private ApplicationDto mapWithLookup(Application a) {
+        String fileUrl = null;
+        if (a.getCvObjectName() != null) {
+            try {
+                // storage-service có thể thêm API getByObjectName
+                fileUrl = storageClient.getFileUrl(a.getCvObjectName()).getFileUrl();
+            } catch (Exception e) {
+                // fallback
+            }
+        }
+        return map(a, fileUrl);
     }
 }

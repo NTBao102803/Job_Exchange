@@ -10,4 +10,5 @@ public interface FileRepository extends JpaRepository<StoredFile, Long> {
     List<StoredFile> findByUserId(Long userId);
     // bỏ phân biệt hoa thường
     Optional<StoredFile> findByUserIdAndCategoryIgnoreCase(Long userId, String category);
+    Optional<StoredFile> findByObjectName(String objectName);
 }

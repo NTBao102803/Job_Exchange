@@ -11,4 +11,5 @@ public interface FileStorageService {
     public FileResponse storeFile(MultipartFile file, Long userId, String category) throws IOException;
     public FileResponse initStorage(Long userId, String category);
     byte[] downloadFile(String objectName) throws Exception;
+    public FileResponse getFileByObjectName(String objectName);
 }
