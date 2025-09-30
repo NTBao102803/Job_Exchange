@@ -18,7 +18,7 @@ export default function DashboardAppliedJobsList() {
      navigate("/candidate/dashboard-joblist");
    };
      const goCVAIClick = () => { 
-     navigate("/candidate/dashboard-candidate#cv-ai-banner");
+     navigate("/candidate/dashboard-creatcvai");
    };
      const goJobSmartClick = () => { 
      navigate("/candidate/dashboard-smartjobsuggestionslist");

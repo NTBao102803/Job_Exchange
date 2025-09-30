@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaderCandidate from "../../components/candidate/HeaderCandidate";
-import SmartJobSuggestionsList from "../../components/candidate/SmartJobSuggestionsList";
+import CreatCVAI from "../../components/candidate/CreatCVAI";
 import Footer from "../../components/Footer";
 
-export default function DashboardSmartJobSuggestionsList() {
+export default function DashboardCreatCVAI() {
   const footerRef = useRef(null);
   const navigate = useNavigate();
      // scroll mượt đến Footer
@@ -40,7 +40,7 @@ export default function DashboardSmartJobSuggestionsList() {
                        onFooter={scrollToFooter} />
 
      
-      <SmartJobSuggestionsList/>
+      <CreatCVAI/>
       <div ref={footerRef}>
         <Footer/>
       </div>

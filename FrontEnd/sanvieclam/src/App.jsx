@@ -20,6 +20,7 @@ import DashboardJobList from "./page/candidate/DashboardJobList";
 import DashboardJobDetail from "./page/candidate/DashboardJobDetail";
 import DashboardSmartJobSuggestionsList from "./page/candidate/DashboardSmartJobSuggestionsList";
 import DashboardAppliedJobsList from "./page/candidate/DashboardAppliedJobsList";
+import DashboardCreatCVAI from "./page/candidate/DashboardCreatCVAI";
 
 import DashboardPostJob from "./page/recruiter/DashboardPostJob";
 import DashboardSmartCandidateSuggestionsList from "./page/recruiter/DashboardSmartCandidateSuggestionsList";
@@ -63,6 +64,7 @@ function AppContent() {
         <Route path="/candidate/jobs/:id" element={<DashboardJobDetail />} />
         <Route path="/candidate/dashboard-smartjobsuggestionslist" element={<DashboardSmartJobSuggestionsList />} />
         <Route path="/candidate/dashboard-appliedjobslist" element={<DashboardAppliedJobsList />} />
+        <Route path="/candidate/dashboard-creatcvai" element={<DashboardCreatCVAI />} />
 
 
         {/* Dashboard nhà tuyển dụng */}

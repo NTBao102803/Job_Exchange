@@ -10,13 +10,13 @@
         <module name="admin_service" />
         <module name="application_service" />
         <module name="recommendation_service" />
-        <module name="ai_matching_service" />
+        <module name="cv_ai_service" />
         <module name="match_candidate_service" />
         <module name="storage_service" />
         <module name="messaging_service" />
         <module name="notification_service" />
-        <module name="chatbot_service" />
         <module name="discovery_service" />
+        <module name="chatbot_service" />
         <module name="job_service" />
         <module name="config_service" />
         <module name="employer_service" />
@@ -41,13 +41,13 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="admin_service" options="-parameters" />
-      <module name="ai_matching_service" options="-parameters" />
       <module name="api_gateway" options="-parameters" />
       <module name="application_service" options="-parameters" />
       <module name="auth_service" options="-parameters" />
       <module name="candidate_matching_service" options="-parameters" />
       <module name="chatbot_service" options="-parameters" />
       <module name="config_service" options="-parameters" />
+      <module name="cv_ai_service" options="-parameters" />
       <module name="discovery_service" options="-parameters" />
       <module name="employer_service" options="-parameters" />
       <module name="job_service" options="-parameters" />

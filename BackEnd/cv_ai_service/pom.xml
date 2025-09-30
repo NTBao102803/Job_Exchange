@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>iuh.fit.se</groupId>
-    <artifactId>chatbot_service</artifactId>
+    <artifactId>cv_ai_service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>chatbot_service</name>
-    <description>chatbot_service</description>
+    <name>cv_ai_service</name>
+    <description>cv_ai_service</description>
     <url/>
     <licenses>
         <license/>

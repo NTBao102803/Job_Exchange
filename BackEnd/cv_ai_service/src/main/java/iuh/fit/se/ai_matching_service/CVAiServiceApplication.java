@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AiMatchingServiceApplication {
+public class CVAiServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AiMatchingServiceApplication.class, args);
+        SpringApplication.run(CVAiServiceApplication.class, args);
     }
 
 }
