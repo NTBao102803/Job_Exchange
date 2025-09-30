@@ -45,6 +45,16 @@ public class CandidateController {
         return ResponseEntity.ok(candidateService.getCandidate());
     }
 
+    @GetMapping("/by-id/{id}")
+    public ResponseEntity<Candidate> getCandidateById(@PathVariable Long id) {
+        Candidate candidate = candidateService.getCandidateById(id);
+        if (candidate != null) {
+            return ResponseEntity.ok(candidate);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/email")
     public ResponseEntity<CandidateDto> getCandidateByEmail() {
         return ResponseEntity.ok(candidateService.getCandidateByEmail());

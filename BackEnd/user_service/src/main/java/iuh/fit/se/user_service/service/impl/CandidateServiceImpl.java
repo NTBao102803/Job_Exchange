@@ -28,6 +28,11 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     @Override
+    public Candidate getCandidateById(Long id) {
+        return candidateRepository.findById(id).orElse(null);
+    }
+
+    @Override
     public Candidate getCandidate() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return candidateRepository.findByEmail(email)

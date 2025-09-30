@@ -13,4 +13,5 @@ public interface CandidateService {
     public Candidate updateCandidate(CandidateDto candidateDto);
     public Candidate createCandidate(CandidateRequest candidateRequest);
     CandidateDto getCandidateByEmail();
+    public Candidate getCandidateById(Long id);
 }
