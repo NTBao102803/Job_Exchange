@@ -6,9 +6,14 @@ import {
   DollarSign,
   Building2,
   ArrowLeft,
-  CalendarDays,User,Mail,Phone,X
+  CalendarDays,
+  User,
+  Mail,
+  Phone,
+  X,
 } from "lucide-react";
 import { getEmployerById } from "../../api/JobApi";
+import { applyJob } from "../../api/ApplicationApi";
 
 const JobDetail = () => {
   const { state } = useLocation();
@@ -18,10 +23,10 @@ const JobDetail = () => {
   const [job, setJob] = useState(state?.job || null);
   const [employer, setEmployer] = useState(null);
 
-    // State cho modal
+  // State cho modal
   const [showModal, setShowModal] = useState(false);
   const [cvFile, setCvFile] = useState(null);
-  
+
   useEffect(() => {
     if (!job) {
       // fetch(`/api/jobs/${id}`).then(res => res.json()).then(setJob);
@@ -74,14 +79,21 @@ const JobDetail = () => {
   const startDate = formatDate(job.startDate);
   const endDate = formatDate(job.endDate);
 
-    // Xử lý nộp CV
-  const handleApply = () => {
+  // Xử lý nộp CV
+  const handleApply = async () => {
     if (!cvFile) {
       alert("⚠️ Vui lòng chọn file CV trước khi ứng tuyển!");
       return;
     }
-    setShowModal(false);
-    alert("✅ Ứng tuyển thành công! Chúng tôi sẽ liên hệ bạn sớm.");
+
+    try {
+      await applyJob(job.id, cvFile);
+      setShowModal(false);
+      alert("✅ Ứng tuyển thành công! Chúng tôi sẽ liên hệ bạn sớm.");
+    } catch (err) {
+      console.error("❌ Lỗi khi ứng tuyển:", err.message);
+      alert("❌ " + err.message);
+    }
   };
 
   return (
@@ -144,39 +156,43 @@ const JobDetail = () => {
               <h2 className="text-xl font-semibold text-indigo-600">
                 ✅ Yêu cầu ứng viên
               </h2>
-              <p className="mt-2">{displayValue(job.requirements.descriptionRequirements)}</p>
+              <p className="mt-2">
+                {displayValue(job.requirements.descriptionRequirements)}
+              </p>
             </div>
             {/* Yêu cầu bắt buộc */}
-              {(job.requirements.skills || job.requirements.experience || job.requirements.certificates) && (
-                <div className="mt-6">
-                  <h2 className="text-lg font-semibold text-red-600 ml-4">
-                    ⚠️ Yêu cầu bắt buộc
-                  </h2>
-                  <div className="mt-2 ml-6 space-y-2 text-gray-700">
-                    {job.requirements.skills && (
-                      <p>
-                        <span className="font-medium">Kỹ năng: </span>
-                        {displayValue(job.requirements.skills)}
-                      </p>
-                    )}
-                    {job.requirements.experience && (
-                      <p>
-                        <span className="font-medium">Kinh nghiệm: </span>
-                        {displayValue(job.requirements.experience)}
-                      </p>
-                    )}
-                    {job.requirements.certificates && (
-                      <p>
-                        <span className="font-medium">Trình độ học vấn: </span>
-                        {displayValue(job.requirements.certificates)}
-                      </p>
-                    )}
-                  </div>
+            {(job.requirements.skills ||
+              job.requirements.experience ||
+              job.requirements.certificates) && (
+              <div className="mt-6">
+                <h2 className="text-lg font-semibold text-red-600 ml-4">
+                  ⚠️ Yêu cầu bắt buộc
+                </h2>
+                <div className="mt-2 ml-6 space-y-2 text-gray-700">
+                  {job.requirements.skills && (
+                    <p>
+                      <span className="font-medium">Kỹ năng: </span>
+                      {displayValue(job.requirements.skills)}
+                    </p>
+                  )}
+                  {job.requirements.experience && (
+                    <p>
+                      <span className="font-medium">Kinh nghiệm: </span>
+                      {displayValue(job.requirements.experience)}
+                    </p>
+                  )}
+                  {job.requirements.certificates && (
+                    <p>
+                      <span className="font-medium">Trình độ học vấn: </span>
+                      {displayValue(job.requirements.certificates)}
+                    </p>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
             {/* Quyền lợi */}
-            <div >
+            <div>
               <h2 className="text-xl font-semibold text-indigo-600">
                 🎁 Quyền lợi
               </h2>
@@ -188,19 +204,22 @@ const JobDetail = () => {
             <h2 className="text-xl font-semibold text-indigo-600">
               📞 Thông tin liên hệ
             </h2>
-              <div className="mt-4 space-y-3 text-gray-700">
-                <p className="flex items-center gap-2"> 
-                  <User className="w-5 h-5 text-pink-500" />Người liên hệ: 
-                  {displayValue(employer?.fullName)}
-                </p>
-                <p className="flex items-center gap-2">
-                  <Mail className="w-5 h-5 text-pink-500" />Email: 
-                  {displayValue(employer?.email)}
-                </p>
-                <p className="flex items-center gap-2">
-                  <Phone className="w-5 h-5 text-green-500" />SĐT: 
-                  {displayValue(employer?.phone)}
-                </p>
+            <div className="mt-4 space-y-3 text-gray-700">
+              <p className="flex items-center gap-2">
+                <User className="w-5 h-5 text-pink-500" />
+                Người liên hệ:
+                {displayValue(employer?.fullName)}
+              </p>
+              <p className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-pink-500" />
+                Email:
+                {displayValue(employer?.email)}
+              </p>
+              <p className="flex items-center gap-2">
+                <Phone className="w-5 h-5 text-green-500" />
+                SĐT:
+                {displayValue(employer?.phone)}
+              </p>
             </div>
           </div>
 
@@ -212,8 +231,10 @@ const JobDetail = () => {
             >
               <ArrowLeft className="w-4 h-4" /> Quay lại
             </button>
-            <button onClick={() => setShowModal(true)}
-                    className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg shadow hover:from-indigo-600 hover:to-purple-600 transition font-medium">
+            <button
+              onClick={() => setShowModal(true)}
+              className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg shadow hover:from-indigo-600 hover:to-purple-600 transition font-medium"
+            >
               Ứng tuyển ngay
             </button>
           </div>

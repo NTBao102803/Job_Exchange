@@ -1,70 +1,68 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {getApplicationsByCandidate} from "../../api/ApplicationApi";
+import {getCandidateProfile} from "../../api/CandidateApi";
+import {getJobById, getEmployerById} from "../../api/JobApi";
 
 const AppliedJobsList = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const [filterStatus, setFilterStatus] = useState("all"); // 👉 trạng thái lọc
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [appliedJobs, setAppliedJobs] = useState([]);
   const jobsPerPage = 3;
 
-  // 👉 Giả lập dữ liệu các job đã ứng tuyển + trạng thái
-  const appliedJobs = [
-    {
-      id: 1,
-      title: "Lập trình viên Backend (Java, Spring Boot)",
-      company: "Công ty ABC",
-      location: "Hà Nội",
-      type: "Fulltime",
-      salary: "15 - 20 triệu",
-      experience: "",
-    education: "hhh",
-    career: "",
-      status: "applied", // đã ứng tuyển
-    },
-    {
-      id: 2,
-      title: "Thực tập sinh Frontend ReactJS",
-      company: "Startup EFG",
-      location: "Đà Nẵng",
-      type: "Parttime",
-      salary: "Hỗ trợ 3 triệu",
-      status: "not-suitable", // hồ sơ chưa phù hợp
-    },
-    {
-      id: 3,
-      title: "Data Engineer",
-      company: "Tập đoàn DataTech",
-      location: "TP. HCM",
-      type: "Fulltime",
-      salary: "20 - 25 triệu",
-      status: "suitable", // hồ sơ đã phù hợp
-    },
-    {
-      id: 4,
-      title: "Chuyên viên Marketing",
-      company: "Công ty Quảng Cáo KLM",
-      location: "Hà Nội",
-      type: "Fulltime",
-      salary: "12 - 18 triệu",
-      status: "applied",
-    },
-  ];
-
-  // 👉 Map trạng thái ra style + text
+  // Map trạng thái từ backend ra UI
   const statusMap = {
-    applied: {
+    PENDING: {
       text: "Đã ứng tuyển",
       className: "bg-green-100 text-green-700",
     },
-    "not-suitable": {
+    REJECTED: {
       text: "Hồ sơ chưa phù hợp",
       className: "bg-red-100 text-red-700",
     },
-    suitable: {
+    APPROVED: {
       text: "Hồ sơ đã phù hợp",
       className: "bg-blue-100 text-blue-700",
     },
   };
+
+  // 🔥 Lấy danh sách jobs ứng tuyển của ứng viên
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 1. Lấy hồ sơ ứng viên
+        const candidate = await getCandidateProfile();
+
+        // 2. Lấy danh sách ứng tuyển của ứng viên
+        const applications = await getApplicationsByCandidate(candidate.id);
+
+        // 3. Với mỗi application, lấy thông tin job
+        const jobsWithDetails = await Promise.all(
+          applications.map(async (app) => {
+            const job = await getJobById(app.jobId);
+            const employer = await getEmployerById(job.employerId);
+            return {
+              id: job.id,
+              title: job.title,
+              company: employer.companyName,
+              location: job.location,
+              type: job.jobType,
+              salary: job.salary,
+              status: app.status, // lấy status từ application
+              applicationId: app.id,
+            };
+          })
+        );
+
+        setAppliedJobs(jobsWithDetails);
+      } catch (err) {
+        console.error("❌ Lỗi khi load applied jobs:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // 👉 Lọc theo trạng thái
   const filteredJobs =
@@ -90,15 +88,15 @@ const AppliedJobsList = () => {
         <div className="flex flex-wrap gap-2 mb-4">
           {[
             { key: "all", label: "Tất cả" },
-            { key: "applied", label: "Đã ứng tuyển" },
-            { key: "not-suitable", label: "Hồ sơ chưa phù hợp" },
-            { key: "suitable", label: "Hồ sơ đã phù hợp" },
+            { key: "PENDING", label: "Đã ứng tuyển" },
+            { key: "REJECTED", label: "Hồ sơ chưa phù hợp" },
+            { key: "APPROVED", label: "Hồ sơ đã phù hợp" },
           ].map((f) => (
             <button
               key={f.key}
               onClick={() => {
                 setFilterStatus(f.key);
-                setPage(1); // reset về trang 1 khi đổi filter
+                setPage(1);
               }}
               className={`px-3 py-1 rounded-full text-sm font-medium shadow-sm transition ${
                 filterStatus === f.key
@@ -142,17 +140,15 @@ const AppliedJobsList = () => {
                 <div className="flex flex-col items-start sm:items-end gap-2 mt-3 sm:mt-0">
                   <span
                     className={`px-3 py-1 rounded-lg text-sm font-medium shadow-sm ${
-                      statusMap[job.status].className
+                      statusMap[job.status]?.className || "bg-gray-200"
                     }`}
                   >
-                    {statusMap[job.status].text}
+                    {statusMap[job.status]?.text || job.status}
                   </span>
                   <div className="flex gap-2">
                     <button
                       onClick={() =>
-                        navigate(`/candidate/jobs/${job.id}`, {
-                          state: { job },
-                        })
+                        navigate(`/candidate/jobs/${job.id}`, { state: { job } })
                       }
                       className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-3 py-1.5 rounded-lg text-sm shadow-md hover:from-indigo-600 hover:to-purple-600 transition"
                     >
@@ -176,7 +172,7 @@ const AppliedJobsList = () => {
         </div>
       </div>
 
-      {/* Pagination luôn đứng im dưới */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="w-full bg-white border-t border-gray-200 py-3 mt-6 shadow-inner sticky bottom-0">
           <div className="max-w-5xl mx-auto px-6 flex items-center justify-center space-x-2">

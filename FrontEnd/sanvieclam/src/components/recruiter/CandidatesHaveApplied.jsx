@@ -1,87 +1,86 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Building2, MapPin, DollarSign, CalendarDays } from "lucide-react";
 import CandidateProfileModal from "../candidate/CandidateProfileModal";
-
-// Dữ liệu mẫu ứng viên đã ứng tuyển
-const appliedCandidates = [
-  {
-    id: 1,
-    fullName: "Nguyễn Văn A",
-    email: "nguyenvana@example.com",
-    phone: "0901234567",
-    major: "Khoa học máy tính",
-    gpa: "3.5/4",
-    graduationYear: "2020",
-    experience: "2 năm làm AI Engineer",
-    skills: "Python, TensorFlow, ML",
-    cvUrl: "/cvs/nguyenvana.pdf",
-  },
-  {
-    id: 2,
-    fullName: "Trần Thị B",
-    email: "tranthib@example.com",
-    phone: "0912345678",
-    major: "Toán tin",
-    gpa: "3.7/4",
-    graduationYear: "2019",
-    experience: "3 năm Data Scientist",
-    skills: "Python, R, SQL",
-    cvUrl: "/cvs/tranthib.pdf",
-  },
-  {
-    id: 3,
-    fullName: "Lê Văn C",
-    email: "levanc@example.com",
-    phone: "0923456789",
-    major: "Cloud Computing",
-    gpa: "3.4/4",
-    graduationYear: "2018",
-    experience: "4 năm Cloud Architect",
-    skills: "AWS, Kubernetes, Terraform",
-    cvUrl: "/cvs/levanc.pdf",
-  },
-  {
-    id: 4,
-    fullName: "Lê Văn C",
-    email: "levanc@example.com",
-    phone: "0923456789",
-    major: "Cloud Computing",
-    gpa: "3.4/4",
-    graduationYear: "2018",
-    experience: "4 năm Cloud Architect",
-    skills: "AWS, Kubernetes, Terraform",
-    cvUrl: "/cvs/levanc.pdf",
-  },
-  {
-    id: 5,
-    fullName: "Lê Văn C",
-    email: "levanc@example.com",
-    phone: "0923456789",
-    major: "Cloud Computing",
-    gpa: "3.4/4",
-    graduationYear: "2018",
-    experience: "4 năm Cloud Architect",
-    skills: "AWS, Kubernetes, Terraform",
-    cvUrl: "/cvs/levanc.pdf",
-  },
-];
+import { getApplicationsByJob } from "../../api/ApplicationApi";
+import { getCandidateById } from "../../api/CandidateApi";
 
 const CandidatesHaveApplied = () => {
   const location = useLocation();
-  const job = location.state?.job;   // ✅ lấy job từ RecruiterJobPosts
+  const job = location.state?.job; // ✅ lấy job từ RecruiterJobPosts
 
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [appliedCandidates, setAppliedCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const candidatesPerPage = 4;
   const totalPages = Math.ceil(appliedCandidates.length / candidatesPerPage);
   const startIndex = (page - 1) * candidatesPerPage;
-  const endIndex = Math.min(startIndex + candidatesPerPage, appliedCandidates.length);
+  const endIndex = Math.min(
+    startIndex + candidatesPerPage,
+    appliedCandidates.length
+  );
   const currentCandidates = appliedCandidates.slice(startIndex, endIndex);
 
   const displayValue = (val) => (val && val !== "" ? val : "Chưa có thông tin");
+
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        setLoading(true);
+        if (!job?.id) return;
+
+        // 1. Gọi API lấy tất cả đơn ứng tuyển theo job
+        const applications = await getApplicationsByJob(job.id);
+
+        // 2. Với mỗi application, lấy thông tin ứng viên
+        const candidatesWithInfo = await Promise.all(
+          applications.map(async (app) => {
+            const candidate = await getCandidateById(app.candidateId);
+            return {
+              id: candidate.id,
+              fullName: candidate.fullName,
+              dob: candidate.dob,
+              gender: candidate.gender,
+              email: candidate.email,
+              phone: candidate.phone,
+              address: candidate.address,
+              school: candidate.school,
+              major: candidate.major,
+              gpa: candidate.gpa,
+              graduationYear: candidate.graduationYear,
+              experience: candidate.experience,
+              projects: candidate.projects,
+              skills: candidate.skills,
+              certificates: candidate.certificates,
+              careerGoal: candidate.careerGoal,
+              hobbies: candidate.hobbies,
+              social: candidate.social,
+              cvUrl: app.cvUrl, // 👉 lấy từ application
+            };
+          })
+        );
+
+        setAppliedCandidates(candidatesWithInfo);
+      } catch (error) {
+        console.error("❌ Lỗi khi load ứng viên đã ứng tuyển:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCandidates();
+  }, [job?.id]);
+
+  if (loading) {
+    return (
+      <div className="p-28 pt-28 text-center text-lg font-semibold text-gray-600">
+        ⏳ Đang tải danh sách ứng viên...
+      </div>
+    );
+  }
 
   return (
     <div className="p-28 pt-28 space-y-4">
@@ -114,9 +113,11 @@ const CandidatesHaveApplied = () => {
         </div>
       </div>
 
-      {/* Phần 2: Danh sách ứng viên */}
+      {/* Danh sách ứng viên */}
       <div className="bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-500 p-6 rounded-xl text-white">
-        <h2 className="text-xl font-bold mb-4">Danh sách ứng viên đã ứng tuyển</h2>
+        <h2 className="text-xl font-bold mb-4">
+          Danh sách ứng viên đã ứng tuyển
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {currentCandidates.map((candidate) => (
@@ -129,11 +130,23 @@ const CandidatesHaveApplied = () => {
                 <h3 className="text-lg font-bold text-yellow-300">
                   {candidate.fullName}
                 </h3>
-                <p className="text-sm opacity-90 font-bold" >{candidate.major}</p>
+                <p className="text-sm opacity-90 font-bold">
+                  {candidate.major}
+                </p>
                 <div className="mt-1 text-x space-y-0.5">
-                  <div><span className="font-semibold">Kỹ năng: </span>{candidate.skills}</div>
-                  <div><span className="font-semibold">Kinh nghiệm: </span>{candidate.experience}</div>
-                  <div><span className="font-semibold">Tốt nghiệp: </span>{candidate.graduationYear} ({candidate.gpa})</div>
+                  <div>
+                    <span className="font-semibold">Kỹ năng: </span>
+                    {displayValue(candidate.skills)}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Kinh nghiệm: </span>
+                    {displayValue(candidate.experience)}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Tốt nghiệp: </span>
+                    {displayValue(candidate.graduationYear)} (
+                    {displayValue(candidate.gpa)})
+                  </div>
                 </div>
               </div>
 
@@ -163,7 +176,8 @@ const CandidatesHaveApplied = () => {
         {/* Phân trang */}
         <div className="flex justify-between items-center mt-6">
           <p className="text-sm">
-            Đang xem {startIndex + 1} - {endIndex} trên tổng {appliedCandidates.length} ứng viên
+            Đang xem {startIndex + 1} - {endIndex} trên tổng{" "}
+            {appliedCandidates.length} ứng viên
           </p>
           <div className="flex items-center space-x-2">
             <button

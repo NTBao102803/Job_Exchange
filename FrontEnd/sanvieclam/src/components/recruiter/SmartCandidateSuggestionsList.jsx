@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Briefcase } from "lucide-react";
 import CandidateProfileModal from "../candidate/CandidateProfileModal";
 import { getJobsByStatusByEmployer } from "../../api/RecruiterApi";
-import { getCandidatesForJob } from "../../api/MachCandidateApi";
+import {
+  getCandidatesForJob,
+  syncAllCandidates,
+} from "../../api/MachCandidateApi";
 
 const SmartCandidateSuggestionsList = () => {
   const [jobs, setJobs] = useState([]); // ✅ danh sách jobs từ API
@@ -27,6 +30,21 @@ const SmartCandidateSuggestionsList = () => {
       }
     };
     fetchJobs();
+  }, []);
+  // ✅ Tự động sync khi mở trang
+  useEffect(() => {
+    const autoSync = async () => {
+      try {
+        await syncAllCandidates();
+        console.log("✅ Sync thành công!");
+        if (selectedJob) {
+          await fetchCandidates();
+        }
+      } catch (err) {
+        console.error("❌ Lỗi khi auto sync:", err);
+      }
+    };
+    autoSync();
   }, []);
 
   // ✅ Lấy ứng viên match khi chọn job

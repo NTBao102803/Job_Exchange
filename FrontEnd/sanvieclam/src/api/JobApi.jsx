@@ -22,3 +22,14 @@ export const getEmployerById = async (id) => {
     throw error;
   }
 };
+
+// Lấy job theo id
+export const getJobById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/jobs/${id}`);
+    return response.data; // trả về JobDto
+  } catch (error) {
+    console.error(`❌ Lỗi khi gọi API getJobById với id=${id}:`, error);
+    throw error;
+  }
+};

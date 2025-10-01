@@ -29,3 +29,14 @@ export const getCandidates = async () => {
     throw error;
   }
 };
+
+// Lấy candidate theo id
+export const getCandidateById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/candidate/by-id/${id}`);
+    return response.data; // trả về Candidate
+  } catch (error) {
+    console.error(`❌ Lỗi khi gọi API getCandidateById với id=${id}:`, error);
+    throw error;
+  }
+};
