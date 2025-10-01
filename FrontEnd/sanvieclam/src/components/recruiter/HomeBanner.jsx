@@ -47,7 +47,7 @@ const HeroBanner = ({ onStartClick }) => {
             <Search className="w-6 h-6 text-gray-500" />
             <input
               type="text"
-              placeholder="Tìm công việc, ngành nghề, địa điểm..."
+              placeholder="Tìm kiếm ứng viên..."
               className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400 text-base md:text-lg"
             />
             <button className="bg-gradient-to-r from-yellow-400 to-orange-500 px-6 py-2 rounded-2xl text-black font-semibold shadow hover:scale-105 transition"
