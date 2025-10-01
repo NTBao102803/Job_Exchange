@@ -1,10 +1,10 @@
 package iuh.fit.se.user_service.service.impl;
 
+import iuh.fit.se.user_service.client.MatchClient;
 import iuh.fit.se.user_service.dto.CandidateDto;
 import iuh.fit.se.user_service.dto.CandidateRequest;
 import iuh.fit.se.user_service.model.Candidate;
 import iuh.fit.se.user_service.repository.CandidateRepository;
-import iuh.fit.se.user_service.repository.ProfileRepository;
 import iuh.fit.se.user_service.service.CandidateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +17,8 @@ import java.util.Optional;
 public class CandidateServiceImpl implements CandidateService {
     @Autowired
     private CandidateRepository candidateRepository;
+    @Autowired
+    private MatchClient matchClient;
 
     public CandidateServiceImpl(CandidateRepository candidateRepository) {
         this.candidateRepository = candidateRepository;
@@ -71,7 +73,27 @@ public class CandidateServiceImpl implements CandidateService {
         candidate.setHobbies(candidateDto.getHobbies());
         candidate.setSocial(candidateDto.getSocial());
 
-        return candidateRepository.save(candidate);
+        Candidate saved = candidateRepository.save(candidate);
+
+        CandidateDto dto = CandidateDto.builder()
+                .id(saved.getId())
+                .fullName(saved.getFullName())
+                .email(saved.getEmail())
+                .skills(saved.getSkills())
+                .experience(saved.getExperience())
+                .major(saved.getMajor())
+                .school(saved.getSchool())
+                .address(saved.getAddress())
+                .careerGoal(saved.getCareerGoal())
+                .build();
+
+        try {
+            matchClient.syncCandidate(dto);
+        } catch (Exception ex) {
+            System.err.println("Failed to sync candidate update to match-service: " + ex.getMessage());
+        }
+
+        return saved;
     }
 
     @Override
@@ -82,7 +104,31 @@ public class CandidateServiceImpl implements CandidateService {
         candidate.setRole(candidateRequest.getRole());
         candidate.setFullName(candidateRequest.getFullName());
 
-        return candidateRepository.save(candidate);
+        Candidate saved = candidateRepository.save(candidate);
+
+        // Build CandidateDto để gửi sang match-service
+        CandidateDto dto = CandidateDto.builder()
+                .id(saved.getId())
+                .fullName(saved.getFullName())
+                .email(saved.getEmail())
+                .skills(saved.getSkills())
+                .experience(saved.getExperience())
+                .major(saved.getMajor())
+                .school(saved.getSchool())
+                .address(saved.getAddress())
+                .careerGoal(saved.getCareerGoal())
+                .build();
+
+        // Gọi REST callback (bọc try/catch)
+        try {
+            matchClient.syncCandidate(dto);
+        } catch (Exception ex) {
+            // log & không throw để không làm hỏng dòng chính
+            // bạn có thể queue để retry later nếu muốn
+            System.err.println("Failed to sync candidate to match-service: " + ex.getMessage());
+        }
+
+        return saved;
     }
 
     @Override

@@ -56,9 +56,13 @@ public class StorageController {
 
     // API tạo profile rỗng
     @PostMapping("/init")
-    public ResponseEntity<FileResponse> initStorage(@RequestParam Long userId,
+    public ResponseEntity<Void> initStorage(@RequestParam Long userId,
                                                     @RequestParam String category) {
-        return ResponseEntity.ok(fileStorageService.initStorage(userId, category));
+        // vẫn gọi service để tạo/lưu fileResponse
+        fileStorageService.initStorage(userId, category);
+
+        // nhưng không trả về dữ liệu, chỉ báo 204 No Content
+        return ResponseEntity.noContent().build();
     }
     @GetMapping("/download")
     public ResponseEntity<byte[]> downloadFile(@RequestParam String objectName) {

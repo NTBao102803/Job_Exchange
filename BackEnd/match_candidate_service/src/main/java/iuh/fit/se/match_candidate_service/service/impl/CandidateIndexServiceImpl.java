@@ -121,6 +121,29 @@ public class CandidateIndexServiceImpl implements CandidateIndexService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void upsertCandidate(CandidateDto dto) {
+        CandidateIndex index = CandidateIndex.builder()
+                .id(dto.getId())
+                .fullName(dto.getFullName())
+                .email(dto.getEmail())
+                // parseSkills expects raw string and returns List<String>
+                .skills(parseSkills(dto.getSkills()))
+                .experience(dto.getExperience())
+                .major(dto.getMajor())
+                .school(dto.getSchool())
+                .address(dto.getAddress())
+                .careerGoal(dto.getCareerGoal())
+                .build();
+
+        candidateIndexRepository.save(index);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        candidateIndexRepository.deleteById(id);
+    }
+
 
     private List<String> parseSkills(String raw) {
         if (raw == null || raw.isBlank()) return List.of();

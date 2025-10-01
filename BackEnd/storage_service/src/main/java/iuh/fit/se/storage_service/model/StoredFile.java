@@ -23,7 +23,7 @@ public class StoredFile {
     private String fileName;      // tên gốc file (nullable nếu chưa upload)
     private String fileType;      // MIME type (nullable nếu chưa upload)
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     private String objectName;    // tên thực trong MinIO (UUID_xxx.pdf, jpg...)
 
     private String category;      // CV, AVATAR, OTHER

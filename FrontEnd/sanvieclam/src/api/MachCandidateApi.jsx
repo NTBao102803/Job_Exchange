@@ -10,3 +10,14 @@ export const getCandidatesForJob = async (jobId) => {
     throw error;
   }
 };
+
+// Đồng bộ tất cả candidate từ MariaDB -> Elasticsearch
+export const syncAllCandidates = async () => {
+  try {
+    const response = await axiosClient.post(`/match/sync/all`);
+    return response.data; // "Synced candidates into Elasticsearch!"
+  } catch (error) {
+    console.error("❌ Lỗi khi gọi API syncAllCandidates:", error);
+    throw error;
+  }
+};
