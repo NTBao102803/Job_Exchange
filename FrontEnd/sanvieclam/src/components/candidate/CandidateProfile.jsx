@@ -97,6 +97,9 @@ const CandidateProfile = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // 🖼️ Ảnh avatar (local preview)
+  const [avatar, setAvatar] = useState(null);
+
   // 🟢 Gọi API lấy profile khi load component
   useEffect(() => {
     const fetchProfile = async () => {
@@ -112,6 +115,11 @@ const CandidateProfile = () => {
               ? "Nữ"
               : "Khác",
         }));
+
+        // Nếu có ảnh từ server
+        if (data.avatarUrl) {
+          setAvatar(data.avatarUrl);
+        }
       } catch (error) {
         console.error("❌ Lỗi khi tải hồ sơ:", error);
       } finally {
@@ -124,6 +132,15 @@ const CandidateProfile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // 👉 Upload ảnh (chỉ preview, chưa lưu DB)
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatar(URL.createObjectURL(file));
+      // Nếu bạn muốn gửi file -> FormData gửi API ở đây
+    }
   };
 
   // 👉 Cập nhật hồ sơ
@@ -141,6 +158,7 @@ const CandidateProfile = () => {
           ? new Date(formData.dob).toISOString().split("T")[0]
           : null,
         role: "USER",
+        // avatar: avatarFile nếu muốn gửi ảnh
       };
 
       const updated = await updateCandidateProfile(payload);
@@ -169,6 +187,41 @@ const CandidateProfile = () => {
         <h1 className="text-3xl font-bold text-center text-indigo-600">
           📄 Hồ sơ ứng viên
         </h1>
+
+        {/* 🖼️ Ảnh đại diện */}
+<div className="flex items-center space-x-8 border-b pb-8">
+  {/* Avatar */}
+  <div className="relative group w-40 h-40 rounded-full overflow-hidden border-4 border-indigo-500 shadow-2xl transform transition duration-500 hover:scale-105 hover:shadow-indigo-300/50">
+    {avatar ? (
+      <img
+        src={avatar}
+        alt="Avatar"
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 text-gray-500 text-lg">
+        No Image
+      </div>
+    )}
+
+    {/* Hiệu ứng overlay khi hover */}
+    <div className="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+      <span className="text-white text-sm">Cập nhật</span>
+    </div>
+  </div>
+
+  {/* Upload button */}
+  <label className="px-6 py-3 bg-indigo-600 text-white rounded-xl shadow-lg cursor-pointer transition duration-300 hover:bg-indigo-700 hover:shadow-xl hover:scale-105">
+    📤 Tải ảnh lên
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handleImageUpload}
+      className="hidden"
+    />
+  </label>
+</div>
+
 
         {/* 👤 Thông tin cá nhân */}
         <div className="space-y-6 border-b pb-6">
