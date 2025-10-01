@@ -7,6 +7,7 @@ import LoginPage from "./page/admin/LoginPage";
 import Login from "./page/login/Login"; 
 import RegisterCandidate from "./page/register/RegisterCandidate";
 import RegisterRecruiter from "./page/register/RegisterRecruiter";
+import ChangePassword from "./page/changepassword/ChangePassword"
 import DashboardCandidate from "./page/candidate/DashboardCandidate";
 import DashboardRecruiter from "./page/recruiter/DashboardRecruiter";
 import AdminLayout from "./layout/AdminLayout";
@@ -26,6 +27,9 @@ import DashboardPostJob from "./page/recruiter/DashboardPostJob";
 import DashboardSmartCandidateSuggestionsList from "./page/recruiter/DashboardSmartCandidateSuggestionsList";
 import DashboardRecruiterJobPosts from "./page/recruiter/DashboardRecruiterJobPosts";
 import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidatesHaveApplied";
+
+
+
 
 import ChatboxAI from "./page/chatboxAI/ChatBoxAI";
 
@@ -65,6 +69,7 @@ function AppContent() {
         <Route path="/candidate/dashboard-smartjobsuggestionslist" element={<DashboardSmartJobSuggestionsList />} />
         <Route path="/candidate/dashboard-appliedjobslist" element={<DashboardAppliedJobsList />} />
         <Route path="/candidate/dashboard-creatcvai" element={<DashboardCreatCVAI />} />
+        <Route path="/candidate/change-password" element={<ChangePassword />} />
 
 
         {/* Dashboard nhà tuyển dụng */}
@@ -74,6 +79,7 @@ function AppContent() {
         <Route path="/recruiter/dashboard-smartcandidatesuggestionslist" element={<DashboardSmartCandidateSuggestionsList />} />
         <Route path="/recruiter/dashboard-recruiterjobposts" element={<DashboardRecruiterJobPosts />} />
         <Route path="/recruiter/dashboard-candidateshaveapplied" element={<DashboardCandidateshaveApplied />} />
+        <Route path="/recruiter/change-password" element={<ChangePassword />} />
       </Routes>
 
       {/* Chatbox floating / global: chỉ render khi ở route của candidate */}
