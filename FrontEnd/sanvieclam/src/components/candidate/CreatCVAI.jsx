@@ -1,10 +1,12 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FileDown, Sparkles, Check } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { getCandidateProfile } from "../../api/CandidateApi"; // ✅ import hàm API
 
 const CreatCVAI = () => {
-  const candidate = { 
+  // ✅ mock data ban đầu (fallback nếu API fail)
+  const defaultCandidate = { 
     fullName: "Trần Văn Lợi", 
     dob: "1998-05-12", 
     gender: "Nam", 
@@ -15,21 +17,37 @@ const CreatCVAI = () => {
     major: "Khoa học Máy tính", 
     gpa: "3.6/4.0", 
     graduationYear: "2020", 
-    experience: "Backend Developer tại Công ty XYZ (2020 - nay). Kinh nghiệm phát triển API, tối ưu hệ thống.", 
-    projects: "Hệ thống đặt tour du lịch WebTourDuLich, Payment Service microservice.", 
-    skills: "Java, Spring Boot, ReactJS, MySQL, Docker, Kubernetes.", 
+    experience: "Backend Developer tại Công ty XYZ (2020 - nay)...", 
+    projects: "Hệ thống đặt tour du lịch WebTourDuLich...", 
+    skills: "Java, Spring Boot, ReactJS, MySQL, Docker...", 
     certificates: "AWS Cloud Practitioner, TOEIC 850.", 
     careerGoal: "Trở thành Senior Backend Engineer trong 3 năm tới.", 
     hobbies: "Đọc sách công nghệ, chơi cờ vua, du lịch.", 
     social: "https://linkedin.com/in/tranvanloi",
   };
 
+  const [candidate, setCandidate] = useState(defaultCandidate); // ✅ state thay vì const cứng
   const [template, setTemplate] = useState("trangtrong");
   const [loading, setLoading] = useState(false);
   const [cvHtml, setCvHtml] = useState("");
   const [showToast, setShowToast] = useState(false);
 
   const iframeRef = useRef(null);
+
+  // ✅ gọi API lấy profile khi component load
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getCandidateProfile();
+        console.log("📌 Candidate từ API:", data);
+        setCandidate(data); // ghi đè bằng data thật
+      } catch (err) {
+        console.error("❌ Lỗi khi lấy profile:", err);
+        setCandidate(defaultCandidate); // fallback mock
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const sanitizeCVHtml = (rawHtml) => {
     if (!rawHtml) return "<p>❌ Không có nội dung</p>";
@@ -44,7 +62,7 @@ const CreatCVAI = () => {
       const response = await fetch("http://localhost:8080/api/cv/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ candidate, template }),
+        body: JSON.stringify({ candidate, template }), // ✅ gửi candidate từ API
       });
       const data = await response.json();
       setCvHtml(sanitizeCVHtml(data.cvHtml));
@@ -58,7 +76,6 @@ const CreatCVAI = () => {
     }
   };
 
-  // ✅ Xuất PDF bằng html2canvas + jsPDF
   const handleExportPDF = async () => {
     if (!iframeRef.current) return;
     const iframeDoc =
@@ -74,7 +91,6 @@ const CreatCVAI = () => {
     });
 
     const imgData = canvas.toDataURL("image/png");
-
     const pdf = new jsPDF("p", "mm", "a4");
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
@@ -95,7 +111,7 @@ const CreatCVAI = () => {
       heightLeft -= pageHeight;
     }
 
-    pdf.save("CV-TranVanLoi.pdf");
+    pdf.save(`CV-${candidate.fullName}.pdf`); // ✅ xuất tên đúng ứng viên
   };
 
   return (
