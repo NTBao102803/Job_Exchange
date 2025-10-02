@@ -27,6 +27,7 @@ import DashboardPostJob from "./page/recruiter/DashboardPostJob";
 import DashboardSmartCandidateSuggestionsList from "./page/recruiter/DashboardSmartCandidateSuggestionsList";
 import DashboardRecruiterJobPosts from "./page/recruiter/DashboardRecruiterJobPosts";
 import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidatesHaveApplied";
+import DashboardServicePlans from "./page/recruiter/DashboardServicePlans";
 
 
 
@@ -80,6 +81,7 @@ function AppContent() {
         <Route path="/recruiter/dashboard-recruiterjobposts" element={<DashboardRecruiterJobPosts />} />
         <Route path="/recruiter/dashboard-candidateshaveapplied" element={<DashboardCandidateshaveApplied />} />
         <Route path="/recruiter/change-password" element={<ChangePassword />} />
+        <Route path="/recruiter/register-service" element={<DashboardServicePlans />} />
       </Routes>
 
       {/* Chatbox floating / global: chỉ render khi ở route của candidate */}
