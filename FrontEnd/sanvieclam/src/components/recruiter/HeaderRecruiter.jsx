@@ -185,6 +185,12 @@ const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onFo
                 Đăng kí dịch vụ
               </button>
               <button
+                onClick={() => navigate("/recruiter/payment-history")}
+                className="block px-4 py-2 w-full text-left hover:bg-gray-100"
+              >
+                Lịch sử thanh toán 
+              </button>
+              <button
                 onClick={() => navigate("/recruiter/change-password")}
                 className="block px-4 py-2 w-full text-left hover:bg-gray-100"
               >
