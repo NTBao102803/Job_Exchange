@@ -35,8 +35,8 @@ const FeaturedJobs = ({ onStartClick, onJob }) => {
             }
           })
         );
-
-        setJobs(jobsWithEmployer);
+        // ✅ chỉ lấy 4 job đầu tiên
+        setJobs(jobsWithEmployer.slice(0, 4));
       } catch (error) {
         console.error("❌ Lỗi khi lấy danh sách job:", error);
       } finally {
