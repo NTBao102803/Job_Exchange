@@ -64,6 +64,14 @@ public class StorageController {
         // nhưng không trả về dữ liệu, chỉ báo 204 No Content
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/avatar-url")
+    public ResponseEntity<String> getAvatarUrl(@RequestParam Long userId) {
+        log.info("Lấy avatar URL cho userId={}", userId);
+        return fileStorageService.getAvatarUrl(userId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.ok(null));
+    }
+
     @GetMapping("/download")
     public ResponseEntity<byte[]> downloadFile(@RequestParam String objectName) {
         try {

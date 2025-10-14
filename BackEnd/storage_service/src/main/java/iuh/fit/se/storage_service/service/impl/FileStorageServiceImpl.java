@@ -1,6 +1,7 @@
 package iuh.fit.se.storage_service.service.impl;
 
 import io.minio.*;
+import io.minio.http.Method;
 import iuh.fit.se.storage_service.dto.FileResponse;
 import iuh.fit.se.storage_service.model.StoredFile;
 import iuh.fit.se.storage_service.repository.FileRepository;
@@ -31,8 +32,27 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Value("${minio.url}")
     private String minioUrl; // ví dụ http://localhost:9000
 
-    private String buildFileUrl(String objectName) {
-        return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
+    private String buildFileUrl(String objectName, String category) {
+        try {
+            // Nếu là ảnh đại diện → tạo URL public tạm thời (presigned)
+            if ("AVATAR".equalsIgnoreCase(category)) {
+                return minioClient.getPresignedObjectUrl(
+                        GetPresignedObjectUrlArgs.builder()
+                                .bucket(bucketName)
+                                .object(objectName)
+                                .method(Method.GET)
+                                .expiry(7 * 24 * 60 * 60) // 7 ngày
+                                .build()
+                );
+            }
+
+            // Ngược lại (CV, PDF, DOCX...) → dùng link trực tiếp
+            return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
+
+        } catch (Exception e) {
+            log.warn("⚠️ Không tạo được presigned URL cho objectName={}: {}", objectName, e.getMessage());
+            return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
+        }
     }
 
     @Override
@@ -87,7 +107,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                     stored.getId(),
                     stored.getFileName(),
                     stored.getObjectName(),
-                    buildFileUrl(objectName),
+                    buildFileUrl(objectName, category),
                     stored.getCategory()
             );
 
@@ -104,7 +124,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                         f.getId(),
                         f.getFileName(),
                         f.getObjectName(),
-                        f.getObjectName() != null ? buildFileUrl(f.getObjectName()) : null,
+                        f.getObjectName() != null ? buildFileUrl(f.getObjectName(), f.getCategory()) : null,
                         f.getCategory()
                 ));
     }
@@ -120,7 +140,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                                 .build()
                 ));
 
-        String url = stored.getObjectName() != null ? buildFileUrl(stored.getObjectName()) : null;
+        String url = stored.getObjectName() != null ? buildFileUrl(stored.getObjectName(), stored.getCategory()) : null;
 
         return new FileResponse(
                 stored.getId(),
@@ -143,6 +163,27 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw e;
         }
     }
+
+    @Override
+    public Optional<String> getAvatarUrl(Long userId) {
+        return fileRepository.findByUserIdAndCategoryIgnoreCase(userId, "AVATAR")
+                .map(file -> {
+                    try {
+                        return minioClient.getPresignedObjectUrl(
+                                GetPresignedObjectUrlArgs.builder()
+                                        .bucket(bucketName)
+                                        .object(file.getObjectName())
+                                        .method(Method.GET)
+                                        .expiry(7 * 24 * 60 * 60) // 7 ngày
+                                        .build()
+                        );
+                    } catch (Exception e) {
+                        log.error("❌ Lỗi tạo presigned URL cho avatar userId={}: {}", userId, e.getMessage());
+                        return null;
+                    }
+                });
+    }
+
     public FileResponse getFileByObjectName(String objectName) {
         StoredFile file = fileRepository.findByObjectName(objectName)
                 .orElseThrow(() -> new RuntimeException("File not found with objectName: " + objectName));
@@ -151,7 +192,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                 file.getId(),
                 file.getFileName(),
                 file.getObjectName(),
-                String.format("%s/%s/%s", minioUrl, bucketName, file.getObjectName()),
+                buildFileUrl(file.getObjectName(), file.getCategory()),
                 file.getCategory()
         );
     }

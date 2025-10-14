@@ -12,4 +12,5 @@ public interface FileStorageService {
     public FileResponse initStorage(Long userId, String category);
     byte[] downloadFile(String objectName) throws Exception;
     public FileResponse getFileByObjectName(String objectName);
+    Optional<String> getAvatarUrl(Long userId);
 }

@@ -63,7 +63,7 @@ export const logout = async () => {
 //   return await axiosClient.post("/auth/reset-password", { email, otp, newPassword });
 // };
 
-// // Đổi mật khẩu
-// export const changePassword = async (data) => {
-//   return await axiosClient.post("/auth/change-password", data);
-// };
+// Đổi mật khẩu
+export const changePassword = async (data) => {
+  return await axiosClient.post("/auth/change-password", data);
+};

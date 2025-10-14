@@ -40,3 +40,40 @@ export const getCandidateById = async (id) => {
     throw error;
   }
 };
+
+// upload avatar
+export const uploadAvatar = async (file, userId) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("userId", userId);
+    formData.append("category", "AVATAR"); // category cố định là AVATAR
+
+    const response = await axiosClient.post("/storage/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data; // Trả về FileResponse từ backend
+  } catch (error) {
+    console.error("❌ Lỗi upload avatar:", error);
+    throw error;
+  }
+};
+
+
+// Lấy avatar URL của user
+export const getAvatarUrl = async (userId) => {
+  try {
+    const response = await axiosClient.get(`/storage/avatar-url`, {
+      params: { userId },
+    });
+
+    // Nếu backend trả null thì vẫn xử lý an toàn
+    return response.data || null;
+  } catch (error) {
+    console.error("❌ Lỗi lấy avatar URL:", error);
+    throw error;
+  }
+};
