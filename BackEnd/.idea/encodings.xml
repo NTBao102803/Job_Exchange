@@ -15,6 +15,7 @@
     <file url="file://$PROJECT_DIR$/match_candidate_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/messaging_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/notification_service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/payment_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/recommendation_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/search_service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/storage_service/src/main/java" charset="UTF-8" />

@@ -185,6 +185,12 @@ const HeaderCandidate = ({ onHomeClick,onJobClick,onCVAIClick,onJobSmartClick,on
                 Hồ sơ của tôi
               </button>
               <button
+                onClick={() => navigate("/candidate/change-password")}
+                className="block px-4 py-2 w-full text-left hover:bg-gray-100"
+              >
+                Thay đổi mật khẩu
+              </button>
+              <button
                 onClick={handleLogout}
                 className="block px-4 py-2 w-full text-left hover:bg-gray-100"
               >

@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Calendar, Eye } from "lucide-react";
+import { ArrowLeft, Save, Calendar, Eye ,AlertTriangle,Loader2} from "lucide-react";
 import JobPreviewModal from "./JobPreviewModal";
 import { createJob, getEmployerProfile } from "../../api/RecruiterApi";
+import axios from "axios";
+import {getAllPenDingJobs,getAllPublicJobs }  from "../../api/JobApi";
 
 const PostJob = () => {
   const navigate = useNavigate();
   const today = new Date().toISOString().split("T")[0];
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [jobData, setJobData] = useState({
     title: "",
@@ -142,6 +146,149 @@ const PostJob = () => {
       alert(error.response?.data?.message || "🚨 Đăng tin thất bại!");
     }
   };
+  const [currentPlan, setCurrentPlan] = useState("");
+  const [totalJobs, setTotalJobs] = useState(null);
+  useEffect(() => {
+
+    const fetchCurrentPlan = async () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user?.id) return;
+
+    const res = await axios.get(`http://localhost:8080/api/payment-plans/current/${user.id}`);
+    setCurrentPlan(res.data?.planName || "");
+  } catch (err) {
+    console.warn("Không có gói hiện tại hoặc lỗi khi lấy gói hiện tại:", err);
+  }
+};
+const fetchJobCounts = async () => {
+      setIsLoading(true);
+      setError(null);
+      let pendingCount = 0;
+      let publicCount = 0;
+
+      try {
+        // Sử dụng Promise.all để gọi song song cả hai API, giúp giảm thời gian tải
+        const [pendingJobs, publicJobs] = await Promise.all([
+            // Tạm thời gọi các hàm mock đã định nghĩa ở trên
+            getAllPenDingJobs("PENDING"), 
+            getAllPenDingJobs("APPROVED")
+        ]);
+
+        // 1. Tính số lượng công việc đang chờ
+        // Đảm bảo dữ liệu trả về là mảng trước khi lấy length
+        pendingCount = Array.isArray(pendingJobs) ? pendingJobs.length : 0;
+        console.log(`Số lượng công việc đang chờ: ${pendingCount}`);
+
+        // 2. Tính số lượng công việc đã công khai
+        publicCount = Array.isArray(publicJobs) ? publicJobs.length : 0;
+        console.log(`Số lượng công việc đã công khai: ${publicCount}`);
+
+        // 3. Calculate Total
+        const total = pendingCount + publicCount;
+        setTotalJobs(total);
+
+      } catch (err) {
+        // Ghi lại lỗi chi tiết và hiển thị thông báo chung cho người dùng
+        console.error("Lỗi khi tải dữ liệu công việc từ API:", err);
+        setError("Không thể tải dữ liệu. Vui lòng kiểm tra kết nối API.");
+        setTotalJobs(0);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCurrentPlan();
+    fetchJobCounts();
+  }, []);
+
+
+
+
+  if (!currentPlan) {
+    return (
+        <div className="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen pt-28 pb-20 px-6">
+            <div className="max-w-4xl mx-auto">
+                <div className="bg-white shadow-2xl rounded-2xl p-10 border border-gray-100">
+                    <h1 className="text-3xl font-bold text-indigo-700 mb-8 text-center">
+                        ✨ Đăng tin tuyển dụng
+                    </h1>
+                    <div className="text-center p-8 bg-yellow-50 border-2 border-yellow-200 rounded-xl shadow-inner space-y-4">
+                        <AlertTriangle className="w-12 h-12 text-yellow-600 mx-auto" />
+                        <h2 className="text-2xl font-bold text-gray-800">
+                            Chức năng bị khóa
+                        </h2>
+                        <p className="text-lg text-gray-600">
+                            Vui lòng **đăng ký gói dịch vụ** để sử dụng chức năng đăng tin tuyển dụng.
+                        </p>
+                        <button
+                            onClick={() => navigate("/recruiter/serviceplans")}
+                            className="mt-4 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition transform hover:scale-105 flex items-center gap-2 mx-auto"
+                        >
+                            Đăng ký dịch vụ ngay!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+  }
+  if (currentPlan==="Gói Nâng Cao" && totalJobs===10) {
+    return (
+        <div className="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen pt-28 pb-20 px-6">
+            <div className="max-w-4xl mx-auto">
+                <div className="bg-white shadow-2xl rounded-2xl p-10 border border-gray-100">
+                    <h1 className="text-3xl font-bold text-indigo-700 mb-8 text-center">
+                        ✨ Đăng tin tuyển dụng
+                    </h1>
+                    <div className="text-center p-8 bg-yellow-50 border-2 border-yellow-200 rounded-xl shadow-inner space-y-4">
+                        <AlertTriangle className="w-12 h-12 text-yellow-600 mx-auto" />
+                        <h2 className="text-2xl font-bold text-gray-800">
+                            Chức năng bị khóa vì bạn đang sử dụng gói dịch vụ Nâng Cao nên chỉ được đăng tối đa 10 tin tuyển dụng/tháng.
+                        </h2>
+                        <p className="text-lg text-gray-600">
+                            Vui lòng **nâng cấp gói dịch vụ** để đăng thêm tin tuyển dụng.
+                        </p>
+                        <button
+                            onClick={() => navigate("/recruiter/serviceplans")}
+                            className="mt-4 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition transform hover:scale-105 flex items-center gap-2 mx-auto"
+                        >
+                            Nâng cấp dịch vụ ngay!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+  }
+  if (currentPlan==="Gói Cơ Bản" && totalJobs===3) {
+    return (
+        <div className="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen pt-28 pb-20 px-6">
+            <div className="max-w-4xl mx-auto">
+                <div className="bg-white shadow-2xl rounded-2xl p-10 border border-gray-100">
+                    <h1 className="text-3xl font-bold text-indigo-700 mb-8 text-center">
+                        ✨ Đăng tin tuyển dụng
+                    </h1>
+                    <div className="text-center p-8 bg-yellow-50 border-2 border-yellow-200 rounded-xl shadow-inner space-y-4">
+                        <AlertTriangle className="w-12 h-12 text-yellow-600 mx-auto" />
+                        <h2 className="text-2xl font-bold text-gray-800">
+                            Chức năng bị khóa vì bạn đang sử dụng gói dịch vụ Cơ Bản nên chỉ được đăng tối đa 3 tin tuyển dụng/tháng.
+                        </h2>
+                        <p className="text-lg text-gray-600">
+                            Vui lòng **nâng cấp gói dịch vụ** để đăng thêm tin tuyển dụng.
+                        </p>
+                        <button
+                            onClick={() => navigate("/recruiter/serviceplans")}
+                            className="mt-4 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition transform hover:scale-105 flex items-center gap-2 mx-auto"
+                        >
+                            Nâng cấp dịch vụ ngay!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen pt-28 pb-20 px-6">
@@ -151,6 +298,7 @@ const PostJob = () => {
           <h1 className="text-3xl font-bold text-indigo-700 mb-8 text-center">
             ✨ Đăng tin tuyển dụng
           </h1>
+
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Tiêu đề công việc */}

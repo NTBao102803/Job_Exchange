@@ -1,12 +1,15 @@
 import React from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { Routes, Route, useLocation } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 
 import HomePage from "./page/homepage/HomePage";
 import LoginPage from "./page/admin/LoginPage";
 import Login from "./page/login/Login"; 
 import RegisterCandidate from "./page/register/RegisterCandidate";
 import RegisterRecruiter from "./page/register/RegisterRecruiter";
+import ChangePassword from "./page/changepassword/ChangePassword"
 import DashboardCandidate from "./page/candidate/DashboardCandidate";
 import DashboardRecruiter from "./page/recruiter/DashboardRecruiter";
 import AdminLayout from "./layout/AdminLayout";
@@ -26,6 +29,12 @@ import DashboardPostJob from "./page/recruiter/DashboardPostJob";
 import DashboardSmartCandidateSuggestionsList from "./page/recruiter/DashboardSmartCandidateSuggestionsList";
 import DashboardRecruiterJobPosts from "./page/recruiter/DashboardRecruiterJobPosts";
 import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidatesHaveApplied";
+import DashboardServicePlans from "./page/recruiter/DashboardServicePlans";
+import DashboardRegisterServiceForm from "./page/recruiter/DashboardRegisterServiceForm";
+import DashboardPaymentHistory from "./page/recruiter/DashboardPaymentHistory";
+
+
+
 
 import ChatboxAI from "./page/chatboxAI/ChatBoxAI";
 
@@ -39,42 +48,107 @@ function AppContent() {
     <>
     < ScrollToTop />
       <Routes>
-        {/* Trang chủ */}
-        <Route path="/" element={<HomePage />} />
+  {/* Trang chủ */}
+  <Route path="/" element={<HomePage />} />
 
-        {/* Trang login admin */}
-        <Route path="/admin" element={<LoginPage />} />
-        
-        <Route path="/admin/dashboard" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="candidates" element={<AdminCandidate />} />
-          <Route path="recruiters" element={<AdminRecruiter />} />
-          <Route path="jobs" element={<AdminJob />} />
-        </Route>
+  {/* Login admin */}
+  <Route path="/admin" element={<LoginPage />} />
 
-        {/* Trang login ứng viên và nhà tuyển dụng */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register-candidate" element={<RegisterCandidate />} />
-        <Route path="/register-recruiter" element={<RegisterRecruiter />} />
+  {/* Admin - chỉ cho role_id === 2 */}
+  <Route
+    path="/admin/dashboard"
+    element={
+      <ProtectedRoute element={AdminLayout} allowedRoles={[2]} />
+    }
+  >
+    <Route index element={<AdminDashboard />} />
+    <Route path="candidates" element={<AdminCandidate />} />
+    <Route path="recruiters" element={<AdminRecruiter />} />
+    <Route path="jobs" element={<AdminJob />} />
+  </Route>
 
-        {/* Dashboard ứng viên */}
-        <Route path="/candidate/dashboard-candidate" element={<DashboardCandidate />} />
-        <Route path="/candidate/candidateprofile" element={<DashboardCandidateProfile />} />
-        <Route path="/candidate/dashboard-joblist" element={<DashboardJobList />} />
-        <Route path="/candidate/jobs/:id" element={<DashboardJobDetail />} />
-        <Route path="/candidate/dashboard-smartjobsuggestionslist" element={<DashboardSmartJobSuggestionsList />} />
-        <Route path="/candidate/dashboard-appliedjobslist" element={<DashboardAppliedJobsList />} />
-        <Route path="/candidate/dashboard-creatcvai" element={<DashboardCreatCVAI />} />
+  {/* Login, đăng ký */}
+  <Route path="/login" element={<Login />} />
+  <Route path="/register-candidate" element={<RegisterCandidate />} />
+  <Route path="/register-recruiter" element={<RegisterRecruiter />} />
 
+  {/* Candidate - chỉ cho role_id === 1 */}
+  <Route
+    path="/candidate/dashboard-candidate"
+    element={<ProtectedRoute element={DashboardCandidate} allowedRoles={[1]} />}
+  />
+  <Route
+    path="/candidate/candidateprofile"
+    element={<ProtectedRoute element={DashboardCandidateProfile} allowedRoles={[1]} />}
+  />
+  <Route
+    path="/candidate/dashboard-joblist"
+    element={<ProtectedRoute element={DashboardJobList} allowedRoles={[1]} />}
+  />
+  <Route
+    path="/candidate/jobs/:id"
+    element={<ProtectedRoute element={DashboardJobDetail} allowedRoles={[1]} />}
+  />
+  <Route
+    path="/candidate/dashboard-smartjobsuggestionslist"
+    element={<ProtectedRoute element={DashboardSmartJobSuggestionsList} allowedRoles={[1]} />}
+  />
+  <Route
+    path="/candidate/dashboard-appliedjobslist"
+    element={<ProtectedRoute element={DashboardAppliedJobsList} allowedRoles={[1]} />}
+  />
+  <Route
+    path="/candidate/dashboard-creatcvai"
+    element={<ProtectedRoute element={DashboardCreatCVAI} allowedRoles={[1]} />}
+  />
+  <Route
+    path="/candidate/change-password"
+    element={<ProtectedRoute element={ChangePassword} allowedRoles={[1]} />}
+  />
 
-        {/* Dashboard nhà tuyển dụng */}
-        <Route path="/recruiter/dashboard-recruiter" element={<DashboardRecruiter />} />
-        <Route path="/recruiter/recruiterprofile" element={<DashboardRecruiterProfile />} />
-        <Route path="/recruiter/dashboard-postjob" element={<DashboardPostJob />} />
-        <Route path="/recruiter/dashboard-smartcandidatesuggestionslist" element={<DashboardSmartCandidateSuggestionsList />} />
-        <Route path="/recruiter/dashboard-recruiterjobposts" element={<DashboardRecruiterJobPosts />} />
-        <Route path="/recruiter/dashboard-candidateshaveapplied" element={<DashboardCandidateshaveApplied />} />
-      </Routes>
+  {/* Recruiter - chỉ cho role_id === 3 */}
+  <Route
+    path="/recruiter/dashboard-recruiter"
+    element={<ProtectedRoute element={DashboardRecruiter} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/recruiterprofile"
+    element={<ProtectedRoute element={DashboardRecruiterProfile} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/dashboard-postjob"
+    element={<ProtectedRoute element={DashboardPostJob} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/dashboard-smartcandidatesuggestionslist"
+    element={<ProtectedRoute element={DashboardSmartCandidateSuggestionsList} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/dashboard-recruiterjobposts"
+    element={<ProtectedRoute element={DashboardRecruiterJobPosts} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/dashboard-candidateshaveapplied"
+    element={<ProtectedRoute element={DashboardCandidateshaveApplied} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/change-password"
+    element={<ProtectedRoute element={ChangePassword} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/serviceplans"
+    element={<ProtectedRoute element={DashboardServicePlans} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/register-service"
+    element={<ProtectedRoute element={DashboardRegisterServiceForm} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/payment-history"
+    element={<ProtectedRoute element={DashboardPaymentHistory} allowedRoles={[3]} />}
+  />
+</Routes>
+
 
       {/* Chatbox floating / global: chỉ render khi ở route của candidate */}
       {isCandidateRoute && <ChatboxAI />}

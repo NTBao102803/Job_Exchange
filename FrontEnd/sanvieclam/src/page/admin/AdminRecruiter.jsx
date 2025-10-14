@@ -36,7 +36,6 @@ const AdminRecruiter = () => {
     const fetchRecruiters = async () => {
       try {
         const data = await getAllEmployer();
-        console.log("📌 Danh sách recruiter từ API:", data);
         setRecruiters(data);
       } catch (error) {
         console.error("Lỗi khi tải danh sách recruiters:", error);

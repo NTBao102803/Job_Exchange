@@ -4,7 +4,7 @@ import HeaderRecruiter from "../../components/recruiter/HeaderRecruiter";
 import RecruiterProfile from "../../components/recruiter/RecruiterProfile";
 import Footer from "../../components/Footer";
 
-export default function DashboardCandidateProfile() {
+export default function DashboardRecruiterProfile() {
   const navigate = useNavigate();
   const footerRef = useRef(null);
   

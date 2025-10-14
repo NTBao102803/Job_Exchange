@@ -179,6 +179,24 @@ const HeaderRecruiter = ({ onHomeClick,onUpTinClick,onSmartCandidate,onQLBD,onFo
                 Hồ sơ của tôi
               </button>
               <button
+                onClick={() => navigate("/recruiter/serviceplans")}
+                className="block px-4 py-2 w-full text-left hover:bg-gray-100"
+              >
+                Đăng kí dịch vụ
+              </button>
+              <button
+                onClick={() => navigate("/recruiter/payment-history")}
+                className="block px-4 py-2 w-full text-left hover:bg-gray-100"
+              >
+                Lịch sử thanh toán 
+              </button>
+              <button
+                onClick={() => navigate("/recruiter/change-password")}
+                className="block px-4 py-2 w-full text-left hover:bg-gray-100"
+              >
+                Thay đổi mật khẩu
+              </button>
+              <button
                 onClick={handleLogout}
                 className="block px-4 py-2 w-full text-left hover:bg-gray-100"
               >
