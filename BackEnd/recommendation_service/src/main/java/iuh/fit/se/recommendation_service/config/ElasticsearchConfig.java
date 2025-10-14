@@ -1,8 +1,13 @@
-package iuh.fit.se.match_candidate_service.config;
+package iuh.fit.se.recommendation_service.config;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -10,16 +15,17 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.ssl.SSLContexts;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.elasticsearch.client.RestClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 
 import javax.net.ssl.SSLContext;
 
 @Configuration
+@Slf4j
 public class ElasticsearchConfig {
-
     @Bean
     public ElasticsearchClient elasticsearchClient() throws Exception {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -42,8 +48,14 @@ public class ElasticsearchConfig {
                 })
                 .build();
 
-        ElasticsearchTransport transport = new RestClientTransport(restClient, new co.elastic.clients.json.jackson.JacksonJsonpMapper());
+        // ✅ Dùng ObjectMapper có hỗ trợ JavaTimeModule
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
 
+        JacksonJsonpMapper mapper = new JacksonJsonpMapper(objectMapper);
+
+        ElasticsearchTransport transport = new RestClientTransport(restClient, mapper);
         return new ElasticsearchClient(transport);
     }
+
 }

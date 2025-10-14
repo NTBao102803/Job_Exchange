@@ -1,29 +1,26 @@
-package iuh.fit.se.job_service.dto;
+package iuh.fit.se.recommendation_service.dto;
 
-
-import iuh.fit.se.job_service.model.JobRequirements;
-import iuh.fit.se.job_service.model.JobType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class JobRequest {
+public class JobDto {
+    private Long id;
+    private Long employerId;
     private String title;
-    private String description;
     private String location;
     private String salary;
-    private JobType jobType;
     private LocalDate startDate;
     private LocalDate endDate;
+    private String description;
     private JobRequirements requirements;
     private String benefits;
+    private String status;
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -1,14 +1,18 @@
-package iuh.fit.se.job_service.dto;
+package iuh.fit.se.recommendation_service.dto;
 
-import lombok.Data;
+import lombok.*;
 
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class JobRequirements {
     private List<String> skills;
-    private String experience; // số năm yêu cầu
+    private String experience;
     private String certificates;
     private String career;
     private String descriptionRequirements;
 }
+

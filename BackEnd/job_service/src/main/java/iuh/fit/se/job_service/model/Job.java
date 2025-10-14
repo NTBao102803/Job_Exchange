@@ -1,6 +1,5 @@
 package iuh.fit.se.job_service.model;
 
-import iuh.fit.se.job_service.dto.JobRequirements;
 import iuh.fit.se.job_service.service.impl.JobRequirementsConverter;
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,7 +1,7 @@
 package iuh.fit.se.job_service.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import iuh.fit.se.job_service.dto.JobRequirements;
+import iuh.fit.se.job_service.model.JobRequirements;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

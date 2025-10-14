@@ -1,5 +1,6 @@
 package iuh.fit.se.job_service.dto;
 
+import iuh.fit.se.job_service.model.JobRequirements;
 import iuh.fit.se.job_service.model.JobStatus;
 import iuh.fit.se.job_service.model.JobType;
 import lombok.*;
