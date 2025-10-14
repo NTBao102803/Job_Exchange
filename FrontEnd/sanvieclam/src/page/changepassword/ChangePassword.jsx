@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-// import { changePasswordApi } from "../../api/AuthApi"; // 👉 gọi API đổi mật khẩu
+import { changePassword } from "../../api/AuthApi"; // 👉 gọi API đổi mật khẩu
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -30,7 +30,11 @@ const ChangePassword = () => {
       errs.newPassword = "Mật khẩu mới không được để trống";
     } else if (form.newPassword.length < 8) {
       errs.newPassword = "Mật khẩu mới phải ít nhất 8 ký tự";
-    } else if (!/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/.test(form.newPassword)) {
+    } else if (
+      !/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/.test(
+        form.newPassword
+      )
+    ) {
       errs.newPassword =
         "Mật khẩu mới phải có chữ hoa, chữ thường, số và ký tự đặc biệt";
     }
@@ -49,13 +53,33 @@ const ChangePassword = () => {
 
     try {
       setLoading(true);
-      // Gọi API thay đổi mật khẩu
-      // await changePasswordApi(form.oldPassword, form.newPassword);
 
+      const data = {
+        oldPassword: form.oldPassword,
+        newPassword: form.newPassword,
+      };
+
+      console.log("🔹 Dữ liệu gửi lên API:", data);
+      await changePassword(data);
+
+      // ✅ Hiển thị thông báo
       alert("✅ Đổi mật khẩu thành công!");
-      navigate("/login"); // về login sau khi đổi xong
+
+      // ✅ Xóa nội dung trong form (clear input)
+      setForm({
+        oldPassword: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      });
+
+      // ✅ Giữ nguyên trang — không navigate, không logout
     } catch (err) {
-      setErrors({ oldPassword: "❌ Mật khẩu cũ không đúng" });
+      console.error("❌ Lỗi đổi mật khẩu:", err.response?.data || err.message);
+      setErrors({
+        oldPassword:
+          err.response?.data?.message ||
+          "❌ Mật khẩu cũ không đúng hoặc lỗi máy chủ",
+      });
     } finally {
       setLoading(false);
     }

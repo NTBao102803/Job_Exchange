@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/AuthApi";
 import { Bell } from "lucide-react";
+import { useUser } from "../../context/UserContext";
 
 const HeaderCandidate = ({ onHomeClick,onJobClick,onCVAIClick,onJobSmartClick,onBlog,onFooter,onJobUTClick}) => {
   const [show, setShow] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { avatarUrl } = useUser();
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -173,7 +175,7 @@ const HeaderCandidate = ({ onHomeClick,onJobClick,onCVAIClick,onJobSmartClick,on
             className="w-12 h-12 rounded-full bg-gray-300 cursor-pointer overflow-hidden border-2 border-white"
             onClick={toggleMenu}
           >
-            <img src="/user-candidate.png" alt="User Avatar" className="w-full h-full object-cover" />
+            <img src={avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
           </div>
 
           {menuOpen && (

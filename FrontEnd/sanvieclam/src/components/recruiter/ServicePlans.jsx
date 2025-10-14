@@ -63,10 +63,27 @@ const ServicePlans = () => {
     const planRankValue = planRank[planName] || 0;
 
     if (planName === currentPlan) return "✅ Đang sử dụng";
-    if (planRankValue > currentRank) return "⬆️ Nâng cấp";
+    if (planRankValue > currentRank) return "⚡ Nâng cấp gói";
     if (planRankValue < currentRank) return "⛔ Không khả dụng";
 
     return "Đăng ký ngay";
+  };
+
+  const getButtonStyle = (planName) => {
+    if (!currentPlan)
+      return "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg";
+
+    const currentRank = planRank[currentPlan] || 0;
+    const planRankValue = planRank[planName] || 0;
+
+    if (planName === currentPlan)
+      return "bg-green-500 text-white cursor-not-allowed";
+    if (planRankValue > currentRank)
+      return "bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white shadow-md hover:shadow-lg";
+    if (planRankValue < currentRank)
+      return "bg-gray-300 text-gray-600 cursor-not-allowed";
+
+    return "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg";
   };
 
   const getButtonDisabled = (planName) => {
@@ -75,9 +92,7 @@ const ServicePlans = () => {
     const currentRank = planRank[currentPlan] || 0;
     const planRankValue = planRank[planName] || 0;
 
-    if (planName === currentPlan) return true;
-    if (planRankValue < currentRank) return true; // không thể hạ cấp
-    return false;
+    return planName === currentPlan || planRankValue < currentRank;
   };
 
   return (
@@ -99,7 +114,6 @@ const ServicePlans = () => {
                 ✅ Active
               </div>
             </div>
-            <div className="absolute inset-0 rounded-2xl border-2 border-white/20 pointer-events-none animate-pulse"></div>
           </div>
         ) : (
           <div className="bg-red-100 text-red-600 p-6 rounded-2xl shadow-md text-center font-medium">
@@ -120,6 +134,7 @@ const ServicePlans = () => {
             const features =
               plan.description?.split(".").map((f) => f.trim()).filter((f) => f) || [];
             const buttonLabel = getButtonLabel(plan.name);
+            const buttonStyle = getButtonStyle(plan.name);
             const disabled = getButtonDisabled(plan.name);
 
             return (
@@ -159,13 +174,7 @@ const ServicePlans = () => {
                     !disabled &&
                     navigate("/recruiter/register-service", { state: { plan } })
                   }
-                  className={`w-full py-3 rounded-xl font-semibold transition transform hover:scale-105 ${
-                    isCurrent
-                      ? "bg-green-500 text-white cursor-not-allowed"
-                      : disabled
-                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg"
-                  }`}
+                  className={`w-full py-3 rounded-xl font-semibold transition transform hover:scale-105 ${buttonStyle}`}
                 >
                   {buttonLabel}
                 </button>
