@@ -108,7 +108,7 @@ const ServicePlans = () => {
                   {plan.name}
                 </h2>
                 <p className="text-xl font-semibold text-gray-800 mb-6">
-                  💰 {plan.price.toLocaleString("vi-VN")}đ / tháng
+                  💰 {plan.price.toLocaleString("vi-VN")}đ / {plan.durationDays} ngày
                 </p>
 
                 <ul className="space-y-3 mb-6">

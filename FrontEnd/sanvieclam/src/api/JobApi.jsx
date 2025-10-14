@@ -33,3 +33,13 @@ export const getJobById = async (id) => {
     throw error;
   }
 };
+// Lấy danh sách job đã được duyệt (public)
+export const getAllPenDingJobs = async (status) => {
+  try {
+    const response = await axiosClient.get(`/jobs/statusByEmployer/${status}`);
+    return response.data; // trả về list JobDto
+  } catch (error) {
+    console.error("❌ Lỗi khi fetch jobs public:", error);
+    throw error;
+  }
+};
