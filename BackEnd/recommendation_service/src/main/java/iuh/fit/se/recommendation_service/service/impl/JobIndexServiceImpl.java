@@ -133,6 +133,7 @@ public class JobIndexServiceImpl implements JobIndexService {
             doc.put("title", job.getTitle());
             doc.put("location", job.getLocation());
             doc.put("salary", job.getSalary());
+            doc.put("jobType", job.getJobType());
             doc.put("startDate", job.getStartDate());
             doc.put("endDate", job.getEndDate());
             doc.put("description", job.getDescription());
@@ -187,6 +188,7 @@ public class JobIndexServiceImpl implements JobIndexService {
             job.setEmployerId(h.get("employerId") != null ? Long.valueOf(String.valueOf(h.get("employerId"))) : null);
             job.setTitle((String) h.get("title"));
             job.setLocation((String) h.get("location"));
+            job.setJobType((String) h.get("jobType"));
             job.setSalary((String) h.get("salary"));
             job.setDescription((String) h.get("description"));
             job.setBenefits((String) h.get("benefits"));

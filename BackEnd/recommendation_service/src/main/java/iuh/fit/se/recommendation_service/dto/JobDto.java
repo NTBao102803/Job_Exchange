@@ -16,6 +16,7 @@ public class JobDto {
     private String location;
     private String salary;
     private LocalDate startDate;
+    private String jobType;
     private LocalDate endDate;
     private String description;
     private JobRequirements requirements;

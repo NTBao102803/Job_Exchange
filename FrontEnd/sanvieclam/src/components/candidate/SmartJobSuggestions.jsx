@@ -1,65 +1,121 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
-
-const smartJobs = [
-  {
-    title: "AI Engineer",
-    company: "FutureAI Labs",
-    salary: "25 - 35 triệu",
-    skills: "Python, TensorFlow, ML",
-    match: "95%",
-    image: "/images/ai-job1.jpg",
-    location: "Hà Nội",
-    jobType: "Fulltime",
-    experience: "",
-    education: "hhh",
-    career: "",
-  },
-  {
-    title: "Data Scientist",
-    company: "Insight Global",
-    salary: "22 - 30 triệu",
-    skills: "R, Python, SQL,AWS, Kubernetes, Terraform,AWS, Kubernetes, Terraform",
-    match: "90%",
-    image: "/images/ai-job2.jpg",
-    experience: "",
-    location: "Hà Nội",
-    jobType: "Fulltime",
-    education: "",
-    career: "",
-  },
-  {
-    title: "Cloud Architect",
-    company: "SkyNet Cloud",
-    salary: "30 - 40 triệu",
-    skills: "AWS, Kubernetes, Terraform",
-    match: "88%",
-    image: "/images/ai-job3.jpg",
-    experience: "",
-    education: "",
-    career: "",
-    location: "Hà Nội",
-    jobType: "Fulltime",
-  },
-  {
-    title: "Product Manager",
-    company: "NextVision",
-    salary: "20 - 28 triệu",
-    skills: "Agile, Jira, Leadership",
-    match: "85%",
-    image: "/images/ai-job4.jpg",
-    experience: "",
-    education: "",
-    career: "",
-    location: "Hà Nội",
-    jobType: "Fulltime",
-  },
-];
+import {
+  getSmartJobRecommendations,
+  syncAllJobs,
+} from "../../api/RecommendationApi";
+import { getEmployerById } from "../../api/JobApi";
 
 const SmartJobSuggestions = () => {
   const navigate = useNavigate();
+  const [jobs, setJobs] = useState([]); // ✅ danh sách job gợi ý
+  const [loading, setLoading] = useState(false);
+
+  // ✅ Lấy userId từ localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id;
+
+  // ✅ Auto sync khi mở trang
+  useEffect(() => {
+    const autoSync = async () => {
+      try {
+        setLoading(true);
+        await syncAllJobs();
+        console.log("✅ Đồng bộ job thành công!");
+
+        if (userId) {
+          await fetchRecommendedJobs();
+        } else {
+          console.warn("⚠️ Không tìm thấy userId trong localStorage");
+        }
+      } catch (err) {
+        console.error("❌ Lỗi khi auto sync job:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    autoSync();
+  }, []);
+
+  // ✅ Hàm lấy danh sách job gợi ý (kèm dữ liệu chi tiết)
+  const fetchRecommendedJobs = async () => {
+    setLoading(true);
+    try {
+      console.log(`🚀 Gọi API getSmartJobRecommendations(${userId})`);
+      const res = await getSmartJobRecommendations(userId, 10);
+
+      console.log("📦 Response từ API:", res);
+
+      // Duyệt qua từng job, đồng thời gọi thêm API lấy thông tin employer
+      const mappedJobs = await Promise.all(
+        res.map(async (item, index) => {
+          const job = item.job || {};
+          const requirements = job.requirements || {};
+          let companyName = "Không rõ công ty";
+
+          // ✅ Nếu có employerId → gọi API lấy thông tin công ty
+          if (job.employerId) {
+            try {
+              const employer = await getEmployerById(job.employerId);
+              console.log("📦 Response employer:", employer);
+              companyName =
+                employer?.companyName ||
+                employer?.company ||
+                `Công ty ID ${job.employerId}`;
+            } catch (error) {
+              console.warn(`⚠️ Lỗi lấy employer ${job.employerId}:`, error);
+            }
+          }
+
+          return {
+            id: job.id,
+            title: job.title || "Chưa có tiêu đề",
+            company: companyName,
+            location: job.location || "Không rõ",
+            salary: job.salary || "Thỏa thuận",
+            jobType: job.jobType || "Fulltime",
+            match: item.score ? `${(item.score * 100).toFixed(1)}%` : "N/A",
+            skills: Array.isArray(requirements.skills)
+              ? requirements.skills.join(", ")
+              : "Không có kỹ năng yêu cầu",
+            image: `/images/ai-job${(index % 4) + 1}.jpg`, // ✅ ảnh ngẫu nhiên 1–4
+            jobDetail: { ...job, companyName },
+          };
+        })
+      );
+
+      console.log("📌 mappedJobs (đã có companyName):", mappedJobs);
+      setJobs(mappedJobs);
+    } catch (err) {
+      console.error("❌ Lỗi load job recommendations:", err);
+
+      if (err.response) {
+        console.error("❌ Error status:", err.response.status);
+        console.error("❌ Error data:", err.response.data);
+      } else if (err.request) {
+        console.error("❌ Không nhận được response từ server:", err.request);
+      } else {
+        console.error("❌ Lỗi khi setup request:", err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Hiển thị loading
+  if (loading) {
+    return (
+      <section className="w-full py-20 bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 text-white text-center">
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent"></div>
+        </div>
+        <p className="mt-4 text-lg">Đang tải gợi ý việc làm...</p>
+      </section>
+    );
+  }
+
   return (
     <section className="w-full py-20 bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 text-white">
       <h2 className="text-3xl md:text-4xl font-extrabold mb-12 text-center flex items-center justify-center gap-3">
@@ -68,13 +124,18 @@ const SmartJobSuggestions = () => {
       </h2>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-6">
-        {smartJobs.map((job, idx) => (
+        {jobs.slice(0, 4).map((job, idx) => (
           <motion.div
             key={idx}
             initial={{ y: 40, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: idx * 0.2, duration: 0.7, type: "spring", stiffness: 100 }}
+            transition={{
+              delay: idx * 0.2,
+              duration: 0.7,
+              type: "spring",
+              stiffness: 100,
+            }}
             className="relative bg-white/20 backdrop-blur-2xl rounded-3xl overflow-hidden 
                        border border-white/30 hover:scale-105 hover:shadow-[0_0_25px_rgba(255,255,255,0.6)] 
                        transition-transform duration-300 flex flex-col"
@@ -87,38 +148,59 @@ const SmartJobSuggestions = () => {
               />
             </div>
 
-            <div className="p-5 flex flex-col flex-1 justify-between text-white">
-              <div>
-                <h3 className="text-lg md:text-xl font-bold mb-1">{job.title}</h3>
-                <span className="text-sm opacity-90">{job.company}</span>
-                <div className="text-sm font-medium mt-2 text-yellow-300">{job.salary}</div>
-                <div className="mt-3 text-xs space-y-1">
-                <p className="truncate max-w-[200px] whitespace-nowrap">
-                      📍 {job.location} | ⏰ {job.jobType}
-                    </p>
-                  {/* Kỹ năng */}
-                  <div
-                    className="truncate max-w-[200px] whitespace-nowrap"
-                    title={job.skills} // tooltip hiện đủ khi hover
-                  >
-                    <span className="font-semibold">Kỹ năng: </span> {job.skills}
-                  </div>
+            <div
+              className="p-5 flex flex-col text-white flex-1 bg-gradient-to-br from-pink-500/20 to-purple-500/10 
+                rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 min-h-[400px]"
+            >
+              {/* Nội dung chính */}
+              <div className="flex flex-col flex-grow justify-start space-y-2">
+                {/* Tiêu đề */}
+                <h3 className="text-xl font-bold line-clamp-2 leading-tight min-h-[48px] text-white">
+                  {job.title}
+                </h3>
 
-                  {/* Phù hợp */}
-                  <div>
-                    <span className="font-semibold">Phù hợp: </span>
-                    <span className="text-green-300 font-bold">{job.match}</span>
-                  </div>
-                </div>
+                {/* Tên công ty */}
+                <p className="text-base text-yellow-200 font-medium line-clamp-1">
+                  {job.company}
+                </p>
 
+                {/* Lương */}
+                <p className="text-sm md:text-base font-semibold text-yellow-300">
+                  💰 {job.salary}
+                </p>
+
+                {/* Địa điểm + loại hình */}
+                <p className="text-sm opacity-90 line-clamp-1">
+                  📍 {job.location} | ⏰ {job.jobType}
+                </p>
+
+                {/* Kỹ năng */}
+                <p
+                  className="text-sm text-gray-200 leading-snug line-clamp-2 h-[40px]"
+                  title={job.skills}
+                >
+                  <span className="font-semibold text-white">Kỹ năng:</span>{" "}
+                  {job.skills}
+                </p>
+
+                {/* Phù hợp */}
+                <p className="text-sm">
+                  <span className="font-semibold text-white">Phù hợp:</span>{" "}
+                  <span className="text-green-300 font-bold">{job.match}</span>
+                </p>
               </div>
 
-              <div className="flex justify-end mt-4">
-                <button onClick={() =>
-                      navigate(`/candidate/jobs/${job.id}`, { state: { job } })
-                    }
-                        className="bg-yellow-400 text-gray-900 font-bold py-2 px-5 rounded-2xl shadow-lg 
-                                   hover:bg-yellow-300 transition-all duration-300">
+              {/* Nút xem chi tiết - gần hơn */}
+              <div className="mt-3 flex justify-center">
+                <button
+                  onClick={() =>
+                    navigate(`/candidate/jobs/${job.id}`, {
+                      state: { job: job.jobDetail },
+                    })
+                  }
+                  className="bg-yellow-400 text-gray-900 font-bold text-base py-2.5 px-6 rounded-full shadow-lg 
+                 hover:bg-yellow-300 transform hover:scale-105 transition-all duration-300"
+                >
                   Xem chi tiết
                 </button>
               </div>
@@ -127,13 +209,20 @@ const SmartJobSuggestions = () => {
         ))}
       </div>
 
-      <div className="mt-14 flex justify-center">
-        <button onClick={() => navigate("/candidate/dashboard-smartjobsuggestionslist")}
-                className="bg-white text-pink-600 font-bold py-3 px-10 rounded-3xl shadow-lg 
-                           hover:bg-pink-100 transition-all duration-300">
-          Xem thêm gợi ý
-        </button>
-      </div>
+      {/* Nút xem thêm */}
+      {jobs.length > 4 && (
+        <div className="mt-14 flex justify-center">
+          <button
+            onClick={() =>
+              navigate("/candidate/dashboard-smartjobsuggestionslist")
+            }
+            className="bg-white text-pink-600 font-bold py-3 px-10 rounded-3xl shadow-lg 
+                       hover:bg-pink-100 transition-all duration-300"
+          >
+            Xem thêm gợi ý
+          </button>
+        </div>
+      )}
     </section>
   );
 };
