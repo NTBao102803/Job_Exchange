@@ -1,4 +1,4 @@
-package iuh.fit.se.chatbot_service.config;
+package iuh.fit.se.payment_service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

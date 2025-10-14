@@ -8,6 +8,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="admin_service" />
+        <module name="payment_service" />
         <module name="recommendation_service" />
         <module name="ai_matching_service" />
         <module name="match_candidate_service" />
@@ -21,7 +22,7 @@
         <module name="employer_service" />
         <module name="search_service" />
       </profile>
-      <profile name="Annotation profile for auth_service" enabled="true">
+      <profile name="Annotation profile for user_service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -52,6 +53,7 @@
       <module name="match_candidate_service" options="-parameters" />
       <module name="messaging_service" options="-parameters" />
       <module name="notification_service" options="-parameters" />
+      <module name="payment_service" options="-parameters" />
       <module name="recommendation_service" options="-parameters" />
       <module name="search_service" options="-parameters" />
       <module name="storage_service" options="-parameters" />
