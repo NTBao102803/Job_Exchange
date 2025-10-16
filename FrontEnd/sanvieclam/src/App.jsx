@@ -32,6 +32,7 @@ import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidates
 import DashboardServicePlans from "./page/recruiter/DashboardServicePlans";
 import DashboardRegisterServiceForm from "./page/recruiter/DashboardRegisterServiceForm";
 import DashboardPaymentHistory from "./page/recruiter/DashboardPaymentHistory";
+import ForgotPassword from "./page/forgotpassword/ForgotPassword";
 
 
 
@@ -71,6 +72,8 @@ function AppContent() {
   <Route path="/login" element={<Login />} />
   <Route path="/register-candidate" element={<RegisterCandidate />} />
   <Route path="/register-recruiter" element={<RegisterRecruiter />} />
+    {/* Quên mật khẩu */}
+  <Route path="/forgot-password" element={<ForgotPassword />} />
 
   {/* Candidate - chỉ cho role_id === 1 */}
   <Route
