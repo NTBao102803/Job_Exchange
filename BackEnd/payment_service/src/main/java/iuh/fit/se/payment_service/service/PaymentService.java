@@ -39,6 +39,27 @@ public class PaymentService {
                 .toList();
     }
 
+    public List<PaymentResponseDTO> getAllPayments() {
+        return paymentRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(p -> PaymentResponseDTO.builder()
+                        .id(p.getId())
+                        .orderId(p.getOrderId())
+                        .planName(p.getPlan() != null ? p.getPlan().getName() : null)
+                        .planId(p.getPlan() != null ? p.getPlan().getId() : null) // ✅ thêm
+                        .recruiterId(p.getRecruiterId()) // ✅ thêm
+                        .amount(p.getAmount())
+                        .status(p.getStatus())
+                        .method(p.getMethod())
+                        .createdAt(p.getCreatedAt())
+                        .payUrl(p.getPayUrl()) // ✅ thêm
+                        .qrCodeUrl(p.getQrCodeUrl()) // ✅ thêm
+                        .build())
+                .toList();
+    }
+
+
+
     /**
      * Tạo payment và request tới provider (MOMO) -> trả về payUrl/qrCodeUrl cho frontend.
      */
