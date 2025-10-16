@@ -54,7 +54,7 @@ export default function DashboardCandidate() {
       <FeaturedJobs onStartClick={() => navigate("/candidate/dashboard-joblist")}
                     onJob={(job) => navigate(`/candidate/jobs/${job.id}`, { state: { job } })}
       />
-      <CvAiBanner/>
+      <CvAiBanner onStartClick={()=>navigate("/candidate/dashboard-creatcvai")}/>
       <SmartJobSuggestions/>
       <div ref={blogRef}>
         <BlogSection/>
