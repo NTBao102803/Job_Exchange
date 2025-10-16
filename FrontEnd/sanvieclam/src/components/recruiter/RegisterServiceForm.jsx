@@ -1,23 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-import { CheckCircleIcon, CreditCardIcon, QrCodeIcon } from "@heroicons/react/24/solid";
+import {
+  CheckCircleIcon,
+  CreditCardIcon,
+  QrCodeIcon,
+} from "@heroicons/react/24/solid";
 
 const RegisterServiceForm = () => {
   const location = useLocation();
   const selectedPlan = location.state?.plan;
+
   const [paymentMethod, setPaymentMethod] = useState("Momo");
   const [orderId, setOrderId] = useState(null);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [step, setStep] = useState(1);
+  const [isCreating, setIsCreating] = useState(false);
   const [currentPlan, setCurrentPlan] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
-
-
+  // ✅ Tạo thanh toán
   const handleCreatePayment = async () => {
+    if (isCreating) return; // ⛔ Ngăn double click
+    setIsCreating(true);
+
     try {
       const reqBody = {
         planId: selectedPlan.id,
@@ -34,10 +42,13 @@ const RegisterServiceForm = () => {
       alert(`✅ Đã tạo đơn hàng ${res.data.orderId}`);
     } catch (err) {
       console.error("Create payment error:", err);
-      alert("❌ Lỗi khi tạo thanh toán");
+      alert("❌ Lỗi khi tạo thanh toán!");
+    } finally {
+      setIsCreating(false);
     }
   };
 
+  // ✅ Giả lập quét QR thành công
   const simulateScan = async () => {
     if (!orderId) {
       alert("⚠️ Chưa có đơn hàng nào để quét! Hãy tạo thanh toán trước.");
@@ -61,7 +72,6 @@ const RegisterServiceForm = () => {
       <h1 className="text-4xl font-extrabold text-indigo-600 mb-4 text-center">
         💼 Đăng Ký Gói Dịch Vụ
       </h1>
-
 
       {/* === Thanh tiến trình === */}
       <div className="flex justify-between items-center mb-10 w-full max-w-3xl">
@@ -110,6 +120,7 @@ const RegisterServiceForm = () => {
               ))}
           </ul>
 
+          {/* === Bước 1: Chọn phương thức & tạo thanh toán === */}
           {step === 1 && (
             <div className="space-y-5">
               <label className="block font-semibold text-gray-600 mb-2">
@@ -126,13 +137,19 @@ const RegisterServiceForm = () => {
 
               <button
                 onClick={handleCreatePayment}
-                className="w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold hover:bg-indigo-700 transition-all duration-300"
+                disabled={isCreating}
+                className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 ${
+                  isCreating
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-indigo-600 text-white hover:bg-indigo-700"
+                }`}
               >
-                🔗 Tạo thanh toán
+                {isCreating ? "⏳ Đang tạo..." : "🔗 Tạo thanh toán"}
               </button>
             </div>
           )}
 
+          {/* === Bước 2: Hiển thị QR code === */}
           {step === 2 && (
             <div className="text-center space-y-6">
               <p className="text-gray-700 text-lg">
@@ -157,6 +174,7 @@ const RegisterServiceForm = () => {
             </div>
           )}
 
+          {/* === Bước 3: Thành công === */}
           {step === 3 && (
             <div className="text-center mt-8 space-y-4">
               <CheckCircleIcon className="w-20 h-20 text-green-500 mx-auto" />
