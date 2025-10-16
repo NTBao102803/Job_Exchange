@@ -17,6 +17,8 @@ import AdminCandidate from "./page/admin/AdminCandidate";
 import AdminDashboard from "./page/admin/AdminDashboad";
 import AdminRecruiter from "./page/admin/AdminRecruiter";
 import AdminJob from "./page/admin/AdminJob";
+import AdminUserReport from "./page/admin/AdminUserReport";
+
 import DashboardCandidateProfile from "./page/candidate/DashboardCandidateProfile";
 import DashboardRecruiterProfile from "./page/recruiter/DashboardRecruiterProfile";
 import DashboardJobList from "./page/candidate/DashboardJobList";
@@ -66,6 +68,7 @@ function AppContent() {
     <Route path="candidates" element={<AdminCandidate />} />
     <Route path="recruiters" element={<AdminRecruiter />} />
     <Route path="jobs" element={<AdminJob />} />
+    <Route path="reports/users" element={<AdminUserReport />} />
   </Route>
 
   {/* Login, đăng ký */}
