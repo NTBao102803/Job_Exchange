@@ -1,68 +1,83 @@
 import React, { useState, useEffect } from "react";
-import { Briefcase } from "lucide-react";
+import { Briefcase, AlertTriangle } from "lucide-react";
 import CandidateProfileModal from "../candidate/CandidateProfileModal";
 import { getJobsByStatusByEmployer } from "../../api/RecruiterApi";
 import {
   getCandidatesForJob,
   syncAllCandidates,
 } from "../../api/MachCandidateApi";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SmartCandidateSuggestionsList = () => {
-  const [jobs, setJobs] = useState([]); // ✅ danh sách jobs từ API
+  const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
-  const [candidates, setCandidates] = useState([]); // ✅ danh sách ứng viên từ API
+  const [candidates, setCandidates] = useState([]);
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState("");
 
-  // ✅ Lấy danh sách job từ API
+  const navigate = useNavigate();
+
+  // ✅ Kiểm tra gói dịch vụ hiện tại
   useEffect(() => {
+    const fetchCurrentPlan = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user?.id) return;
+
+        const res = await axios.get(
+          `http://localhost:8080/api/payment-plans/current/${user.id}`
+        );
+        setCurrentPlan(res.data?.planName || "");
+      } catch (err) {
+        console.warn("⚠️ Không có gói dịch vụ hiện tại:", err);
+      }
+    };
+    fetchCurrentPlan();
+  }, []);
+
+  // ✅ Lấy danh sách job (chỉ khi có gói)
+  useEffect(() => {
+    if (!currentPlan) return;
     const fetchJobs = async () => {
       try {
-        const res = await getJobsByStatusByEmployer("APPROVED"); // ví dụ lấy job đang mở
+        const res = await getJobsByStatusByEmployer("APPROVED");
         setJobs(res);
-        if (res.length > 0) {
-          setSelectedJob(res[0].id); // chọn job đầu tiên
-        }
+        if (res.length > 0) setSelectedJob(res[0].id);
       } catch (err) {
         console.error("❌ Lỗi load jobs:", err);
       }
     };
     fetchJobs();
-  }, []);
-  // ✅ Tự động sync khi mở trang
+  }, [currentPlan]);
+
+  // ✅ Auto sync ứng viên khi mở trang
   useEffect(() => {
+    if (!currentPlan) return;
     const autoSync = async () => {
       try {
         await syncAllCandidates();
         console.log("✅ Sync thành công!");
-        if (selectedJob) {
-          await fetchCandidates();
-        }
       } catch (err) {
         console.error("❌ Lỗi khi auto sync:", err);
       }
     };
     autoSync();
-  }, []);
+  }, [currentPlan]);
 
-  // ✅ Lấy ứng viên match khi chọn job
+  // ✅ Lấy danh sách ứng viên khi chọn job
   useEffect(() => {
-    const fetchCandidate = async () => {
-      if (!selectedJob) {
-        console.log("⚠️ Không có job nào được chọn -> không gọi API");
-        return;
-      }
+    if (!selectedJob || !currentPlan) return;
 
+    const fetchCandidate = async () => {
       setLoading(true);
       console.log("🚀 Gọi API getCandidatesForJob với jobId:", selectedJob);
 
       try {
         const res = await getCandidatesForJob(selectedJob);
-        console.log("✅ API response (raw):", res);
-
-        // res = [{ candidate, score }]
         const mappedCandidates = res.map((item, index) => {
           const matchValue =
             item.score != null
@@ -71,44 +86,23 @@ const SmartCandidateSuggestionsList = () => {
                 : String(item.score)
               : "N/A";
 
-          console.log(
-            `🟢 Candidate[${index}]:`,
-            item.candidate,
-            "Score:",
-            item.score,
-            "Match:",
-            matchValue
-          );
-
           return {
             ...item.candidate,
-            match: matchValue, // giữ "match" để UI cũ không phải thay đổi
-            score: item.score, // giữ score nếu bạn cần tính khác nơi khác
+            match: matchValue,
+            score: item.score,
           };
         });
 
-        console.log("📌 mappedCandidates:", mappedCandidates);
-        setCandidates(mappedCandidates); // ✅ set list để render
+        setCandidates(mappedCandidates);
       } catch (err) {
         console.error("❌ Lỗi load candidate:", err);
-
-        // log chi tiết nếu có response từ server
-        if (err.response) {
-          console.error("❌ Error status:", err.response.status);
-          console.error("❌ Error data:", err.response.data);
-          console.error("❌ Error headers:", err.response.headers);
-        } else if (err.request) {
-          console.error("❌ Không nhận được response từ server:", err.request);
-        } else {
-          console.error("❌ Lỗi khi setup request:", err.message);
-        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchCandidate();
-  }, [selectedJob]);
+  }, [selectedJob, currentPlan]);
 
   // ✅ Phân trang
   const candidatesPerPage = 4;
@@ -116,6 +110,41 @@ const SmartCandidateSuggestionsList = () => {
   const startIndex = (page - 1) * candidatesPerPage;
   const endIndex = Math.min(startIndex + candidatesPerPage, candidates.length);
   const currentCandidates = candidates.slice(startIndex, endIndex);
+
+  // ✅ Nếu chưa có gói dịch vụ
+  if (!currentPlan) {
+  return (
+    <section className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-700 via-blue-600 to-cyan-500 text-white px-6">
+      <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-10 text-center max-w-lg animate-fadeIn">
+        <div className="flex justify-center mb-5">
+          <AlertTriangle className="w-16 h-16 text-yellow-400 animate-bounce" />
+        </div>
+
+        <h2 className="text-2xl md:text-3xl font-bold mb-3 text-yellow-300">
+          Tính năng bị khóa
+        </h2>
+        <p className="text-base md:text-lg text-white/90 mb-6">
+          Bạn chưa có gói dịch vụ nào đang hoạt động.  
+          Hãy{" "}
+          <span className="font-semibold text-yellow-300">
+            đăng ký ngay
+          </span>{" "}
+          để sử dụng tính năng{" "}
+          <span className="font-bold text-white">
+            Gợi ý ứng viên thông minh
+          </span>.
+        </p>
+
+        <button
+          onClick={() => navigate("/recruiter/serviceplans")}
+          className="px-8 py-3 bg-yellow-400 text-gray-900 font-bold rounded-xl shadow-md hover:bg-yellow-300 hover:scale-105 transition-all duration-200"
+        >
+          Đăng ký ngay
+        </button>
+      </div>
+    </section>
+  );
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-500 pt-32 pb-32 px-6 relative text-white">

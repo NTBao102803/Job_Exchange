@@ -17,6 +17,10 @@ import AdminCandidate from "./page/admin/AdminCandidate";
 import AdminDashboard from "./page/admin/AdminDashboad";
 import AdminRecruiter from "./page/admin/AdminRecruiter";
 import AdminJob from "./page/admin/AdminJob";
+import AdminUserReport from "./page/admin/AdminUserReport";
+import AdminJobReport from "./page/admin/AdminJobReport";
+import AdminFinanceReport from "./page/admin/AdminFinanceReport";
+
 import DashboardCandidateProfile from "./page/candidate/DashboardCandidateProfile";
 import DashboardRecruiterProfile from "./page/recruiter/DashboardRecruiterProfile";
 import DashboardJobList from "./page/candidate/DashboardJobList";
@@ -32,6 +36,7 @@ import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidates
 import DashboardServicePlans from "./page/recruiter/DashboardServicePlans";
 import DashboardRegisterServiceForm from "./page/recruiter/DashboardRegisterServiceForm";
 import DashboardPaymentHistory from "./page/recruiter/DashboardPaymentHistory";
+import ForgotPassword from "./page/forgotpassword/ForgotPassword";
 
 
 
@@ -65,12 +70,17 @@ function AppContent() {
     <Route path="candidates" element={<AdminCandidate />} />
     <Route path="recruiters" element={<AdminRecruiter />} />
     <Route path="jobs" element={<AdminJob />} />
+    <Route path="reports/users" element={<AdminUserReport />} />
+    <Route path="reports/jobs" element={<AdminJobReport />} />
+    <Route path="reports/finance" element={<AdminFinanceReport />} />
   </Route>
 
   {/* Login, đăng ký */}
   <Route path="/login" element={<Login />} />
   <Route path="/register-candidate" element={<RegisterCandidate />} />
   <Route path="/register-recruiter" element={<RegisterRecruiter />} />
+    {/* Quên mật khẩu */}
+  <Route path="/forgot-password" element={<ForgotPassword />} />
 
   {/* Candidate - chỉ cho role_id === 1 */}
   <Route

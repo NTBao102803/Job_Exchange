@@ -17,4 +17,6 @@ public class PaymentResponseDTO {
     private LocalDateTime createdAt;
     private String payUrl;
     private String qrCodeUrl;
+    private Long planId;
+    private Long recruiterId;
 }

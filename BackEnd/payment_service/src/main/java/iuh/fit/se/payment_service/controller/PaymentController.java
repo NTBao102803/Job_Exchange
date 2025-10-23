@@ -48,4 +48,11 @@ public class PaymentController {
     public ResponseEntity<?> getPaymentsByRecruiter(@PathVariable Long recruiterId) {
         return ResponseEntity.ok(paymentService.getPaymentsByRecruiter(recruiterId));
     }
+    /**
+     * ✅ API cho admin: Lấy toàn bộ payment trong hệ thống
+     */
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllPayments() {
+        return ResponseEntity.ok(paymentService.getAllPayments());
+    }
 }

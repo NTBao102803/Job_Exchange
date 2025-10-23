@@ -8,6 +8,7 @@ const ServicePlans = () => {
   const [currentPlan, setCurrentPlan] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // 📦 Lấy danh sách gói và gói hiện tại
   useEffect(() => {
     const fetchPlans = async () => {
       try {
@@ -21,17 +22,18 @@ const ServicePlans = () => {
     };
 
     const fetchCurrentPlan = async () => {
-  try {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user?.id) return;
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user?.id) return;
 
-    const res = await axios.get(`http://localhost:8080/api/payment-plans/current/${user.id}`);
-    setCurrentPlan(res.data?.planName || "");
-  } catch (err) {
-    console.warn("Không có gói hiện tại hoặc lỗi khi lấy gói hiện tại:", err);
-  }
-};
-
+        const res = await axios.get(
+          `http://localhost:8080/api/payment-plans/current/${user.id}`
+        );
+        setCurrentPlan(res.data?.planName || "");
+      } catch (err) {
+        console.warn("Không có gói hiện tại hoặc lỗi khi lấy gói hiện tại:", err);
+      }
+    };
 
     fetchPlans();
     fetchCurrentPlan();
@@ -46,6 +48,52 @@ const ServicePlans = () => {
       </div>
     );
   }
+
+  // 🔢 Xếp hạng gói (để so sánh cấp độ)
+  const planRank = {
+    "Gói Cơ Bản": 1,
+    "Gói Nâng Cao": 2,
+    "Gói Chuyên Nghiệp": 3,
+  };
+
+  const getButtonLabel = (planName) => {
+    if (!currentPlan) return "Đăng ký ngay";
+
+    const currentRank = planRank[currentPlan] || 0;
+    const planRankValue = planRank[planName] || 0;
+
+    if (planName === currentPlan) return "✅ Đang sử dụng";
+    if (planRankValue > currentRank) return "⚡ Nâng cấp gói";
+    if (planRankValue < currentRank) return "⛔ Không khả dụng";
+
+    return "Đăng ký ngay";
+  };
+
+  const getButtonStyle = (planName) => {
+    if (!currentPlan)
+      return "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg";
+
+    const currentRank = planRank[currentPlan] || 0;
+    const planRankValue = planRank[planName] || 0;
+
+    if (planName === currentPlan)
+      return "bg-green-500 text-white cursor-not-allowed";
+    if (planRankValue > currentRank)
+      return "bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white shadow-md hover:shadow-lg";
+    if (planRankValue < currentRank)
+      return "bg-gray-300 text-gray-600 cursor-not-allowed";
+
+    return "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg";
+  };
+
+  const getButtonDisabled = (planName) => {
+    if (!currentPlan) return false;
+
+    const currentRank = planRank[currentPlan] || 0;
+    const planRankValue = planRank[planName] || 0;
+
+    return planName === currentPlan || planRankValue < currentRank;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-32 p-6 flex flex-col items-center">
@@ -66,7 +114,6 @@ const ServicePlans = () => {
                 ✅ Active
               </div>
             </div>
-            <div className="absolute inset-0 rounded-2xl border-2 border-white/20 pointer-events-none animate-pulse"></div>
           </div>
         ) : (
           <div className="bg-red-100 text-red-600 p-6 rounded-2xl shadow-md text-center font-medium">
@@ -84,10 +131,11 @@ const ServicePlans = () => {
         {plans.length > 0 ? (
           plans.map((plan, index) => {
             const isCurrent = plan.name === currentPlan;
-
-            // format mô tả xuống dòng đẹp
             const features =
               plan.description?.split(".").map((f) => f.trim()).filter((f) => f) || [];
+            const buttonLabel = getButtonLabel(plan.name);
+            const buttonStyle = getButtonStyle(plan.name);
+            const disabled = getButtonDisabled(plan.name);
 
             return (
               <div
@@ -121,17 +169,14 @@ const ServicePlans = () => {
                 </ul>
 
                 <button
-                  disabled={isCurrent}
+                  disabled={disabled}
                   onClick={() =>
+                    !disabled &&
                     navigate("/recruiter/register-service", { state: { plan } })
                   }
-                  className={`w-full py-3 rounded-xl font-semibold transition transform hover:scale-105 ${
-                    isCurrent
-                      ? "bg-green-500 text-white cursor-not-allowed"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg"
-                  }`}
+                  className={`w-full py-3 rounded-xl font-semibold transition transform hover:scale-105 ${buttonStyle}`}
                 >
-                  {isCurrent ? "Đang sử dụng" : "Đăng ký ngay"}
+                  {buttonLabel}
                 </button>
               </div>
             );
