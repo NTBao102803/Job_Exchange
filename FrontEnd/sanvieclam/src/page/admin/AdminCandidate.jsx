@@ -132,9 +132,6 @@ const handleView = (candidate) => {
                   <button onClick={() => handleView(c)} className="p-2 bg-white/30 rounded-lg hover:bg-white/40 text-white transition">
                     <Eye size={18} />
                   </button>
-                  <button className="p-2 bg-red-500 rounded-lg hover:bg-red-400 text-white transition">
-                    <Trash2 size={18} />
-                  </button>
                   {/* Nút thay đổi trạng thái */}
                   <button
                     onClick={() => handleActiveClick(c)}

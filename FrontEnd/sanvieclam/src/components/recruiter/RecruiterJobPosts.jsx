@@ -130,9 +130,10 @@ const RecruiterJobPosts = () => {
                 <div className="flex-1">
                   <h3
                     className="text-lg font-semibold text-indigo-700 cursor-pointer"
-                    onClick={() =>
-                      navigate(`/candidate/jobs/${job.id}`, { state: { job } })
-                    }
+                    onClick={() => {
+                        setJobData(job); // ✅ lưu job hiện tại
+                        setShowPreview(true); // ✅ bật modal
+                      }}
                   >
                     {job.title}
                   </h3>

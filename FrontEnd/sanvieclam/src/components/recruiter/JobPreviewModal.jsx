@@ -20,7 +20,6 @@ const JobPreviewModal = ({ job, onClose }) => {
     phone: "",
     companyName: "",
   });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -36,7 +35,8 @@ const JobPreviewModal = ({ job, onClose }) => {
       year: "numeric",
     });
   };
-  // ✅ gọi API lấy thông tin employer khi mở modal
+
+  // ✅ Gọi API lấy thông tin employer khi mở modal
   useEffect(() => {
     const fetchEmployer = async () => {
       try {
@@ -159,29 +159,39 @@ const JobPreviewModal = ({ job, onClose }) => {
                 )}
               </div>
 
-              {/* Yêu cầu bắt buộc */}
-              {job.requirements &&
-                (job.requirements.skills ||
-                  job.requirements.experience ||
-                  job.requirements.certificates) && (
+              {/* ✅ Yêu cầu bắt buộc  */}
+              {(() => {
+                const skills =
+                  job.requirements?.skills
+                    ?.map((s) => s?.trim())
+                    ?.filter((s) => s && s.length > 0) || [];
+
+                const hasSkills = skills.length > 0;
+                const hasExperience = !!job.requirements?.experience;
+                const hasCertificates = !!job.requirements?.certificates;
+
+                if (!hasSkills && !hasExperience && !hasCertificates)
+                  return null;
+
+                return (
                   <div className="mt-6">
                     <h2 className="text-lg font-semibold text-red-600 ml-4">
                       ⚠️ Yêu cầu bắt buộc
                     </h2>
                     <div className="mt-2 ml-6 space-y-2 text-gray-700">
-                      {job.requirements.skills && (
+                      {hasSkills && (
                         <p>
                           <span className="font-medium">Kỹ năng: </span>
-                          {displayValue(job.requirements.skills)}
+                          {skills.join(", ")}
                         </p>
                       )}
-                      {job.requirements.experience && (
+                      {hasExperience && (
                         <p>
                           <span className="font-medium">Kinh nghiệm: </span>
                           {displayValue(job.requirements.experience)}
                         </p>
                       )}
-                      {job.requirements.certificates && (
+                      {hasCertificates && (
                         <p>
                           <span className="font-medium">
                             Trình độ học vấn:{" "}
@@ -191,7 +201,8 @@ const JobPreviewModal = ({ job, onClose }) => {
                       )}
                     </div>
                   </div>
-                )}
+                );
+              })()}
 
               {/* Quyền lợi */}
               <div>

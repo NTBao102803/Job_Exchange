@@ -104,6 +104,23 @@ const PostJob = () => {
     }
     return newErrors;
   };
+  const [previewData, setPreviewData] = useState(null);
+
+  const handlePreview = () => {
+  const previewJob = {
+    ...jobData,
+    requirements: {
+      skills: jobData.skills.split(",").map((s) => s.trim()),
+      experience: jobData.experience,
+      certificates: jobData.certificates,
+      career: jobData.career,
+      descriptionRequirements: jobData.requirements,
+    },
+  };
+  setShowPreview(true);
+  setPreviewData(previewJob);
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -560,7 +577,7 @@ const fetchJobCounts = async () => {
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowPreview(true)}
+                  onClick={handlePreview}
                   className="px-5 py-2 flex items-center gap-2 border border-blue-500 text-blue-600 rounded-lg shadow-sm hover:bg-blue-50 transition font-medium text-sm"
                 >
                   <Eye className="w-4 h-4" /> Xem trước
@@ -578,7 +595,7 @@ const fetchJobCounts = async () => {
         </div>
       </div>
 
-      {showPreview && (
+      {showPreview && previewData && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
             <button
@@ -587,10 +604,7 @@ const fetchJobCounts = async () => {
             >
               ✖
             </button>
-            <JobPreviewModal
-              job={jobData}
-              onClose={() => setShowPreview(false)}
-            />
+            <JobPreviewModal job={previewData} onClose={() => setShowPreview(false)} />
           </div>
         </div>
       )}
