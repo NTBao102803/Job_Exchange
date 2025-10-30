@@ -142,6 +142,10 @@ const SmartCandidateSuggestions = () => {
                         <span className="font-semibold">Kinh nghiệm: </span>
                         {candidate.experience}
                       </div>
+                        <div className="truncate ">
+                        <span className="font-semibold">Liên hệ: </span>
+                        {candidate.email}
+                      </div>
                       <div className="truncate max-w-[200px]">
                         <span className="font-semibold">Phù hợp: </span>
                         <span className="text-green-300 font-bold">

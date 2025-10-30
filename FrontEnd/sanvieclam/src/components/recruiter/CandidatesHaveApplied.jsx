@@ -73,7 +73,7 @@ const CandidatesHaveApplied = () => {
 
     fetchCandidates();
   }, [job?.id]);
-
+  
   if (loading) {
     return (
       <div className="p-28 pt-28 text-center text-lg font-semibold text-gray-600">
@@ -81,7 +81,7 @@ const CandidatesHaveApplied = () => {
       </div>
     );
   }
-
+ console.log(job);
   return (
     <div className="p-28 pt-28 space-y-4">
       {/* Thông tin job */}

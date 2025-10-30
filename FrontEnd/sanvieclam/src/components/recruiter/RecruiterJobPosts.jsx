@@ -187,7 +187,7 @@ const RecruiterJobPosts = () => {
                         onClick={() =>
                           navigate(
                             "/recruiter/dashboard-candidateshaveapplied",
-                            { state: { job } }
+                            { state: { job:{...job,company:employer.companyName} } }
                           )
                         }
                         className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm shadow hover:bg-blue-200 transition"
