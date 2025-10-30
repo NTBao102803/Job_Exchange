@@ -64,7 +64,7 @@ const ChangePassword = () => {
 
       // ✅ Hiển thị thông báo
       alert("✅ Đổi mật khẩu thành công!");
-
+      navigate(-1);
       // ✅ Xóa nội dung trong form (clear input)
       setForm({
         oldPassword: "",

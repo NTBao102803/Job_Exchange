@@ -43,15 +43,11 @@ const AppliedJobsList = () => {
             const job = await getJobById(app.jobId);
             const employer = await getEmployerById(job.employerId);
             return {
-              id: job.id,
-              title: job.title,
-              company: employer.companyName,
-              location: job.location,
-              type: job.jobType,
-              salary: job.salary,
-              status: app.status, // lấy status từ application
-              applicationId: app.id,
-            };
+                    ...job, // ✅ giữ toàn bộ thông tin job gốc
+                    companyName: employer.companyName,
+                    status: app.status,
+                    applicationId: app.id,
+                  };
           })
         );
 
@@ -127,7 +123,7 @@ const AppliedJobsList = () => {
                   >
                     {job.title}
                   </h3>
-                  <p className="text-sm text-gray-600">{job.company}</p>
+                  <p className="text-sm text-gray-600">{job.companyName}</p>
                   <p className="text-sm text-gray-600">
                     📍 {job.location} | ⏰ {job.type}
                   </p>
