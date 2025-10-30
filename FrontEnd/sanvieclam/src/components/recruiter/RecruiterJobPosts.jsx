@@ -97,9 +97,9 @@ const RecruiterJobPosts = () => {
         <div className="flex flex-wrap gap-2 mb-4">
           {[
             { key: "all", label: "Tất cả" },
-            { key: "pending", label: "Đang chờ kiểm duyệt" },
-            { key: "approved", label: "Kiểm duyệt thành công" },
-            { key: "rejected", label: "Kiểm duyệt thất bại" },
+            { key: "PENDING", label: "Đang chờ kiểm duyệt" },
+            { key: "APPROVED", label: "Kiểm duyệt thành công" },
+            { key: "REJECTED", label: "Kiểm duyệt thất bại" },
           ].map((f) => (
             <button
               key={f.key}
