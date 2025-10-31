@@ -5,6 +5,11 @@ import { getEmployerProfile } from "../../api/RecruiterApi";
 import { Bell } from "lucide-react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
+import {
+  getNotifications,
+  markAsRead,
+  getUnreadCount,
+} from "../../api/NotificationApi";
 
 const HeaderRecruiter = ({
   onHomeClick,
@@ -25,6 +30,7 @@ const HeaderRecruiter = ({
   const notifRef = useRef(null);
   const navigate = useNavigate();
   const [isReady, setIsReady] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // ✅ 1️⃣ Lấy employer profile
   useEffect(() => {
@@ -44,37 +50,36 @@ const HeaderRecruiter = ({
     fetchEmployer();
   }, []);
 
-  // ✅ 2️⃣ Gọi API lấy danh sách thông báo ban đầu
+  // 2. Lấy danh sách + số lượng chưa đọc
   useEffect(() => {
     if (!employerId) return;
 
-    const fetchNotifications = async () => {
+    const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(
-          `http://localhost:8080/api/notifications/${employerId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (!res.ok) throw new Error("Không thể tải danh sách thông báo");
-        const data = await res.json();
+        const [notifs, count] = await Promise.all([
+          getNotifications(employerId),
+          getUnreadCount(employerId),
+        ]);
 
-        const formatted = data
+        const formatted = notifs
           .map((n) => ({
             id: n.id,
             message: n.message,
-            read: n.read || false,
+            read: n.readFlag || false,
             createdAt: n.createdAt,
           }))
           .reverse();
+
         setNotifications(formatted);
+        setUnreadCount(count);
       } catch (err) {
-        console.error("Lỗi tải thông báo:", err);
+        console.error("Lỗi tải thông báo:", err.message);
       }
     };
 
-    fetchNotifications();
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Refresh mỗi 30s
+    return () => clearInterval(interval);
   }, [employerId]);
 
   // ✅ 3️⃣ Kết nối WebSocket sau khi đã có employerId
@@ -168,10 +173,21 @@ const HeaderRecruiter = ({
     }
   };
 
-  // ✅ Đếm thông báo chưa đọc
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // Đánh dấu đã đọc (gọi API)
+  const handleMarkAsRead = async (id) => {
+    try {
+      const updated = await markAsRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: updated.readFlag } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error("Lỗi đánh dấu đã đọc:", err.message);
+      alert(err.message);
+    }
+  };
 
-  const toggleMenu = () => {
+const toggleMenu = () => {
     setMenuOpen((prev) => {
       if (!prev) setNotifOpen(false);
       return !prev;
@@ -183,10 +199,6 @@ const HeaderRecruiter = ({
       if (!prev) setMenuOpen(false);
       return !prev;
     });
-    if (!notifOpen) {
-      // Đánh dấu đã đọc ở frontend
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    }
   };
 
   // ✅ Đóng menu / notif khi click ra ngoài
@@ -256,6 +268,7 @@ const HeaderRecruiter = ({
               )}
             </button>
 
+            {/* Dropdown */}
             {notifOpen && (
               <div className="absolute top-14 right-1/2 translate-x-1/2 w-80 bg-white text-gray-800 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
                 <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
@@ -271,13 +284,24 @@ const HeaderRecruiter = ({
                     notifications.map((n) => (
                       <div
                         key={n.id}
-                        className={`px-4 py-3 text-sm border-b last:border-0 cursor-pointer transition ${
+                        onClick={() => !n.read && handleMarkAsRead(n.id)}
+                        className={`px-4 py-3 text-sm border-b last:border-0 cursor-pointer transition flex items-start gap-2 ${
                           n.read
                             ? "text-gray-500 bg-white hover:bg-gray-50"
                             : "text-gray-900 font-medium bg-indigo-50 hover:bg-indigo-100"
                         }`}
                       >
-                        {n.message}
+                        {!n.read && (
+                          <span className="w-2 h-2 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                        )}
+                        <div className="flex-1">
+                          <p className="leading-tight">{n.message}</p>
+                          {n.createdAt && (
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(n.createdAt).toLocaleString("vi-VN")}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))
                   ) : (
@@ -288,7 +312,9 @@ const HeaderRecruiter = ({
                 </div>
 
                 <div className="px-4 py-2 text-xs text-gray-500 text-center bg-gray-50">
-                  Đã xem tất cả thông báo
+                  {unreadCount > 0
+                    ? `Bạn có ${unreadCount} thông báo chưa đọc`
+                    : "Đã xem tất cả"}
                 </div>
               </div>
             )}

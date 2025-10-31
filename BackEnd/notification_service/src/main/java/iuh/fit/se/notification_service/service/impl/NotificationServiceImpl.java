@@ -47,4 +47,21 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setReadFlag(true);
         return notificationRepository.save(notification);
     }
+
+    @Override
+    public List<Notification> markAllAsRead(Long receiverId) {
+        List<Notification> notifications = notificationRepository.findByReceiverIdAndReadFlagFalse(receiverId);
+        notifications.forEach(n -> n.setReadFlag(true));
+        return notificationRepository.saveAll(notifications);
+    }
+
+    @Override
+    public Long getUnreadCount(Long receiverId) {
+        return notificationRepository.countByReceiverIdAndReadFlagFalse(receiverId);
+    }
+
+    @Override
+    public void deleteNotification(Long id) {
+        notificationRepository.deleteById(id);
+    }
 }

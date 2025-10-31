@@ -75,4 +75,25 @@ public class NotificationController {
 
         System.out.println("📩 Message from user: " + username + " (" + role + ")");
     }
+
+    // 🔹 Đánh dấu tất cả đã đọc
+    @PutMapping("/read-all")
+    public ResponseEntity<List<Notification>> markAllAsRead(@RequestParam Long receiverId) {
+        List<Notification> updated = notificationService.markAllAsRead(receiverId);
+        return ResponseEntity.ok(updated);
+    }
+
+    // 🔹 Lấy số thông báo chưa đọc
+    @GetMapping("/unread-count/{receiverId}")
+    public ResponseEntity<Long> getUnreadCount(@PathVariable Long receiverId) {
+        Long count = notificationService.getUnreadCount(receiverId);
+        return ResponseEntity.ok(count);
+    }
+
+    // 🔹 Xóa thông báo
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long id) {
+        notificationService.deleteNotification(id);
+        return ResponseEntity.noContent().build();
+    }
 }
