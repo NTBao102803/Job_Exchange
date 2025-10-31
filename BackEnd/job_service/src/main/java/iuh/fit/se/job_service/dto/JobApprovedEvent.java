@@ -1,4 +1,4 @@
-package iuh.fit.se.notification_service.dto;
+package iuh.fit.se.job_service.dto;
 
 import lombok.*;
 
@@ -9,6 +9,4 @@ public class JobApprovedEvent {
     private Long jobId;
     private Long employerId;
     private String jobTitle;
-    private String message;
-//    private String status; // e.g., "APPROVED", "REJECTED"
 }

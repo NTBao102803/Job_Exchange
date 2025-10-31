@@ -6,18 +6,28 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter @Setter
-@Builder
-@NoArgsConstructor @AllArgsConstructor
+@Table(name = "notifications")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class Notification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long recipientId; // ID employer
+    private Long receiverId; // ID của employer hoặc user
     private String title;
     private String message;
     private boolean readFlag = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    // Constructors
+    public Notification(Long receiverId, String title, String message) {
+        this.receiverId = receiverId;
+        this.title = title;
+        this.message = message;
+    }
 }

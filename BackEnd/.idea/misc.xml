@@ -29,6 +29,8 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/candidate_matching_service/pom.xml" />
+        <option value="$PROJECT_DIR$/config_service/pom.xml" />
+        <option value="$PROJECT_DIR$/messaging_service/pom.xml" />
       </set>
     </option>
   </component>

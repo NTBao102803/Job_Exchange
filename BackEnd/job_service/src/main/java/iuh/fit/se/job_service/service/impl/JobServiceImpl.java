@@ -3,17 +3,24 @@ package iuh.fit.se.job_service.service.impl;
 import iuh.fit.se.job_service.client.EmployerClient;
 import iuh.fit.se.job_service.config.JwtUtil;
 import iuh.fit.se.job_service.dto.*;
+import iuh.fit.se.job_service.kafka.JobEventProducer;
 import iuh.fit.se.job_service.model.Job;
 import iuh.fit.se.job_service.model.JobStatus;
 import iuh.fit.se.job_service.repository.JobRepository;
 import iuh.fit.se.job_service.service.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.LoggingProducerListener;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,11 +34,16 @@ public class JobServiceImpl implements JobService {
     private final JobRepository jobRepository;
     private final EmployerClient employerClient;
 //    private final LoggingProducerListener loggingProducerListener;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final JobEventProducer jobEventProducer;
 
     @Autowired
-    public JobServiceImpl(JobRepository jobRepository, JwtUtil jwtUtil, EmployerClient employerClient) {
+    public JobServiceImpl(JobRepository jobRepository, JwtUtil jwtUtil,
+                          EmployerClient employerClient, KafkaTemplate<String, Object> kafkaTemplate, JobEventProducer jobEventProducer) {
         this.jobRepository = jobRepository;
         this.employerClient = employerClient;
+        this.kafkaTemplate = kafkaTemplate;
+        this.jobEventProducer = jobEventProducer;
     }
 
     @Override
@@ -177,6 +189,42 @@ public class JobServiceImpl implements JobService {
         job.setStatus(JobStatus.APPROVED);
         Job approvedJob = jobRepository.save(job);
         logger.info("Job with ID {} has been approved.", approvedJob.getId());
+
+        JobApprovedEvent event = new JobApprovedEvent(
+                approvedJob.getId(),
+                approvedJob.getEmployerId(),
+                approvedJob.getTitle()
+        );
+
+        // ✅ Gửi event qua Kafka (nếu có)
+        try {
+            jobEventProducer.publishJobApprovedEvent(event);
+        } catch (Exception e) {
+            logger.error("Kafka producer failed: {}", e.getMessage());
+        }
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String url = "http://localhost:8080/api/notifications/job-approved"; // gọi qua API Gateway cho đúng luồng
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            // 👉 Lấy token hiện tại của admin duyệt job
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getCredentials() != null) {
+                String token = authentication.getCredentials().toString();
+                headers.setBearerAuth(token);
+            }
+
+            HttpEntity<JobApprovedEvent> request = new HttpEntity<>(event, headers);
+            restTemplate.postForObject(url, request, String.class);
+
+            logger.info("✅ Sent job approved notification via REST fallback");
+        } catch (Exception e) {
+            logger.warn("⚠ REST fallback failed: {}", e.getMessage());
+        }
+
         return JobMapper.toDto(approvedJob);
     }
 
