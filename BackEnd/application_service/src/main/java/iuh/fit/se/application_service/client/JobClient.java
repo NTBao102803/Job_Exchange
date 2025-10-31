@@ -9,5 +9,5 @@ public interface JobClient {
     @GetMapping("/{id}")
     JobDto getJobById(@PathVariable("id") Long id);
 
-    record JobDto(Long id, Long employerId, String title) {}
+    record JobDto(Long id, Long employerId, String title) { }
 }

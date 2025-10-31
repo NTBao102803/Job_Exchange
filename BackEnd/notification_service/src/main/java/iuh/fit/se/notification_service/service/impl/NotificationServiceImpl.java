@@ -1,10 +1,14 @@
 package iuh.fit.se.notification_service.service.impl;
 
 
+import iuh.fit.se.notification_service.dto.ApplicationSubmittedEvent;
+import iuh.fit.se.notification_service.dto.JobApprovedEvent;
+import iuh.fit.se.notification_service.dto.JobRejectedEvent;
 import iuh.fit.se.notification_service.event.NotificationCreatedEvent;
 import iuh.fit.se.notification_service.model.Notification;
 import iuh.fit.se.notification_service.repository.NotificationRepository;
 import iuh.fit.se.notification_service.service.NotificationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -13,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 @Service
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
 
     @Autowired
@@ -24,16 +29,25 @@ public class NotificationServiceImpl implements NotificationService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate; // WebSocket push
 
-    @Override
-    public Notification sendNotification(Long receiverId, String title, String message) {
+    // === GỬI + LƯU + WEBSOCKET ===
+    private Notification saveAndSend(Long receiverId, String title, String message) {
+        if (receiverId == null) {
+            log.warn("receiverId is null, skip notification: {}", message);
+            return null;
+        }
+
         Notification notification = new Notification(receiverId, title, message);
         Notification saved = notificationRepository.save(notification);
 
-//        // Gửi qua WebSocket tới client
+        log.info("Lưu thông báo ID={} cho receiverId={}", saved.getId(), receiverId);
         messagingTemplate.convertAndSend("/topic/notifications/" + receiverId, saved);
-        // ✅ Chỉ phát event, không gửi WebSocket trực tiếp ở đây
-//        eventPublisher.publishEvent(new NotificationCreatedEvent(saved));
+
         return saved;
+    }
+
+    @Override
+    public Notification sendNotification(Long receiverId, String title, String message) {
+        return saveAndSend(receiverId, title, message);
     }
 
     @Override
@@ -64,4 +78,31 @@ public class NotificationServiceImpl implements NotificationService {
     public void deleteNotification(Long id) {
         notificationRepository.deleteById(id);
     }
+    // === EVENT HANDLERS ===
+    @Override
+    public void handleApplicationSubmitted(ApplicationSubmittedEvent event) {
+        String title = "Ứng viên mới ứng tuyển";
+        String message = String.format("%s đã ứng tuyển vào tin \"%s\"",
+                event.getCandidateName(), event.getJobTitle());
+
+        saveAndSend(event.getEmployerId(), title, message);
+    }
+
+    @Override
+    public void handleJobApproved(JobApprovedEvent event) {
+        String title = "Tin tuyển dụng được duyệt";
+        String message = "Tin tuyển dụng \"" + event.getJobTitle() + "\" của bạn đã được phê duyệt.";
+
+        saveAndSend(event.getEmployerId(), title, message);
+    }
+
+    @Override
+    public void handleJobRejected(JobRejectedEvent event) {
+        String title = "Tin tuyển dụng bị từ chối";
+        String reason = event.getRejectReason() != null ? event.getRejectReason() : "Không phù hợp";
+        String message = String.format("Tin \"%s\" của bạn đã bị từ chối. Lý do: %s", event.getJobTitle(), reason);
+
+        saveAndSend(event.getEmployerId(), title, message);
+    }
+
 }

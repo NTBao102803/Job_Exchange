@@ -33,16 +33,16 @@ public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
     private final EmployerClient employerClient;
-//    private final LoggingProducerListener loggingProducerListener;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final JobEventProducer jobEventProducer;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    private final Optional<JobEventProducer> jobEventProducer;
 
     @Autowired
     public JobServiceImpl(JobRepository jobRepository, JwtUtil jwtUtil,
-                          EmployerClient employerClient, KafkaTemplate<String, Object> kafkaTemplate, JobEventProducer jobEventProducer) {
+                          EmployerClient employerClient, Optional<JobEventProducer> jobEventProducer) {
         this.jobRepository = jobRepository;
         this.employerClient = employerClient;
-        this.kafkaTemplate = kafkaTemplate;
         this.jobEventProducer = jobEventProducer;
     }
 
@@ -195,35 +195,17 @@ public class JobServiceImpl implements JobService {
                 approvedJob.getEmployerId(),
                 approvedJob.getTitle()
         );
+        // Gửi REST
+        sendNotificationViaRest(event, "job-approved");
 
-        // ✅ Gửi event qua Kafka (nếu có)
-        try {
-            jobEventProducer.publishJobApprovedEvent(event);
-        } catch (Exception e) {
-            logger.error("Kafka producer failed: {}", e.getMessage());
-        }
-
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-            String url = "http://localhost:8080/api/notifications/job-approved"; // gọi qua API Gateway cho đúng luồng
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            // 👉 Lấy token hiện tại của admin duyệt job
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getCredentials() != null) {
-                String token = authentication.getCredentials().toString();
-                headers.setBearerAuth(token);
+        // Gửi Kafka nếu có
+        jobEventProducer.ifPresent(producer -> {
+            try {
+                producer.publishJobApprovedEvent(event);
+            } catch (Exception e) {
+                logger.warn("Kafka send failed for job approval", e);
             }
-
-            HttpEntity<JobApprovedEvent> request = new HttpEntity<>(event, headers);
-            restTemplate.postForObject(url, request, String.class);
-
-            logger.info("✅ Sent job approved notification via REST fallback");
-        } catch (Exception e) {
-            logger.warn("⚠ REST fallback failed: {}", e.getMessage());
-        }
+        });
 
         return JobMapper.toDto(approvedJob);
     }
@@ -241,6 +223,21 @@ public class JobServiceImpl implements JobService {
         job.setRejectReason(reason);
         Job rejectedJob = jobRepository.save(job);
         logger.info("Job with ID {} has been rejected with reason: {}", rejectedJob.getId(), reason);
+
+        JobRejectedEvent event = new JobRejectedEvent(rejectedJob.getId(), rejectedJob.getEmployerId(), rejectedJob.getTitle(), reason);
+
+        // Gửi REST
+        sendNotificationViaRest(event, "job-rejected");
+
+        // Gửi Kafka nếu có
+        jobEventProducer.ifPresent(producer -> {
+            try {
+                producer.publishJobRejectedEvent(event);
+            } catch (Exception e) {
+                logger.warn("Kafka send failed for job rejection", e);
+            }
+        });
+
         return JobMapper.toDto(rejectedJob);
     }
 
@@ -257,5 +254,23 @@ public class JobServiceImpl implements JobService {
         Job removedJob = jobRepository.save(job);
         logger.info("Job with ID {} has been removed.", removedJob.getId());
         return JobMapper.toDto(removedJob);
+    }
+
+    private void sendNotificationViaRest(Object event, String endpoint) {
+        try {
+            String url = "http://localhost:8080/api/notifications/" + endpoint;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getCredentials() != null) {
+                headers.setBearerAuth(auth.getCredentials().toString());
+            }
+
+            HttpEntity<Object> request = new HttpEntity<>(event, headers);
+            restTemplate.postForObject(url, request, String.class);
+        } catch (Exception e) {
+            logger.error("REST notification failed: {}", e.getMessage());
+        }
     }
 }
