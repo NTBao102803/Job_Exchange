@@ -73,7 +73,7 @@ const CandidatesHaveApplied = () => {
 
     fetchCandidates();
   }, [job?.id]);
-  
+
   if (loading) {
     return (
       <div className="p-28 pt-28 text-center text-lg font-semibold text-gray-600">
@@ -168,6 +168,7 @@ const CandidatesHaveApplied = () => {
                 >
                   Xem CV
                 </button>
+                
               </div>
             </div>
           ))}

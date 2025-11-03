@@ -36,7 +36,6 @@ const AppliedJobsList = () => {
 
         // 2. Lấy danh sách ứng tuyển của ứng viên
         const applications = await getApplicationsByCandidate(candidate.id);
-
         // 3. Với mỗi application, lấy thông tin job
         const jobsWithDetails = await Promise.all(
           applications.map(async (app) => {
@@ -47,6 +46,7 @@ const AppliedJobsList = () => {
                     companyName: employer.companyName,
                     status: app.status,
                     applicationId: app.id,
+                    cvUrl: app.cvUrl, 
                   };
           })
         );
@@ -59,7 +59,7 @@ const AppliedJobsList = () => {
 
     fetchData();
   }, []);
-
+console.log(appliedJobs);
   // 👉 Lọc theo trạng thái
   const filteredJobs =
     filterStatus === "all"
@@ -151,7 +151,7 @@ const AppliedJobsList = () => {
                       Xem chi tiết
                     </button>
                     <button
-                      onClick={() => alert("Xem CV của bạn")}
+                      onClick={() => window.open(job.cvUrl, "_blank")}
                       className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm shadow hover:bg-gray-200 transition"
                     >
                       Xem CV của bạn
