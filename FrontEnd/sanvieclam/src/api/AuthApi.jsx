@@ -67,3 +67,42 @@ export const logout = async () => {
 export const changePassword = async (data) => {
   return await axiosClient.post("/auth/change-password", data);
 };
+
+// Khoá tài khoản người dùng (ADMIN)
+export const lockUser = async (userId) => {
+  try {
+    const response = await axiosClient.put(`/admin/users/${userId}/lock`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Không thể khoá người dùng");
+    }
+    throw new Error("Lỗi kết nối đến server");
+  }
+};
+
+//Mở khoá tài khoản người dùng (ADMIN)
+export const unlockUser = async (userId) => {
+  try {
+    const response = await axiosClient.put(`/admin/users/${userId}/unlock`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Không thể mở khoá người dùng");
+    }
+    throw new Error("Lỗi kết nối đến server");
+  }
+};
+
+// danh sách tài khoản
+export const getAllUser = async () => {
+  try {
+    const response = await axiosClient.get("/admin/users/all");
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Không có danh sách nào tồn tại");
+    }
+    throw new Error("Lỗi kết nối đến server");
+  }
+};

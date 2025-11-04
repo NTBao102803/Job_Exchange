@@ -10,6 +10,7 @@ import {
   markAsRead,
   getUnreadCount,
 } from "../../api/NotificationApi";
+import { useUser } from "../../context/UserContext";
 
 const HeaderRecruiter = ({
   onHomeClick,
@@ -31,6 +32,8 @@ const HeaderRecruiter = ({
   const navigate = useNavigate();
   const [isReady, setIsReady] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+    const { avatarUrl } = useUser();
 
   // ✅ 1️⃣ Lấy employer profile
   useEffect(() => {
@@ -328,7 +331,7 @@ const toggleMenu = () => {
             onClick={toggleMenu}
           >
             <img
-              src="/user-candidate.png"
+              src={avatarUrl}
               alt="User Avatar"
               className="w-full h-full object-cover"
             />

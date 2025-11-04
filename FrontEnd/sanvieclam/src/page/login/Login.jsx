@@ -11,41 +11,38 @@ const Login = () => {
   const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // chặn reload trang
+    e.preventDefault();
     setError("");
 
     try {
-      const response = await axiosClient.post("/auth/login", {
+      const { data } = await axiosClient.post("/auth/login", {
         email,
         passWord,
       });
+      const { accessToken, user } = data;
 
-      // Giả sử backend trả về { token, user }
-      const { accessToken, user } = response.data;
-
-      // Lưu token và user vào localStorage
       localStorage.setItem("token", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
 
-      console.log(user.role);
-
-      // Điều hướng theo role nếu có
-      if (user.role.roleName === "USER") {
-        navigate("/candidate/dashboard-candidate");
-      } else if (user.role.roleName === "EMPLOYER") {
-        navigate("/recruiter/dashboard-recruiter");
-      } else {
-        navigate("/");
-      }
+      const role = user.role.roleName;
+      if (role === "USER") navigate("/candidate/dashboard-candidate");
+      else if (role === "EMPLOYER") navigate("/recruiter/dashboard-recruiter");
+      else navigate("/");
     } catch (err) {
-      console.error(err);
-      setError("Sai tài khoản hoặc mật khẩu!");
+      const message =
+        err.response?.data?.message ||
+        err.response?.data ||
+        "Đăng nhập thất bại! Vui lòng thử lại.";
+      const finalMessage = message.includes(": ")
+        ? message.split(": ").pop()
+        : message;
+      setError(finalMessage);
     }
   };
 
   return (
     <div className="min-h-screen flex bg-gray-100">
-      {/* Bên trái: Form đăng nhập */}
+      {/* Form đăng nhập */}
       <div className="flex flex-1 items-center justify-center">
         <div className="w-full max-w-lg p-10">
           <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center tracking-wide">
@@ -100,7 +97,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Link phụ */}
           <div className="flex justify-between items-center mt-6 text-sm">
             <a
               href="/forgot-password"
@@ -110,7 +106,6 @@ const Login = () => {
             </a>
           </div>
 
-          {/* 2 nút đăng ký */}
           <div className="mt-10 grid grid-cols-2 gap-4">
             <button
               onClick={() => navigate("/register-candidate")}
@@ -126,7 +121,6 @@ const Login = () => {
             </button>
           </div>
 
-          {/* Ghi chú nhỏ */}
           <p className="mt-10 text-center text-gray-400 text-sm">
             Bằng việc đăng nhập, bạn đồng ý với{" "}
             <a href="/terms" className="text-indigo-500 hover:underline">
@@ -141,13 +135,12 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Bên phải: Logo + Giới thiệu */}
+      {/* Banner bên phải */}
       <div className="w-1/3 relative flex items-center justify-center bg-gray-900">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{ backgroundImage: "url('/logohomebanner3.png')" }}
-        ></div>
-
+        />
         <div className="relative z-10 text-center p-8 text-white drop-shadow-lg">
           <img
             src="/Logo.png"
@@ -159,8 +152,8 @@ const Login = () => {
           </h2>
           <p className="text-base leading-relaxed max-w-xs mx-auto">
             Nơi kết nối <strong>Ứng viên</strong> và{" "}
-            <strong>Nhà tuyển dụng</strong>.  
-            Hãy đăng nhập để bắt đầu hành trình sự nghiệp hoặc tìm kiếm nhân tài cho doanh nghiệp của bạn!
+            <strong>Nhà tuyển dụng</strong>. Hãy đăng nhập để bắt đầu hành trình
+            sự nghiệp hoặc tìm kiếm nhân tài!
           </p>
         </div>
       </div>
