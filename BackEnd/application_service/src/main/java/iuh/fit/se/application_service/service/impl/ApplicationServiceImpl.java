@@ -54,13 +54,17 @@ public class ApplicationServiceImpl implements ApplicationService {
         JobClient.JobDto job = null;
         CandidateClient.CandidateDto candidate = null;
         if (checkRemote) {
-            job = jobClient.getJobById(request.getJobId()); // GỌI 1 LẦN DUY NHẤT
+            job = jobClient.getJobById(request.getJobId());
             candidate = candidateClient.getCandidateByEmail();
             request.setCandidateId(candidate.id());
         }
 
-        applicationRepository.findByCandidateIdAndJobId(request.getCandidateId(), request.getJobId())
-                .ifPresent(a -> { throw new IllegalStateException("Bạn đã ứng tuyển công việc này rồi"); });
+        // Cho phép apply tối đa 3 lần cho cùng 1 job
+        List<Application> existingApps = applicationRepository.findAllByCandidateIdAndJobId(
+                request.getCandidateId(), request.getJobId());
+        if (existingApps.size() >= 3) {
+            throw new IllegalStateException("Bạn đã ứng tuyển công việc này quá 3 lần");
+        }
 
         // upload file sang storage-service
         StorageResponse stored = storageClient.uploadFile(
@@ -74,7 +78,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .candidateId(request.getCandidateId())
                 .jobId(request.getJobId())
                 .status(ApplicationStatus.PENDING)
-                .cvFileName(stored.getFileName())   // lấy từ response
+                .cvFileName(stored.getFileName())
                 .cvObjectName(stored.getObjectName())
                 .appliedAt(LocalDateTime.now())
                 .build();
@@ -84,15 +88,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationSubmittedEvent event = new ApplicationSubmittedEvent(
                 saved.getId(),
                 request.getCandidateId(),
-                candidate.fullName(),    // ĐÚNG
+                candidate.fullName(),
                 request.getJobId(),
-                job.title(),             // ĐÚNG
+                job.title(),
                 job.employerId()
         );
 
         sendNotificationViaRest(event, "application-submitted");
 
-        // GỬI KAFKA (nếu có)
         if (eventProducer != null) {
             try {
                 eventProducer.publishApplicationSubmittedEvent(event);
