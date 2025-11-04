@@ -29,7 +29,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/storage/init").permitAll()
 
                         // upload file: chỉ user
-                        .requestMatchers(HttpMethod.POST, "/api/storage/upload").hasRole("USER")
+                        .requestMatchers(HttpMethod.POST, "/api/storage/upload").hasAnyRole("USER", "EMPLOYER")
 
                         // ✅ Cho phép public xem avatar
                         .requestMatchers(HttpMethod.GET, "/api/storage/avatar-url").permitAll()
