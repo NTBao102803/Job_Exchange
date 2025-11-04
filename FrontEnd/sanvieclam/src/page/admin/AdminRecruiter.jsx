@@ -3,6 +3,7 @@ import { Search, Trash2, Building2, Lock, Unlock } from "lucide-react";
 import RecruiterActiveModal from "../../components/admin/RecruiterActiveModal";
 import { approveEmployer, rejectEmployer } from "../../api/AdminApi";
 import { getAllEmployer } from "../../api/RecruiterApi";
+import { lockUser, unlockUser, getAllUser } from "../../api/AuthApi";
 
 const AdminRecruiter = () => {
   const [recruiters, setRecruiters] = useState([]);
@@ -33,16 +34,38 @@ const AdminRecruiter = () => {
   };
 
   useEffect(() => {
-    const fetchRecruiters = async () => {
-      try {
-        const data = await getAllEmployer();
-        setRecruiters(data);
-      } catch (error) {
-        console.error("Lỗi khi tải danh sách recruiters:", error);
-      }
-    };
-    fetchRecruiters();
-  }, []);
+  const fetchRecruiters = async () => {
+    try {
+      // Gọi song song
+      const [employers, users] = await Promise.all([
+        getAllEmployer(),
+        getAllUser(),
+      ]);
+
+      // Merge theo authUserId (nếu có) hoặc email
+      const merged = employers.map((emp) => {
+        const matchUser = users.find(
+          (u) =>
+            u.id === emp.authUserId || 
+            u.email?.toLowerCase() === emp.email?.toLowerCase()
+        );
+        return {
+          ...emp,
+          isActive: matchUser?.isActive ?? true, // mặc định true nếu không có
+          active: matchUser?.isActive
+            ? "Đang hoạt động"
+            : "Tạm thời vô hiệu hóa",
+        };
+      });
+
+      setRecruiters(merged);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách recruiters:", error);
+    }
+  };
+  fetchRecruiters();
+}, []);
+
 
   // lọc recruiter theo email + trạng thái
   const filteredRecruiters = recruiters.filter((r) => {
@@ -67,25 +90,36 @@ const AdminRecruiter = () => {
     setIsConfirmModalOpen(true);
   };
 
-  const confirmToggleActive = () => {
-    if (recruiterToToggle) {
+  const confirmToggleActive = async () => {
+  if (!recruiterToToggle) return;
+
+  try {
+    if (recruiterToToggle.active === "Đang hoạt động") {
+      await lockUser(recruiterToToggle.authUserId); // gọi API user service
       setRecruiters((prev) =>
         prev.map((r) =>
           r.id === recruiterToToggle.id
-            ? {
-                ...r,
-                active:
-                  r.active === "Đang hoạt động"
-                    ? "Tạm thời vô hiệu hóa"
-                    : "Đang hoạt động",
-              }
+            ? { ...r, isActive: false, active: "Tạm thời vô hiệu hóa" }
             : r
         )
       );
-      setRecruiterToToggle(null);
-      setIsConfirmModalOpen(false);
+    } else {
+      await unlockUser(recruiterToToggle.authUserId);
+      setRecruiters((prev) =>
+        prev.map((r) =>
+          r.id === recruiterToToggle.id
+            ? { ...r, isActive: true, active: "Đang hoạt động" }
+            : r
+        )
+      );
     }
-  };
+  } catch (error) {
+    console.error("❌ Lỗi khi cập nhật trạng thái:", error);
+  } finally {
+    setRecruiterToToggle(null);
+    setIsConfirmModalOpen(false);
+  }
+};
 
   const cancelToggleActive = () => {
     setRecruiterToToggle(null);

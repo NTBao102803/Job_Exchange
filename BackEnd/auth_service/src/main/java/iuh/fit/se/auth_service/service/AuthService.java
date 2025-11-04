@@ -3,7 +3,7 @@ package iuh.fit.se.auth_service.service;
 import iuh.fit.se.auth_service.dto.*;
 import iuh.fit.se.auth_service.model.User;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface AuthService {
     AuthResponse login(AuthRequest request);
@@ -13,4 +13,7 @@ public interface AuthService {
     public void forgotPassword(String email);
     public void resetPassword(ResetPasswordRequest request);
     public void changePassword(String usernameOrEmail, ChangePasswordRequest request);
+    UserResponse lockUser(Long userId);
+    UserResponse unlockUser(Long userId);
+    public List<UserResponse> getAllUsers();
 }

@@ -1,6 +1,5 @@
-package iuh.fit.se.auth_service.dto;
+package iuh.fit.se.admin_service.dto;
 
-import iuh.fit.se.auth_service.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,4 +15,5 @@ public class UserResponse {
     private String fullName;
     private String role;
     private Boolean isActive;
+
 }

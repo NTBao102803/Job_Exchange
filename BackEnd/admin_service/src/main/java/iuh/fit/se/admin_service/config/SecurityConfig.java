@@ -21,7 +21,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**", "/error").permitAll()
                         .requestMatchers(
                                 "/api/admin/jobs/**",
-                                "/api/admin/employers/**"
+                                "/api/admin/employers/**",
+                                "/api/admin/users/**"
                                 ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

@@ -13,12 +13,10 @@ import iuh.fit.se.auth_service.repository.UserRepository;
 import iuh.fit.se.auth_service.repository.VerificationTokenRepository;
 import iuh.fit.se.auth_service.service.AuthService;
 import iuh.fit.se.auth_service.service.EmailService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.mail.MailException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,17 +24,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class AuthServiceImpl implements AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -258,14 +256,14 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
 
-        // Kiểm tra tài khoản đã xác thực chưa
-        if (!user.getIsActive()) {
-            throw new RuntimeException("Tài khoản chưa được xác thực qua OTP");
-        }
-
-        // Kiểm tra mật khẩu
+        // Kiểm tra mật khẩu trước
         if (!passwordEncoder.matches(loginRequest.getPassWord(), user.getPassword())) {
             throw new RuntimeException("Sai mật khẩu");
+        }
+
+        // Nếu mật khẩu đúng mà vẫn isActive = false => TÀI KHOẢN BỊ KHÓA
+        if (!user.getIsActive()) {
+            throw new RuntimeException("Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
         }
 
         // Load UserDetails
@@ -276,5 +274,65 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = jwtService.generateRefreshToken(userDetails);
 
         return new AuthResponse(accessToken, refreshToken, user);
+    }
+
+    @Override
+    public UserResponse lockUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        user.setIsActive(false);
+        userRepository.save(user);
+
+        // Nếu muốn có log thay thế event, có thể ghi log tại đây
+        log.info("User {} has been locked", user.getId());
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getRole().getRoleName(),
+                user.getIsActive()
+        );
+    }
+
+    @Override
+    public UserResponse unlockUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        user.setIsActive(true);
+        userRepository.save(user);
+
+        log.info("User {} has been unlocked", user.getId());
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getRole().getRoleName(),
+                user.getIsActive()
+        );
+    }
+
+    @Override
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAll();
+
+        // 2. Chuyển đổi List<User> sang List<UserResponse>
+        return users.stream()
+                .map(this::convertToUserResponse) // Sử dụng hàm chuyển đổi
+                .collect(Collectors.toList());
+    }
+
+    // Hàm chuyển đổi từ User Entity sang UserResponse DTO
+    private UserResponse convertToUserResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .role(user.getRole().getRoleName())
+                .isActive(user.getIsActive())
+                .build();
     }
 }
