@@ -217,9 +217,6 @@ const AdminRecruiter = () => {
                     >
                       Xét duyệt
                     </button>
-                    <button className="p-2 bg-red-500 rounded-lg hover:bg-red-400 text-white transition">
-                      <Trash2 size={18} />
-                    </button>
                     <button
                       disabled={r.status !== "APPROVED"}
                       onClick={() => handleActiveClick(r)}

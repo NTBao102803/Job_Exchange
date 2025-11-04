@@ -97,9 +97,9 @@ const RecruiterJobPosts = () => {
         <div className="flex flex-wrap gap-2 mb-4">
           {[
             { key: "all", label: "Tất cả" },
-            { key: "pending", label: "Đang chờ kiểm duyệt" },
-            { key: "approved", label: "Kiểm duyệt thành công" },
-            { key: "rejected", label: "Kiểm duyệt thất bại" },
+            { key: "PENDING", label: "Đang chờ kiểm duyệt" },
+            { key: "APPROVED", label: "Kiểm duyệt thành công" },
+            { key: "REJECTED", label: "Kiểm duyệt thất bại" },
           ].map((f) => (
             <button
               key={f.key}
@@ -130,9 +130,10 @@ const RecruiterJobPosts = () => {
                 <div className="flex-1">
                   <h3
                     className="text-lg font-semibold text-indigo-700 cursor-pointer"
-                    onClick={() =>
-                      navigate(`/candidate/jobs/${job.id}`, { state: { job } })
-                    }
+                    onClick={() => {
+                        setJobData(job); // ✅ lưu job hiện tại
+                        setShowPreview(true); // ✅ bật modal
+                      }}
                   >
                     {job.title}
                   </h3>
@@ -186,7 +187,7 @@ const RecruiterJobPosts = () => {
                         onClick={() =>
                           navigate(
                             "/recruiter/dashboard-candidateshaveapplied",
-                            { state: { job } }
+                            { state: { job:{...job,company:employer.companyName} } }
                           )
                         }
                         className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm shadow hover:bg-blue-200 transition"

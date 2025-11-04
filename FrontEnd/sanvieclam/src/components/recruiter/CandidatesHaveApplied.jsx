@@ -7,7 +7,7 @@ import { getCandidateById } from "../../api/CandidateApi";
 
 const CandidatesHaveApplied = () => {
   const location = useLocation();
-  const job = location.state?.job; // ✅ lấy job từ RecruiterJobPosts
+  const job = location.state?.job;
 
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,13 +15,14 @@ const CandidatesHaveApplied = () => {
   const [appliedCandidates, setAppliedCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Trạng thái modal xét duyệt
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [candidateToApprove, setCandidateToApprove] = useState(null);
+
   const candidatesPerPage = 4;
   const totalPages = Math.ceil(appliedCandidates.length / candidatesPerPage);
   const startIndex = (page - 1) * candidatesPerPage;
-  const endIndex = Math.min(
-    startIndex + candidatesPerPage,
-    appliedCandidates.length
-  );
+  const endIndex = Math.min(startIndex + candidatesPerPage, appliedCandidates.length);
   const currentCandidates = appliedCandidates.slice(startIndex, endIndex);
 
   const displayValue = (val) => (val && val !== "" ? val : "Chưa có thông tin");
@@ -32,40 +33,28 @@ const CandidatesHaveApplied = () => {
         setLoading(true);
         if (!job?.id) return;
 
-        // 1. Gọi API lấy tất cả đơn ứng tuyển theo job
         const applications = await getApplicationsByJob(job.id);
 
-        // 2. Với mỗi application, lấy thông tin ứng viên
         const candidatesWithInfo = await Promise.all(
           applications.map(async (app) => {
             const candidate = await getCandidateById(app.candidateId);
             return {
               id: candidate.id,
               fullName: candidate.fullName,
-              dob: candidate.dob,
-              gender: candidate.gender,
-              email: candidate.email,
-              phone: candidate.phone,
-              address: candidate.address,
-              school: candidate.school,
               major: candidate.major,
-              gpa: candidate.gpa,
-              graduationYear: candidate.graduationYear,
-              experience: candidate.experience,
-              projects: candidate.projects,
               skills: candidate.skills,
-              certificates: candidate.certificates,
-              careerGoal: candidate.careerGoal,
-              hobbies: candidate.hobbies,
-              social: candidate.social,
-              cvUrl: app.cvUrl, // 👉 lấy từ application
+              experience: candidate.experience,
+              graduationYear: candidate.graduationYear,
+              gpa: candidate.gpa,
+              cvUrl: app.cvUrl,
+              approvalStatus: "pending", // 👈 thêm trạng thái mặc định
             };
           })
         );
 
         setAppliedCandidates(candidatesWithInfo);
       } catch (error) {
-        console.error("❌ Lỗi khi load ứng viên đã ứng tuyển:", error);
+        console.error("❌ Lỗi khi load ứng viên:", error);
       } finally {
         setLoading(false);
       }
@@ -81,6 +70,25 @@ const CandidatesHaveApplied = () => {
       </div>
     );
   }
+
+  // ✅ Xử lý khi bấm "Xét duyệt"
+  const handleApproveClick = (candidate) => {
+    setCandidateToApprove(candidate);
+    setIsApprovalModalOpen(true);
+  };
+
+  // ✅ Khi chọn Có / Không
+  const handleApprovalDecision = (decision) => {
+    setAppliedCandidates((prev) =>
+      prev.map((c) =>
+        c.id === candidateToApprove.id
+          ? { ...c, approvalStatus: decision ? "approved" : "rejected" }
+          : c
+      )
+    );
+    setIsApprovalModalOpen(false);
+    setCandidateToApprove(null);
+  };
 
   return (
     <div className="p-28 pt-28 space-y-4">
@@ -115,24 +123,18 @@ const CandidatesHaveApplied = () => {
 
       {/* Danh sách ứng viên */}
       <div className="bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-500 p-6 rounded-xl text-white">
-        <h2 className="text-xl font-bold mb-4">
-          Danh sách ứng viên đã ứng tuyển
-        </h2>
+        <h2 className="text-xl font-bold mb-4">Danh sách ứng viên đã ứng tuyển</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {currentCandidates.map((candidate) => (
             <div
               key={candidate.id}
               className="bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 shadow-md p-4 
-                        flex flex-col sm:flex-row justify-between items-start sm:items-center"
+                         flex flex-col sm:flex-row justify-between items-start sm:items-center"
             >
               <div>
-                <h3 className="text-lg font-bold text-yellow-300">
-                  {candidate.fullName}
-                </h3>
-                <p className="text-sm opacity-90 font-bold">
-                  {candidate.major}
-                </p>
+                <h3 className="text-lg font-bold text-yellow-300">{candidate.fullName}</h3>
+                <p className="text-sm opacity-90 font-bold">{candidate.major}</p>
                 <div className="mt-1 text-x space-y-0.5">
                   <div>
                     <span className="font-semibold">Kỹ năng: </span>
@@ -144,8 +146,7 @@ const CandidatesHaveApplied = () => {
                   </div>
                   <div>
                     <span className="font-semibold">Tốt nghiệp: </span>
-                    {displayValue(candidate.graduationYear)} (
-                    {displayValue(candidate.gpa)})
+                    {displayValue(candidate.graduationYear)} ({displayValue(candidate.gpa)})
                   </div>
                 </div>
               </div>
@@ -156,18 +157,41 @@ const CandidatesHaveApplied = () => {
                     setSelectedCandidate(candidate);
                     setIsModalOpen(true);
                   }}
-                  className="bg-yellow-400 text-gray-900 font-bold px-4 py-2 rounded-lg shadow-md 
-                             hover:bg-yellow-300 transition"
+                  className="bg-yellow-400 text-gray-900 font-bold px-4 py-2 rounded-lg shadow-md hover:bg-yellow-300 transition"
                 >
                   Xem hồ sơ
                 </button>
+
                 <button
                   onClick={() => window.open(candidate.cvUrl, "_blank")}
-                  className="bg-white/30 text-white px-4 py-2 rounded-lg shadow-md 
-                             hover:bg-white/40 transition"
+                  className="bg-white/30 text-white px-4 py-2 rounded-lg shadow-md hover:bg-white/40 transition"
                 >
                   Xem CV
                 </button>
+
+                {/* ✅ Nút xét duyệt */}
+                {candidate.approvalStatus === "pending" ? (
+                  <button
+                    onClick={() => handleApproveClick(candidate)}
+                    className="bg-green-500 text-white font-bold px-4 py-2 rounded-lg shadow-md hover:bg-green-400 transition"
+                  >
+                    Xét duyệt
+                  </button>
+                ) : candidate.approvalStatus === "approved" ? (
+                  <button
+                    disabled
+                    className="bg-green-700 text-white font-bold px-4 py-2 rounded-lg shadow-md cursor-default"
+                  >
+                    Hồ sơ phù hợp ✅
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="bg-gray-500 text-white font-bold px-4 rounded-lg shadow-md cursor-default"
+                  >
+                    Hồ sơ chưa phù hợp ❌
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -176,8 +200,7 @@ const CandidatesHaveApplied = () => {
         {/* Phân trang */}
         <div className="flex justify-between items-center mt-6">
           <p className="text-sm">
-            Đang xem {startIndex + 1} - {endIndex} trên tổng{" "}
-            {appliedCandidates.length} ứng viên
+            Đang xem {startIndex + 1} - {endIndex} trên tổng {appliedCandidates.length} ứng viên
           </p>
           <div className="flex items-center space-x-2">
             <button
@@ -211,12 +234,47 @@ const CandidatesHaveApplied = () => {
         </div>
       </div>
 
-      {/* Modal hồ sơ */}
+      {/* Modal xem hồ sơ */}
       <CandidateProfileModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         candidate={selectedCandidate}
       />
+
+      {/* ✅ Modal xác nhận xét duyệt */}
+      {isApprovalModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-96 text-center">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              Bạn có muốn xét duyệt hồ sơ của ứng viên{" "}
+              <span className="font-bold text-indigo-600">
+                {candidateToApprove?.fullName}
+              </span>{" "}
+              không?
+            </h3>
+            <div className="flex justify-center gap-4 mt-6">
+              <button
+                onClick={() => handleApprovalDecision(true)}
+                className="bg-green-500 hover:bg-green-400 text-white px-5 py-2 rounded-lg font-bold"
+              >
+                Có
+              </button>
+              <button
+                onClick={() => handleApprovalDecision(false)}
+                className="bg-red-500 hover:bg-red-400 text-white px-5 py-2 rounded-lg font-bold"
+              >
+                Không
+              </button>
+              <button
+                onClick={() => setIsApprovalModalOpen(false)}
+                className="bg-gray-300 hover:bg-gray-200 text-gray-800 px-5 py-2 rounded-lg font-bold"
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
