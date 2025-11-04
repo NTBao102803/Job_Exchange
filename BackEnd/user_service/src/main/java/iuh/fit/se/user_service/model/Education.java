@@ -4,12 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+
 @Entity
-@Table(name = "experiences")
+@Table(name = "educations")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class Experience {
+public class Education {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -18,6 +19,8 @@ public class Experience {
     @JsonIgnore
     private Candidate candidate;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    private String school;
+    private String major;
+    private String gpa;
+    private String graduationYear;
 }

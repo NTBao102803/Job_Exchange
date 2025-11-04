@@ -4,12 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
-@Table(name = "experiences")
+@Table(name = "certificates")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class Experience {
+public class Certificate {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -18,6 +20,8 @@ public class Experience {
     @JsonIgnore
     private Candidate candidate;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    private String name;
+    private String issuer;
+    private LocalDate issueDate;
+    private LocalDate expiryDate;
 }

@@ -5,11 +5,11 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "experiences")
+@Table(name = "projects")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class Experience {
+public class Project {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
