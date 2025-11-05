@@ -24,13 +24,4 @@ public class JobEventConsumer {
         }
     }
 
-    // Khi Kafka chưa bật: gọi thủ công hàm này trong Controller để test
-//    public void simulateJobEvent(JobApprovedEvent event) {
-//        System.out.println("🧩 Simulating consume JobEvent...");
-//        notificationService.sendNotification(
-//                event.getEmployerId(),
-//                event.getJobTitle(),
-//                event.getMessage()
-//        );
-//    }
 }

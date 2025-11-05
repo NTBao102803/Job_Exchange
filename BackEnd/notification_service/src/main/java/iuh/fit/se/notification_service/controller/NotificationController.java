@@ -1,5 +1,6 @@
 package iuh.fit.se.notification_service.controller;
 
+import iuh.fit.se.notification_service.dto.ApplicationStatusChangedEvent;
 import iuh.fit.se.notification_service.dto.ApplicationSubmittedEvent;
 import iuh.fit.se.notification_service.dto.JobApprovedEvent;
 import iuh.fit.se.notification_service.dto.JobRejectedEvent;
@@ -93,4 +94,11 @@ public class NotificationController {
         notificationService.handleJobRejected(event);
         return ResponseEntity.ok("Sent to employer: " + event.getEmployerId());
     }
+
+    @PostMapping("/application-status-changed")
+    public ResponseEntity<String> handleApplicationStatusChanged(@RequestBody ApplicationStatusChangedEvent event) {
+        notificationService.handleApplicationStatusChanged(event);
+        return ResponseEntity.ok("Sent to candidate: " + event.getCandidateId());
+    }
+
 }

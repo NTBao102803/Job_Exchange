@@ -3,10 +3,7 @@ package iuh.fit.se.application_service.service.impl;
 import iuh.fit.se.application_service.client.CandidateClient;
 import iuh.fit.se.application_service.client.JobClient;
 import iuh.fit.se.application_service.client.StorageClient;
-import iuh.fit.se.application_service.dto.ApplicationDto;
-import iuh.fit.se.application_service.dto.ApplicationRequest;
-import iuh.fit.se.application_service.dto.ApplicationSubmittedEvent;
-import iuh.fit.se.application_service.dto.StorageResponse;
+import iuh.fit.se.application_service.dto.*;
 import iuh.fit.se.application_service.kafka.ApplicationEventProducer;
 import iuh.fit.se.application_service.model.Application;
 import iuh.fit.se.application_service.model.ApplicationStatus;
@@ -133,6 +130,76 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         Application saved = applicationRepository.save(app);
         return mapWithLookup(saved);
+    }
+
+    @Override
+    public Application approvedApplication(Long applicationId) {
+        Application apply = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application không tồn tại"));
+        apply.setStatus(ApplicationStatus.APPROVED);
+        Application saved = applicationRepository.save(apply);
+
+        // LẤY THÔNG TIN
+        CandidateClient.CandidateDto candidate = candidateClient.getCandidateById(apply.getCandidateId());
+        JobClient.JobDto job = jobClient.getJobById(apply.getJobId());
+
+        // GỬI THÔNG BÁO CHO ỨNG VIÊN
+        ApplicationStatusChangedEvent event = new ApplicationStatusChangedEvent(
+                saved.getId(),
+                candidate.id(),
+                candidate.fullName(),
+                job.id(),
+                job.title(),
+                "APPROVED",
+                null
+        );
+        sendNotificationViaRest(event, "application-status-changed");
+
+        // GỬI KAFKA (nếu bật)
+        if (eventProducer != null) {
+            try {
+                eventProducer.publishApplicationStatusChangedEvent(event);
+                logger.info("Kafka: Đã gửi ApplicationStatusChangedEvent (APPROVED)");
+            } catch (Exception e) {
+                logger.warn("Kafka send failed (APPROVED)", e);
+            }
+        }
+        return saved;
+    }
+
+    @Override
+    public Application rejectedApplication(Long applicationId) {
+        Application apply = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application không tồn tại"));
+
+        apply.setStatus(ApplicationStatus.REJECTED);
+        Application saved = applicationRepository.save(apply);
+
+        CandidateClient.CandidateDto candidate = candidateClient.getCandidateById(apply.getCandidateId());
+        JobClient.JobDto job = jobClient.getJobById(apply.getJobId());
+
+        ApplicationStatusChangedEvent event = new ApplicationStatusChangedEvent(
+                saved.getId(),
+                candidate.id(),
+                candidate.fullName(),
+                job.id(),
+                job.title(),
+                "REJECTED",
+                apply.getRejectReason()
+        );
+        sendNotificationViaRest(event, "application-status-changed");
+
+        // GỬI KAFKA (nếu bật)
+        if (eventProducer != null) {
+            try {
+                eventProducer.publishApplicationStatusChangedEvent(event);
+                logger.info("Kafka: Đã gửi ApplicationStatusChangedEvent (REJECTED)");
+            } catch (Exception e) {
+                logger.warn("Kafka send failed (REJECTED)", e);
+            }
+        }
+
+        return saved;
     }
 
     // Map khi đã có fileUrl (trong lúc apply)

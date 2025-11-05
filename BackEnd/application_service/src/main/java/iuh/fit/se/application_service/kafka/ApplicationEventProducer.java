@@ -1,5 +1,6 @@
 package iuh.fit.se.application_service.kafka;
 
+import iuh.fit.se.application_service.dto.ApplicationStatusChangedEvent;
 import iuh.fit.se.application_service.dto.ApplicationSubmittedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,5 +17,10 @@ public class ApplicationEventProducer {
 
     public void publishApplicationSubmittedEvent(ApplicationSubmittedEvent event) {
         kafkaTemplate.send(TOPIC, event);
+    }
+
+    public void publishApplicationStatusChangedEvent(ApplicationStatusChangedEvent event) {
+        String key = event.getStatus().toLowerCase(); // "approved" or "rejected"
+        kafkaTemplate.send(TOPIC, key, event);
     }
 }

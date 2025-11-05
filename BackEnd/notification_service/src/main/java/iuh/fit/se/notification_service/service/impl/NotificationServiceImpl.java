@@ -1,6 +1,7 @@
 package iuh.fit.se.notification_service.service.impl;
 
 
+import iuh.fit.se.notification_service.dto.ApplicationStatusChangedEvent;
 import iuh.fit.se.notification_service.dto.ApplicationSubmittedEvent;
 import iuh.fit.se.notification_service.dto.JobApprovedEvent;
 import iuh.fit.se.notification_service.dto.JobRejectedEvent;
@@ -105,4 +106,20 @@ public class NotificationServiceImpl implements NotificationService {
         saveAndSend(event.getEmployerId(), title, message);
     }
 
+    @Override
+    public void handleApplicationStatusChanged(ApplicationStatusChangedEvent event) {
+        String title;
+        String message;
+
+        if ("APPROVED".equals(event.getStatus())) {
+            title = "Hồ sơ ứng tuyển được duyệt";
+            message = String.format("Chúc mừng! Hồ sơ ứng tuyển của bạn vào tin \"%s\" đã được duyệt.", event.getJobTitle());
+        } else {
+            title = "Hồ sơ ứng tuyển bị từ chối";
+            String reason = event.getRejectReason() != null ? event.getRejectReason() : "Không phù hợp";
+            message = String.format("Hồ sơ ứng tuyển vào tin \"%s\" bị từ chối. Lý do: %s", event.getJobTitle(), reason);
+        }
+
+        saveAndSend(event.getCandidateId(), title, message);
+    }
 }

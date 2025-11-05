@@ -28,7 +28,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/applications/user/**").hasRole("USER")
 
                         // EMPLOYER: xem & cập nhật application cho job mình đăng
-                        .requestMatchers("/api/applications/employer/**").hasRole("EMPLOYER")
+                        .requestMatchers("/api/applications/employer/**",
+                                "/api/employer/applications/**").hasRole("EMPLOYER")
 
                         // những request khác => cần login
                         .anyRequest().authenticated()
