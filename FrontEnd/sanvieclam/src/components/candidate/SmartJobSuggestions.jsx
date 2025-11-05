@@ -140,9 +140,9 @@ const SmartJobSuggestions = () => {
                        border border-white/30 hover:scale-105 hover:shadow-[0_0_25px_rgba(255,255,255,0.6)] 
                        transition-transform duration-300 flex flex-col"
           >
-            <div className="h-44 w-full overflow-hidden">
+            <div className="h-60 w-full overflow-hidden">
               <img
-                src={job.image}
+                src={"/cvphuhop.png"}
                 alt={job.title}
                 className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
               />
@@ -150,33 +150,33 @@ const SmartJobSuggestions = () => {
 
             <div
               className="p-5 flex flex-col text-white flex-1 bg-gradient-to-br from-pink-500/20 to-purple-500/10 
-                rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 min-h-[400px]"
+                rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 min-h-[250px]"
             >
               {/* Nội dung chính */}
               <div className="flex flex-col flex-grow justify-start space-y-2">
                 {/* Tiêu đề */}
-                <h3 className="text-xl font-bold line-clamp-2 leading-tight min-h-[48px] text-white">
+                <h3 className="text-xl font-bold line-clamp-1 leading-tight max-w-[250px] text-white">
                   {job.title}
                 </h3>
 
                 {/* Tên công ty */}
-                <p className="text-base text-yellow-200 font-medium line-clamp-1">
+                <p className="text-base text-yellow-200 font-medium line-clamp-1 max-w-[350px]">
                   {job.company}
                 </p>
 
                 {/* Lương */}
-                <p className="text-sm md:text-base font-semibold text-yellow-300">
+                <p className="text-sm md:text-base font-semibold text-yellow-300 max-w-[350px]">
                   💰 {job.salary}
                 </p>
 
                 {/* Địa điểm + loại hình */}
-                <p className="text-sm opacity-90 line-clamp-1">
+                <p className="text-sm opacity-90 line-clamp-1 max-w-[350px]">
                   📍 {job.location} | ⏰ {job.jobType}
                 </p>
 
                 {/* Kỹ năng */}
                 <p
-                  className="text-sm text-gray-200 leading-snug line-clamp-2 h-[40px]"
+                  className="text-sm text-gray-200 leading-snug line-clamp-1 max-w-[350px]"
                   title={job.skills}
                 >
                   <span className="font-semibold text-white">Kỹ năng:</span>{" "}
@@ -191,7 +191,7 @@ const SmartJobSuggestions = () => {
               </div>
 
               {/* Nút xem chi tiết - gần hơn */}
-              <div className="mt-3 flex justify-center">
+              <div className="mt-3 flex justify-end">
                 <button
                   onClick={() =>
                     navigate(`/candidate/jobs/${job.id}`, {

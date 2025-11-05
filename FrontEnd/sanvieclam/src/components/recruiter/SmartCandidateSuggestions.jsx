@@ -117,9 +117,9 @@ const SmartCandidateSuggestions = () => {
                           border border-white/30 hover:scale-105 hover:shadow-[0_0_25px_rgba(255,255,255,0.6)] 
                           transition-transform duration-300 flex flex-col"
               >
-                <div className="h-44 w-full overflow-hidden">
+                <div className="h-49 w-full overflow-hidden">
                   <img
-                    src={candidate.image}
+                    src={"/uvphuhop.png"}
                     alt={candidate.fullName}
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                   />

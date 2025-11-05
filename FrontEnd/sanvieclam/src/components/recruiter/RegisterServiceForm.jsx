@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState,useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   CheckCircleIcon,
@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/solid";
 
 const RegisterServiceForm = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const selectedPlan = location.state?.plan;
 
@@ -65,6 +66,15 @@ const RegisterServiceForm = () => {
       alert("❌ Giả lập thanh toán thất bại!");
     }
   };
+  // ✅ tự động chuyển trang khi step === 3 sau 4 giây
+  useEffect(() => {
+    if (step === 3) {
+      const timer = setTimeout(() => {
+        navigate(-1);
+      }, 4000); // delay 4s để người dùng thấy thông báo
+      return () => clearTimeout(timer);
+    }
+  }, [step, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-32 p-6 flex flex-col items-center">
