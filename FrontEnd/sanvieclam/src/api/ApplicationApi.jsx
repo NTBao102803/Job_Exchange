@@ -75,3 +75,24 @@ export const updateApplicationStatus = async (id, status, rejectReason = null) =
     throw new Error("Không kết nối được server");
   }
 };
+
+// duyệt hồ sơ ứng viên ứng tuyển
+export const approveApplication = async (id) => {
+  try {
+    const response = await axiosClient.put(`/employer/applications/${id}/approve`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi duyệt hồ sơ:", error);
+    throw error;
+  }
+};
+
+export const rejectApplication = async (id) => {
+  try {
+    const response = await axiosClient.put(`/employer/applications/${id}/reject`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi từ chối hồ sơ:", error);
+    throw error;
+  }
+};
