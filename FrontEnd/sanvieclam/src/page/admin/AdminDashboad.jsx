@@ -1,83 +1,141 @@
-// src/page/admin/AdminDashboard.js
-import React from "react";
-import { BarChart3, Users, Briefcase, DollarSign } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Users, Briefcase, DollarSign } from "lucide-react";
+import { getAllEmployer } from "../../api/RecruiterApi";
+import { getCandidates } from "../../api/CandidateApi";
 
 const AdminDashboard = () => {
+  const [stats, setStats] = useState({
+    candidates: 0,
+    employers: 0,
+    totalAmount: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [candidatesRes, employersRes, paymentsRes] = await Promise.all([
+          getCandidates(),
+          getAllEmployer(),
+          axios.get("http://localhost:8080/api/payment/all"),
+        ]);
+
+        const candidates = candidatesRes?.length || [];
+        const employers = employersRes?.length || [];
+        const payments = paymentsRes?.data || [];
+
+        const totalAmount = payments
+          .filter((p) => p.status === "SUCCESS" || p.status === "COMPLETED")
+          .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+        setStats({
+          candidates: candidates,
+          employers: employers,
+          totalAmount,
+        });
+      } catch (error) {
+        console.error("❌ Lỗi khi lấy dữ liệu thống kê:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full bg-gray-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  const formatCurrency = (value) =>
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      minimumFractionDigits: 0,
+    }).format(value);
+
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="w-full max-w-6xl h-full bg-white rounded-2xl shadow-xl p-10 flex flex-col justify-between">
-        {/* Logo + Tiêu đề */}
-        <div className="flex flex-col items-center">
-          <h1 className="text-4xl font-extrabold text-indigo-600 text-center">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
+      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl p-10">
+        {/* Header */}
+        <div className="flex flex-col items-center mb-10">
+          <h1 className="text-4xl font-extrabold text-indigo-700 drop-shadow-sm">
             📊 Bảng Điều Khiển Quản Trị
           </h1>
-          <p className="text-gray-600 mt-2 text-center text-lg">
-            Chào mừng bạn đến với hệ thống quản lý.  
-            Hãy theo dõi thống kê và chọn menu bên trái để thao tác chi tiết.
+          <p className="text-gray-500 mt-3 text-center text-lg max-w-2xl">
+            Chào mừng bạn đến với hệ thống quản lý!
+            <br />
+            Theo dõi số liệu tổng quan và hoạt động của nền tảng tuyển dụng.
           </p>
         </div>
 
-        {/* Thống kê nhanh */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 flex-1 place-items-center">
-          <div className="bg-indigo-50 p-6 rounded-xl shadow hover:shadow-lg transition w-full">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-indigo-600 text-white rounded-full">
-                <Users size={28} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Ứng viên</h3>
-                <p className="text-2xl font-bold text-indigo-700">1,245</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-green-50 p-6 rounded-xl shadow hover:shadow-lg transition w-full">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-600 text-white rounded-full">
-                <Briefcase size={28} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Nhà tuyển dụng</h3>
-                <p className="text-2xl font-bold text-green-700">326</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-yellow-50 p-6 rounded-xl shadow hover:shadow-lg transition w-full">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-600 text-white rounded-full">
-                <DollarSign size={28} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Giao dịch</h3>
-                <p className="text-2xl font-bold text-yellow-700">3,567</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-red-50 p-6 rounded-xl shadow hover:shadow-lg transition w-full">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-red-600 text-white rounded-full">
-                <BarChart3 size={28} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Báo cáo</h3>
-                <p className="text-2xl font-bold text-red-700">89</p>
-              </div>
-            </div>
-          </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <StatCard
+            title="Ứng viên"
+            icon={<Users size={28} />}
+            value={stats.candidates}
+            gradient="from-indigo-500 to-blue-500"
+            small={false}
+          />
+          <StatCard
+            title="Nhà tuyển dụng"
+            icon={<Briefcase size={28} />}
+            value={stats.employers}
+            gradient="from-green-500 to-emerald-500"
+            small={false}
+          />
+          <StatCard
+            title="Doanh thu"
+            icon={<DollarSign size={28} />}
+            value={formatCurrency(stats.totalAmount)}
+            gradient="from-yellow-500 to-orange-400"
+            small={true} 
+          />
         </div>
 
-        {/* Thông tin bổ sung */}
-        <div className="bg-gray-50 rounded-xl p-8 shadow-inner text-center mt-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">
-            Hướng dẫn nhanh
+        {/* Quick Guide */}
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-8 shadow-inner text-center border border-indigo-100">
+          <h2 className="text-2xl font-bold text-indigo-700 mb-4">
+            🚀 Hướng dẫn nhanh
           </h2>
-          <p className="text-gray-600 leading-relaxed">
-            - Chọn mục <b>Ứng viên</b> để quản lý danh sách ứng viên. <br />
-            - Chọn mục <b>Nhà tuyển dụng</b> để xem và phê duyệt tài khoản. <br />
-            - Vào phần <b>Giao dịch</b> để theo dõi các gói dịch vụ đã mua. <br />
-            - Phần <b>Báo cáo</b> giúp bạn theo dõi hiệu suất hệ thống.
+          <p className="text-gray-700 leading-relaxed text-lg">
+            • <b>Ứng viên:</b> Quản lý danh sách và hồ sơ ứng viên. <br />
+            • <b>Nhà tuyển dụng:</b> Kiểm duyệt và theo dõi tài khoản doanh nghiệp. <br />
+            • <b>Thanh toán:</b> Xem thống kê và quản lý các giao dịch thành công. <br />
+            • <b>Báo cáo:</b> Phân tích dữ liệu và tối ưu hiệu suất hệ thống.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StatCard = ({ title, icon, value, gradient, small }) => {
+  return (
+    <div className="relative group bg-white border border-gray-100 rounded-2xl p-5 shadow-md hover:shadow-2xl transition-all duration-300 w-full">
+      <div
+        className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-10 transition duration-500`}
+      ></div>
+      <div className="flex items-center gap-4 relative z-10">
+        <div
+          className={`p-3 rounded-full bg-gradient-to-br ${gradient} text-white shadow-md`}
+        >
+          {icon}
+        </div>
+        <div>
+          <h3 className="text-gray-700 font-semibold text-base">{title}</h3>
+          <p
+            className={`font-bold mt-1 ${
+              small ? "text-xl md:text-2xl text-gray-800" : "text-2xl md:text-3xl text-gray-900"
+            }`}
+          >
+            {value}
           </p>
         </div>
       </div>
