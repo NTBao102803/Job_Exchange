@@ -1,25 +1,22 @@
 package iuh.fit.se.user_service.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Entity;
 import jakarta.persistence.*;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.*;
 
 @Entity
-@Data
 @Table(name = "skills")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+@Builder
 public class Skill {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Tên kỹ năng không được để trống")
-    private String skillName;
+    @ManyToOne
+    @JoinColumn(name = "candidate_id")
+    @JsonIgnore
+    private Candidate candidate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "profile_id")
-    @JsonIgnore // ngăn lặp vô hạn json
-    private Profile profile;
+    private String name;
 }

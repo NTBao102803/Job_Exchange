@@ -2,13 +2,11 @@ package iuh.fit.se.user_service.controller;
 
 import iuh.fit.se.user_service.dto.CandidateDto;
 import iuh.fit.se.user_service.dto.CandidateRequest;
-import iuh.fit.se.user_service.dto.ProfileDto;
-import iuh.fit.se.user_service.dto.ProfileRequest;
+import iuh.fit.se.user_service.mapper.CandidateMapper;
 import iuh.fit.se.user_service.model.Candidate;
-import iuh.fit.se.user_service.model.Profile;
 import iuh.fit.se.user_service.service.CandidateService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,38 +14,62 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/candidate")
+@RequiredArgsConstructor
 public class CandidateController {
-    @Autowired
-    private CandidateService candidateService;
 
-    public CandidateController(CandidateService candidateService) {
-        this.candidateService = candidateService;
-    }
+    private final CandidateService candidateService;
+    private final CandidateMapper candidateMapper;
 
-
+    // TẠO MỚI (internal)
     @PostMapping
-    public ResponseEntity<Candidate> createCandidate(@Valid @RequestBody CandidateRequest request) {
-        return ResponseEntity.ok(candidateService.createCandidate(request));
+    public ResponseEntity<CandidateDto> createCandidate(@Valid @RequestBody CandidateRequest request) {
+        Candidate saved = candidateService.createCandidate(request);
+        return ResponseEntity.ok(candidateMapper.toDto(saved));
     }
 
+    // TẠO MỚI (nội bộ)
     @PostMapping("/internal")
-    public ResponseEntity<Candidate> createCandidateInternal(@Valid @RequestBody CandidateRequest request) {
-        return ResponseEntity.ok(candidateService.createCandidate(request));
+    public ResponseEntity<CandidateDto> createCandidateInternal(@Valid @RequestBody CandidateRequest request) {
+        Candidate saved = candidateService.createCandidate(request);
+        return ResponseEntity.ok(candidateMapper.toDto(saved));
     }
+
+    // LẤY TẤT CẢ (CHO MATCH-SERVICE)
     @GetMapping("/all")
-    public ResponseEntity<List<Candidate>> getCandidates() {
-        return ResponseEntity.ok(candidateService.getCandidates());
+    public ResponseEntity<List<CandidateDto>> getAllCandidates() {
+        List<Candidate> candidates = candidateService.getCandidates();
+        List<CandidateDto> dtos = candidates.stream()
+                .map(candidateMapper::toDto)
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
 
-    // 🔹 Lấy profile theo token
+    // LẤY HỒ SƠ THEO TOKEN (người dùng hiện tại)
     @GetMapping
-    public ResponseEntity<Candidate> getCandidate() {
-        return ResponseEntity.ok(candidateService.getCandidate());
+    public ResponseEntity<CandidateDto> getCurrentCandidate() {
+        Candidate candidate = candidateService.getCandidate();
+        return ResponseEntity.ok(candidateMapper.toDto(candidate));
     }
 
+    // LẤY THEO ID (admin hoặc hệ thống)
+    @GetMapping("/by-id/{id}")
+    public ResponseEntity<CandidateDto> getCandidateById(@PathVariable Long id) {
+        Candidate candidate = candidateService.getCandidateById(id);
+        return candidate != null
+                ? ResponseEntity.ok(candidateMapper.toDto(candidate))
+                : ResponseEntity.notFound().build();
+    }
+
+    // LẤY THEO EMAIL (người dùng hiện tại)
+    @GetMapping("/email")
+    public ResponseEntity<CandidateDto> getCandidateByEmail() {
+        return ResponseEntity.ok(candidateService.getCandidateByEmail());
+    }
+
+    // CẬP NHẬT HỒ SƠ
     @PutMapping
-    public ResponseEntity<Candidate> updateCandidate(@RequestBody CandidateDto candidateDto) {
-        Candidate updateCandidate = candidateService.updateCandidate(candidateDto);
-        return ResponseEntity.ok(updateCandidate);
+    public ResponseEntity<CandidateDto> updateCandidate(@RequestBody CandidateDto dto) {
+        Candidate updated = candidateService.updateCandidate(dto);
+        return ResponseEntity.ok(candidateMapper.toDto(updated));
     }
 }

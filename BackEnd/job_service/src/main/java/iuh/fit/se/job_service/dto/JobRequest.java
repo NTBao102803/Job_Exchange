@@ -1,8 +1,8 @@
 package iuh.fit.se.job_service.dto;
 
 
+import iuh.fit.se.job_service.model.JobRequirements;
 import iuh.fit.se.job_service.model.JobType;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

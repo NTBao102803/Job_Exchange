@@ -4,57 +4,45 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "candidates")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Builder
 public class Candidate {
     @Id
-    private Long id; //map với userId từ auth-service
+    private Long id;
 
     private String fullName;
-
     private LocalDate dob;
-
     private Gender gender;
 
     @Column(unique = true, nullable = false)
     private String email;
 
     private String phone;
-
     private String role;
-
     private String address;
-
-    private String school;
-
-    private String major;
-
-    private String gpa;
-
-    private String graduationYear;
-
-    @Column(columnDefinition = "TEXT")
-    private String experience;
-
-    @Column(columnDefinition = "TEXT")
-    private String projects;
-
-    @Column(columnDefinition = "TEXT")
-    private String skills;
-
-    @Column(columnDefinition = "TEXT")
-    private String certificates;
-
-    @Column(columnDefinition = "TEXT")
     private String careerGoal;
-
     private String hobbies;
-
     private String social;
+
+    // Relationships
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Education> educations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Experience> experiences = new ArrayList<>();
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Project> projects = new ArrayList<>();
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Skill> skills = new ArrayList<>();
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Certificate> certificates = new ArrayList<>();
 }

@@ -27,12 +27,16 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers(
                                 "/api/auth/request-otp",
                                 "/api/auth/verify-otp",
                                 "/api/auth/login",
                                 "/api/auth/logout",
                                 "/api/auth/register",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password",
+                                "/api/auth/change-password",
                                 "/api/auth/refresh-token",
                                 "/api/user/**",
                                 "/api/candidate/**",

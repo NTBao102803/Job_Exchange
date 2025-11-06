@@ -15,14 +15,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 public class FeignClientInterceptor implements RequestInterceptor {
 
-//    @Override
-//    public void apply(RequestTemplate template) {
-//        Object auth = SecurityContextHolder.getContext().getAuthentication();
-//        if (auth instanceof JwtAuthenticationToken jwtAuth) {
-//            String token = jwtAuth.getToken().getTokenValue();
-//            template.header("Authorization", "Bearer " + token);
-//        }
-//    }
     private static final Logger logger = LoggerFactory.getLogger(FeignClientInterceptor.class);
 
     @Override

@@ -21,6 +21,8 @@ public class MatchingController {
 
     @GetMapping("/job/{jobId}")
     public ResponseEntity<List<CandidateMatchDto>> getCandidatesForJob(@PathVariable Long jobId) {
+        // 🔹 Option 1: đảm bảo ES luôn mới nhất
+        candidateIndexService.syncCandidates();
         JobDto job = jobClient.getJobById(jobId);
         List<CandidateMatchDto> candidates = candidateIndexService.searchCandidatesForJob(job, 20);
         return ResponseEntity.ok(candidates);

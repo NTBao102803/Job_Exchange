@@ -3,17 +3,24 @@ package iuh.fit.se.job_service.service.impl;
 import iuh.fit.se.job_service.client.EmployerClient;
 import iuh.fit.se.job_service.config.JwtUtil;
 import iuh.fit.se.job_service.dto.*;
+import iuh.fit.se.job_service.kafka.JobEventProducer;
 import iuh.fit.se.job_service.model.Job;
 import iuh.fit.se.job_service.model.JobStatus;
 import iuh.fit.se.job_service.repository.JobRepository;
 import iuh.fit.se.job_service.service.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.LoggingProducerListener;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,12 +33,17 @@ public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
     private final EmployerClient employerClient;
-//    private final LoggingProducerListener loggingProducerListener;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    private final Optional<JobEventProducer> jobEventProducer;
 
     @Autowired
-    public JobServiceImpl(JobRepository jobRepository, JwtUtil jwtUtil, EmployerClient employerClient) {
+    public JobServiceImpl(JobRepository jobRepository, JwtUtil jwtUtil,
+                          EmployerClient employerClient, Optional<JobEventProducer> jobEventProducer) {
         this.jobRepository = jobRepository;
         this.employerClient = employerClient;
+        this.jobEventProducer = jobEventProducer;
     }
 
     @Override
@@ -177,6 +189,24 @@ public class JobServiceImpl implements JobService {
         job.setStatus(JobStatus.APPROVED);
         Job approvedJob = jobRepository.save(job);
         logger.info("Job with ID {} has been approved.", approvedJob.getId());
+
+        JobApprovedEvent event = new JobApprovedEvent(
+                approvedJob.getId(),
+                approvedJob.getEmployerId(),
+                approvedJob.getTitle()
+        );
+        // Gửi REST
+        sendNotificationViaRest(event, "job-approved");
+
+        // Gửi Kafka nếu có
+        jobEventProducer.ifPresent(producer -> {
+            try {
+                producer.publishJobApprovedEvent(event);
+            } catch (Exception e) {
+                logger.warn("Kafka send failed for job approval", e);
+            }
+        });
+
         return JobMapper.toDto(approvedJob);
     }
 
@@ -193,6 +223,21 @@ public class JobServiceImpl implements JobService {
         job.setRejectReason(reason);
         Job rejectedJob = jobRepository.save(job);
         logger.info("Job with ID {} has been rejected with reason: {}", rejectedJob.getId(), reason);
+
+        JobRejectedEvent event = new JobRejectedEvent(rejectedJob.getId(), rejectedJob.getEmployerId(), rejectedJob.getTitle(), reason);
+
+        // Gửi REST
+        sendNotificationViaRest(event, "job-rejected");
+
+        // Gửi Kafka nếu có
+        jobEventProducer.ifPresent(producer -> {
+            try {
+                producer.publishJobRejectedEvent(event);
+            } catch (Exception e) {
+                logger.warn("Kafka send failed for job rejection", e);
+            }
+        });
+
         return JobMapper.toDto(rejectedJob);
     }
 
@@ -209,5 +254,23 @@ public class JobServiceImpl implements JobService {
         Job removedJob = jobRepository.save(job);
         logger.info("Job with ID {} has been removed.", removedJob.getId());
         return JobMapper.toDto(removedJob);
+    }
+
+    private void sendNotificationViaRest(Object event, String endpoint) {
+        try {
+            String url = "http://localhost:8080/api/notifications/" + endpoint;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getCredentials() != null) {
+                headers.setBearerAuth(auth.getCredentials().toString());
+            }
+
+            HttpEntity<Object> request = new HttpEntity<>(event, headers);
+            restTemplate.postForObject(url, request, String.class);
+        } catch (Exception e) {
+            logger.error("REST notification failed: {}", e.getMessage());
+        }
     }
 }

@@ -142,7 +142,7 @@
         <dependency>
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
-            <version>8.19.0</version>
+            <version>8.19.4</version>
         </dependency>
 
         <!-- Jackson (usually pulled by spring-boot-starter-web) -->

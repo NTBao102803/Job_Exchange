@@ -10,6 +10,7 @@ import iuh.fit.se.match_candidate_service.model.CandidateIndex;
 import iuh.fit.se.match_candidate_service.repository.CandidateIndexRepository;
 import iuh.fit.se.match_candidate_service.service.CandidateIndexService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CandidateIndexServiceImpl implements CandidateIndexService {
 
     private  final UserClient userClient;
@@ -44,22 +46,33 @@ public class CandidateIndexServiceImpl implements CandidateIndexService {
 
     @Override
     public void syncCandidates() {
-        List<CandidateDto> candidates = userClient.getCandidates();
-        List<CandidateIndex> indexList = candidates.stream()
-                .map(c -> CandidateIndex.builder()
-                        .id(c.getId())
-                        .fullName(c.getFullName())
-                        .email(c.getEmail())
-                        .skills(parseSkills(c.getSkills()))
-                        .experience(c.getExperience())
-                        .major(c.getMajor())
-                        .school(c.getSchool())
-                        .address(c.getAddress())
-                        .careerGoal(c.getCareerGoal())
-                        .build())
-                .collect(Collectors.toList());
+        try {
+            List<CandidateDto> candidates = userClient.getCandidates();
+            if (candidates == null || candidates.isEmpty()) {
+                log.warn("No candidates received from user-service");
+                return;
+            }
 
-        candidateIndexRepository.saveAll(indexList);
+            List<CandidateIndex> indexList = candidates.stream()
+                    .map(dto -> CandidateIndex.builder()
+                            .id(dto.getId())
+                            .fullName(dto.getFullName())
+                            .email(dto.getEmail())
+                            .skills(parseSkills(dto.getSkills()))
+                            .experience(dto.getExperience())
+                            .major(dto.getMajor())
+                            .school(dto.getSchool())
+                            .address(dto.getAddress())
+                            .careerGoal(dto.getCareerGoal())
+                            .build())
+                    .toList();
+
+            candidateIndexRepository.deleteAll();
+            candidateIndexRepository.saveAll(indexList);
+            log.info("Synced {} candidates to Elasticsearch", indexList.size());
+        } catch (Exception e) {
+            log.error("Failed to sync candidates: {}", e.getMessage(), e);
+        }
     }
 
     @Override
@@ -119,6 +132,29 @@ public class CandidateIndexServiceImpl implements CandidateIndexService {
                 .map(dto -> new CandidateMatchDto(dto, scoredIds.get(dto.getId())))
                 .sorted((a, b) -> Float.compare(b.getScore(), a.getScore())) // sort theo score desc
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void upsertCandidate(CandidateDto dto) {
+        CandidateIndex index = CandidateIndex.builder()
+                .id(dto.getId())
+                .fullName(dto.getFullName())
+                .email(dto.getEmail())
+                // parseSkills expects raw string and returns List<String>
+                .skills(parseSkills(dto.getSkills()))
+                .experience(dto.getExperience())
+                .major(dto.getMajor())
+                .school(dto.getSchool())
+                .address(dto.getAddress())
+                .careerGoal(dto.getCareerGoal())
+                .build();
+
+        candidateIndexRepository.save(index);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        candidateIndexRepository.deleteById(id);
     }
 
 

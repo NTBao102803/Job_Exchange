@@ -24,7 +24,7 @@ public class ElasticsearchConfig {
     public ElasticsearchClient elasticsearchClient() throws Exception {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY,
-                new UsernamePasswordCredentials("elastic", "X*TjPR0VWhJyAZSS4tf-"));
+                new UsernamePasswordCredentials("elastic", "FL3xuyOWffeGRqVy96Ko"));
 
         SSLContext sslContext = SSLContexts.custom()
                 .loadTrustMaterial(null, (certificate, authType) -> true) // trust all

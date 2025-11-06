@@ -16,5 +16,4 @@ public class UserResponse {
     private String fullName;
     private String role;
     private Boolean isActive;
-
 }

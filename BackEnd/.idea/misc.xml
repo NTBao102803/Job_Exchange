@@ -21,12 +21,16 @@
         <option value="$PROJECT_DIR$/employer_service/pom.xml" />
         <option value="$PROJECT_DIR$/candidate_matching_service/pom.xml" />
         <option value="$PROJECT_DIR$/match_candidate_service/pom.xml" />
+        <option value="$PROJECT_DIR$/application_service/pom.xml" />
+        <option value="$PROJECT_DIR$/cv_ai_service/pom.xml" />
         <option value="$PROJECT_DIR$/payment_service/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/candidate_matching_service/pom.xml" />
+        <option value="$PROJECT_DIR$/config_service/pom.xml" />
+        <option value="$PROJECT_DIR$/messaging_service/pom.xml" />
       </set>
     </option>
   </component>
