@@ -36,7 +36,6 @@ const AdminFinanceReport = () => {
     const fetchAll = async () => {
       setLoading(true);
       try {
-        console.log("📡 Fetching dữ liệu...");
 
         // ✅ 1. Lấy tất cả payment & plan
         const [paymentRes, planRes] = await Promise.all([
@@ -50,23 +49,17 @@ const AdminFinanceReport = () => {
         const paymentData = paymentRes.data || [];
         const planData = planRes.data || [];
 
-        console.log("💰 Payment data:", paymentData);
-        console.log("📦 Plan data:", planData);
-        console.log("🏢 Recruiter data:", recruiterData);
-
-        // ✅ Phần mapping sau khi fetch API
+        //  Phần mapping sau khi fetch API
 const enriched = paymentData.map((p) => {
-  // ✅ Tìm plan khớp theo tên (vì payment không có plan_id)
   const plan = planData.find(
     (pl) =>
       pl.name?.trim().toLowerCase() === p.planName?.trim().toLowerCase()
   );
 
-  // ✅ Tìm recruiter dựa vào authUserId === recruiter_id (nếu có)
+  //  Tìm recruiter dựa vào authUserId === recruiter_id (nếu có)
   const recruiter = recruiterData.find(
     (r) =>
-      Number(r.authUserId) === Number(p.recruiter_id) ||
-      Number(r.id) === Number(p.recruiter_id)
+      Number(r.authUserId) === Number(p.recruiterId)
   );
 
   return {
@@ -74,14 +67,9 @@ const enriched = paymentData.map((p) => {
     planName: plan?.name || p.planName || "Không xác định",
     planPrice: plan?.price || p.amount,
     recruiterName:
-      recruiter?.companyName ||
-      recruiter?.fullName ||
-      recruiter?.email ||
-      `#${p.recruiter_id}`,
+      recruiter?.fullName
   };
 });
-
-console.log("🧾 Enriched payments:", enriched);
 
 
         setPayments(enriched);
@@ -99,7 +87,7 @@ console.log("🧾 Enriched payments:", enriched);
     fetchAll();
   }, []);
 
-  // --- 🧮 Thống kê tổng quan ---
+  // ---  Thống kê tổng quan ---
   const stats = useMemo(() => {
     const success = payments.filter((p) => p.status === "SUCCESS");
     const totalRevenue = success.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -142,7 +130,7 @@ console.log("🧾 Enriched payments:", enriched);
       .sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [payments]);
 
-  // --- 📊 Doanh thu theo gói ---
+  // ---  Doanh thu theo gói ---
   const revenueByPlan = useMemo(() => {
     const map = {};
     payments
@@ -155,7 +143,7 @@ console.log("🧾 Enriched payments:", enriched);
       .sort((a, b) => b.total - a.total);
   }, [payments]);
 
-  // --- 🥇 Top recruiter ---
+  // ---  Top recruiter ---
   const topRecruiters = useMemo(() => {
     const map = {};
     payments
@@ -169,7 +157,7 @@ console.log("🧾 Enriched payments:", enriched);
       .slice(0, 8);
   }, [payments]);
 
-  // --- 🔍 Bộ lọc bảng ---
+  // ---  Bộ lọc bảng ---
   const filteredPayments = useMemo(() => {
     return payments.filter((p) => {
       const statusOK = statusFilter === "ALL" || p.status === statusFilter;
@@ -182,7 +170,7 @@ console.log("🧾 Enriched payments:", enriched);
     });
   }, [payments, statusFilter, searchOrder]);
 
-  // --- ⬇️ Xuất CSV ---
+  // --- Xuất CSV ---
   const handleExportCSV = () => {
     const header = [
       "ID",
@@ -365,7 +353,7 @@ const PaymentTable = ({
         <tbody>
           {payments.map((p) => (
             <tr key={p.id} className="border-b hover:bg-gray-50">
-              <td className="py-2 px-3 font-mono text-indigo-600">{p.order_id}</td>
+              <td className="py-2 px-3 font-mono text-indigo-600">{p.orderId}</td>
               <td className="py-2 px-3">{p.planName}</td>
               <td className="py-2 px-3">{p.recruiterName}</td>
               <td className="py-2 px-3 text-right font-semibold">

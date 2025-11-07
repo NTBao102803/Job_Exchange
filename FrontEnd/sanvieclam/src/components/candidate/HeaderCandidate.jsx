@@ -244,7 +244,7 @@ const HeaderCandidate = ({
             Gợi ý việc làm
           </button>
           <button onClick={onJobUTClick} className="hover:text-pink-400">
-            Đã ứng tuyển
+            Việc làm đã ứng tuyển
           </button>
           <button onClick={onBlog} className="hover:text-pink-400">
             Blog

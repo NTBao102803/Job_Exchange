@@ -1,4 +1,3 @@
-// src/components/admin/JobActiveModal.js
 import React, { useEffect, useState } from "react";
 import {
   MapPin,
@@ -21,9 +20,11 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
     phone: "",
     companyName: "",
   });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [showRejectReason, setShowRejectReason] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   if (!job) return null;
 
@@ -40,7 +41,6 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
     });
   };
 
-  // ✅ Gọi API lấy employer khi mở modal
   useEffect(() => {
     const fetchEmployer = async () => {
       if (!job?.employerId) return;
@@ -58,6 +58,15 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
     };
     fetchEmployer();
   }, [job?.employerId]);
+
+  const handleRejectWithReason = () => {
+    if (!rejectReason.trim()) {
+      alert("Vui lòng nhập lý do thất bại!");
+      return;
+    }
+    onReject({ id: job.id, status: "Xét duyệt thất bại", reason: rejectReason });
+    setShowRejectReason(false);
+  };
 
   return (
     <AnimatePresence>
@@ -234,9 +243,7 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
               </button>
 
               <button
-                onClick={() =>
-                  onReject({ id: job.id, status: "Xét duyệt thất bại" })
-                }
+                onClick={() => setShowRejectReason(true)}
                 className="px-6 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
               >
                 ❌ Xét duyệt thất bại
@@ -249,6 +256,52 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
                 🔙 Hủy
               </button>
             </div>
+
+            {/* Modal nhập lý do thất bại */}
+            <AnimatePresence>
+              {showRejectReason && (
+                <motion.div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowRejectReason(false)}
+                >
+                  <motion.div
+                    className="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <h2 className="text-xl font-bold text-red-600 mb-4 text-center">
+                      ❌ Lý do xét duyệt thất bại
+                    </h2>
+                    <textarea
+                      className="w-full p-3 border rounded-lg resize-none mb-4"
+                      rows={4}
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Nhập lý do..."
+                    />
+                    <div className="flex justify-end gap-3">
+                      <button
+                        onClick={handleRejectWithReason}
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                      >
+                        Gửi
+                      </button>
+                      <button
+                        onClick={() => setShowRejectReason(false)}
+                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </motion.div>
       )}
