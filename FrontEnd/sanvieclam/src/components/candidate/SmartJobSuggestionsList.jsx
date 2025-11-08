@@ -153,8 +153,12 @@ const SmartJobSuggestionsList = () => {
                   >
                     {job.title}
                   </h3>
-                  <p className="text-x opacity-90">{job.companyName}</p>
-                  <p className="text-x opacity-90">
+                  <p className="text-x opacity-90 cursor-pointer hover:underline"
+                      onClick={() =>
+                      navigate(`/candidate/dashboard-recruiterpageview`, { state: { recruiterId: job.jobDetail.employerId } })
+                      }
+                  >{job.companyName}</p>
+                  <p className="text-x opacity-90 ">
                     📍 {job.location} | ⏰ {job.type}
                   </p>
                   <p className="text-x text-green-300 font-medium">

@@ -207,8 +207,11 @@ const JobList = () => {
                       {job.title}
                     </h3>
                     <p
-                      className="text-x text-gray-600 truncate"
+                      className="text-x text-gray-600 truncate cursor-pointer hover:underline"
                       title={job.companyName}
+                      onClick={() =>
+                      navigate(`/candidate/dashboard-recruiterpageview`, { state: { recruiterId: job.employerId } })
+                    }
                     >
                       {job.companyName}
                     </p>

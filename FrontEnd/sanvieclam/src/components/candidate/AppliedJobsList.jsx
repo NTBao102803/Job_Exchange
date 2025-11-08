@@ -123,7 +123,14 @@ console.log(appliedJobs);
                   >
                     {job.title}
                   </h3>
-                  <p className="text-sm text-gray-600">{job.companyName}</p>
+                  <p
+                    className="text-sm text-gray-600 font-medium cursor-pointer hover:underline"
+                    onClick={() =>
+                      navigate(`/candidate/dashboard-recruiterpageview`, { state: { recruiterId: job.employerId } })
+                    }
+                  >
+                    {job.companyName}
+                  </p>
                   <p className="text-sm text-gray-600">
                     📍 {job.location} | ⏰ {job.type}
                   </p>

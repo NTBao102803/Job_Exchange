@@ -28,6 +28,7 @@ import DashboardJobDetail from "./page/candidate/DashboardJobDetail";
 import DashboardSmartJobSuggestionsList from "./page/candidate/DashboardSmartJobSuggestionsList";
 import DashboardAppliedJobsList from "./page/candidate/DashboardAppliedJobsList";
 import DashboardCreatCVAI from "./page/candidate/DashboardCreatCVAI";
+import DashboardRecruiterPageView from "./page/candidate/DashboadRecruiterPageView";
 
 import DashboardPostJob from "./page/recruiter/DashboardPostJob";
 import DashboardSmartCandidateSuggestionsList from "./page/recruiter/DashboardSmartCandidateSuggestionsList";
@@ -36,6 +37,7 @@ import DashboardCandidateshaveApplied from "./page/recruiter/DashboardCandidates
 import DashboardServicePlans from "./page/recruiter/DashboardServicePlans";
 import DashboardRegisterServiceForm from "./page/recruiter/DashboardRegisterServiceForm";
 import DashboardPaymentHistory from "./page/recruiter/DashboardPaymentHistory";
+import DashboardRecruiterPage from "./page/recruiter/DashboardRecruiterPage";
 import ForgotPassword from "./page/forgotpassword/ForgotPassword";
 
 
@@ -114,6 +116,11 @@ function AppContent() {
   <Route
     path="/candidate/change-password"
     element={<ProtectedRoute element={ChangePassword} allowedRoles={[1]} />}
+
+  />
+  <Route
+    path="/candidate/dashboard-recruiterpageview"
+    element={<ProtectedRoute element={DashboardRecruiterPageView} allowedRoles={[1]} />}
   />
 
   {/* Recruiter - chỉ cho role_id === 3 */}
@@ -156,6 +163,10 @@ function AppContent() {
   <Route
     path="/recruiter/payment-history"
     element={<ProtectedRoute element={DashboardPaymentHistory} allowedRoles={[3]} />}
+  />
+  <Route
+    path="/recruiter/dashboard-recruiterpage"
+    element={<ProtectedRoute element={DashboardRecruiterPage} allowedRoles={[3]} />}
   />
 </Routes>
 

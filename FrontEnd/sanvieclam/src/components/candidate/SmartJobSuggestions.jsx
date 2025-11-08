@@ -115,7 +115,6 @@ const SmartJobSuggestions = () => {
       </section>
     );
   }
-
   return (
     <section className="w-full py-20 bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 text-white">
       <h2 className="text-3xl md:text-4xl font-extrabold mb-12 text-center flex items-center justify-center gap-3">
@@ -160,7 +159,10 @@ const SmartJobSuggestions = () => {
                 </h3>
 
                 {/* Tên công ty */}
-                <p className="text-base text-yellow-200 font-medium line-clamp-1 max-w-[350px]">
+                <p className="text-base text-yellow-200 font-medium line-clamp-1 max-w-[350px] cursor-pointer hover:underline"
+                  onClick={() =>
+                      navigate(`/candidate/dashboard-recruiterpageview`, { state: { recruiterId: job.jobDetail.employerId } })
+                    }>
                   {job.company}
                 </p>
 
