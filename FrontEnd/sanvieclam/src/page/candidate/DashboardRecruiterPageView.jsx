@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import HeaderCandidate from "../../components/candidate/HeaderCandidate";
 import Footer from "../../components/Footer";
 import RecruiterPageView from "../../components/recruiter/RecruiterPageView";
-export default function DashboardCandidateProfile() {
+export default function DashboardRecruiterPageView() {
     const navigate = useNavigate();
     const footerRef = useRef(null);
     // scroll mượt đến Footer
