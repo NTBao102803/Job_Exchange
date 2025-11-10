@@ -1,6 +1,6 @@
 import React, { useEffect, useState,useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search, Briefcase, CheckCircle2, ThumbsUp, XCircle } from "lucide-react";
+import { Search, Briefcase, CheckCircle2, ThumbsUp, XCircle,Clock } from "lucide-react";
 import { getApplicationsByCandidate } from "../../api/ApplicationApi";
 import { getAllPublicJobs } from "../../api/JobApi";
 
@@ -14,6 +14,7 @@ const HeroBanner = ({ onStartClick }) => {
     approved: 0,
     matched: 0,
     notMatched: 0,
+    pending: 0,
   });
 
   useEffect(() => {
@@ -36,6 +37,8 @@ const HeroBanner = ({ onStartClick }) => {
       const approved = applications.filter((a) => a.status != "PENDING").length;
       const matched = applications.filter((a) => a.status === "APPROVED").length;
       const notMatched = applications.filter((a) => a.status === "REJECTED").length;
+      const pending = applications.filter((a) => a.status === "PENDING").length;
+
 
       setStats({
         totalApplications: applications.length,
@@ -43,6 +46,7 @@ const HeroBanner = ({ onStartClick }) => {
         approved,
         matched,
         notMatched,
+        pending,
       });
     } catch (err) {
       console.error("Lỗi tải thống kê:", err);
@@ -65,7 +69,7 @@ const HeroBanner = ({ onStartClick }) => {
 
   return (
     <section className="relative w-full min-h-[750px] bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 overflow-hidden text-gray-900 flex items-center">
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 px-4 py-12 pt-48 pb-48 items-center">
+      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 px-4 py-12 pt-40 pb-48 items-center">
 
         {/* LEFT SIDE */}
         <motion.div
@@ -98,6 +102,7 @@ const HeroBanner = ({ onStartClick }) => {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 z-10 mt-6">
               <StatCard icon={Briefcase} label="Đã nộp CV" value={stats.totalApplications} color="text-blue-600" />
               <StatCard icon={CheckCircle2} label="Được duyệt" value={stats.approved} color="text-green-600" />
+              <StatCard icon={Clock} label="Đang chờ duyệt" value={stats.pending} color="text-yellow-600"/>
               <StatCard icon={ThumbsUp} label="Phù hợp" value={stats.matched} color="text-yellow-600" />
               <StatCard icon={XCircle} label="Không phù hợp" value={stats.notMatched} color="text-red-600" />
               <StatCard icon={Briefcase} label="Tổng công việc" value={stats.totalJobs} color="text-purple-600 col-span-2 sm:col-span-1" />
