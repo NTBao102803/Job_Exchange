@@ -104,7 +104,10 @@ const JobDetail = () => {
           <h1 className="text-3xl font-bold text-indigo-700">
             {displayValue(job.title)}
           </h1>
-          <p className="text-lg text-gray-600 mt-1 flex items-center gap-2">
+          <p className="text-lg text-gray-600 mt-1 flex items-center gap-2 cursor-pointer hover:underline"
+              onClick={() =>
+                      navigate(`/candidate/dashboard-recruiterpageview`, { state: { recruiterId: job.employerId } })
+                    }>
             <Building2 className="w-5 h-5 text-indigo-500" />
             {displayValue(job.companyName)}
           </p>

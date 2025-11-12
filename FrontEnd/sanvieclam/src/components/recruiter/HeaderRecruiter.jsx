@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/AuthApi";
 import { getEmployerProfile } from "../../api/RecruiterApi";
-import { Bell } from "lucide-react";
+import { Bell,MessageCircle } from "lucide-react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import {
@@ -256,6 +256,17 @@ const toggleMenu = () => {
           <button onClick={onFooter} className="hover:text-pink-400">
             Liên hệ
           </button>
+          <button
+              onClick={() => navigate("/recruiter/dashboard-recruitermessenger")}
+              className="relative p-2 rounded-full hover:bg-white/10 transition"
+            >
+              <MessageCircle className="w-6 h-6" /> {/* ✅ Icon Messenger */}
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
+                          {unreadCount}
+                        </span>
+                      )}
+            </button>
 
           {/* 🔔 Notification Bell */}
           <div className="relative flex items-center" ref={notifRef}>
@@ -339,6 +350,12 @@ const toggleMenu = () => {
 
           {menuOpen && (
             <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-48 bg-white text-gray-800 rounded-xl shadow-lg py-2 z-50">
+              <button
+                onClick={() => navigate("/recruiter/dashboard-recruiterpage")}
+                className="block px-4 py-2 w-full text-left hover:bg-gray-100"
+              >
+                Trang cá nhân
+              </button>
               <button
                 onClick={() => navigate("/recruiter/recruiterprofile")}
                 className="block px-4 py-2 w-full text-left hover:bg-gray-100"

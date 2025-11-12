@@ -143,7 +143,6 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
 
             {/* Nội dung công việc */}
             <div className="mt-8 space-y-6 text-gray-700 leading-relaxed">
-              {/* Mô tả */}
               <div>
                 <h2 className="text-xl font-semibold text-indigo-600">
                   📝 Mô tả công việc
@@ -152,67 +151,9 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
                   {displayValue(job.description)}
                 </p>
               </div>
-
-              {/* Yêu cầu */}
-              <div>
-                <h2 className="text-xl font-semibold text-indigo-600">
-                  ✅ Yêu cầu ứng viên
-                </h2>
-                {job.requirements ? (
-                  <p className="mt-2 whitespace-pre-line">
-                    {displayValue(job.requirements.descriptionRequirements)}
-                  </p>
-                ) : (
-                  <p className="mt-2 text-gray-500 italic">
-                    Chưa có thông tin yêu cầu
-                  </p>
-                )}
-              </div>
-
-              {/* Yêu cầu bắt buộc */}
-              {job.requirements &&
-                (job.requirements.skills ||
-                  job.requirements.experience ||
-                  job.requirements.certificates) && (
-                  <div className="mt-6">
-                    <h2 className="text-lg font-semibold text-red-600 ml-4">
-                      ⚠️ Yêu cầu bắt buộc
-                    </h2>
-                    <div className="mt-2 ml-3 space-y-2 text-gray-700 ml-4">
-                      {job.requirements.skills && (
-                        <p>
-                          <span className="font-medium">Kỹ năng: </span>
-                          {displayValue(job.requirements.skills)}
-                        </p>
-                      )}
-                      {job.requirements.experience && (
-                        <p>
-                          <span className="font-medium">Kinh nghiệm: </span>
-                          {displayValue(job.requirements.experience)}
-                        </p>
-                      )}
-                      {job.requirements.certificates && (
-                        <p>
-                          <span className="font-medium">Chứng chỉ: </span>
-                          {displayValue(job.requirements.certificates)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-              {/* Quyền lợi */}
-              <div>
-                <h2 className="text-xl font-semibold text-indigo-600">
-                  🎁 Quyền lợi
-                </h2>
-                <p className="mt-2 whitespace-pre-line">
-                  {displayValue(job.benefits)}
-                </p>
-              </div>
             </div>
 
-            {/* Thông tin liên hệ (lấy từ employer profile) */}
+            {/* Thông tin liên hệ */}
             <div className="mt-10 border-t pt-6">
               <h2 className="text-2xl font-bold text-indigo-700">
                 📞 Thông tin liên hệ

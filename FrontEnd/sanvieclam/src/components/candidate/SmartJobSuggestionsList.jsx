@@ -53,9 +53,8 @@ const SmartJobSuggestionsList = () => {
           if (job.employerId) {
             try {
               const employer = await getEmployerById(job.employerId);
-              console.log("📦 Response employer từ API:", employer);
-              companyName =
-                employer?.companyName || `Công ty ID ${job.employerId}`;
+              console.log("📦 Response employer từ API:", employer)
+              companyName = employer?.companyName || `Công ty ID ${job.employerId}`;
             } catch (error) {
               console.warn(`⚠️ Lỗi lấy employer ${job.employerId}:`, error);
             }
@@ -160,8 +159,12 @@ const SmartJobSuggestionsList = () => {
                   >
                     {job.title}
                   </h3>
-                  <p className="text-x opacity-90">{job.companyName}</p>
-                  <p className="text-x opacity-90">
+                  <p className="text-x opacity-90 cursor-pointer hover:underline"
+                      onClick={() =>
+                      navigate(`/candidate/dashboard-recruiterpageview`, { state: { recruiterId: job.jobDetail.employerId } })
+                      }
+                  >{job.companyName}</p>
+                  <p className="text-x opacity-90 ">
                     📍 {job.location} | ⏰ {job.type}
                   </p>
                   <p className="text-x text-green-300 font-medium">
