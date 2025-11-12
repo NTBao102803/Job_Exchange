@@ -1,0 +1,9 @@
+{
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "BackEnd/docker-compose.yml"
+  },
+  "start": {
+    "command": "docker-compose -f BackEnd/docker-compose.yml up"
+  }
+}
