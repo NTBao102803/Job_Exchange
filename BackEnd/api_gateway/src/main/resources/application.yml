@@ -1,0 +1,100 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      websocket:
+        max-frame-payload-length: 65536
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**, /api/admin/users/**
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/profiles/**, /api/candidate/**
+
+        - id: storage-service
+          uri: lb://storage-service
+          predicates:
+            - Path=/api/storage/**
+
+        - id: job-service
+          uri: lb://job-service
+          predicates:
+            - Path=/api/jobs/**, /api/admin/jobs/**
+
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/api/admin/jobs/**
+
+        - id: employer-service
+          uri: lb://employer-service
+          predicates:
+            - Path=/api/employers/**, /api/admin/employers/**
+
+        - id: match-candidate-service
+          uri: lb://match-candidate-service
+          predicates:
+            - Path=/api/match/**
+
+        - id: application-service
+          uri: lb://application-service
+          predicates:
+            - Path=/api/applications/**, /api/employer/applications/**
+
+        - id: chatbot-service
+          uri: lb://chatbot-service
+          predicates:
+            - Path=/api/chat/**
+
+        - id: cv-ai-service
+          uri: lb://cv-ai-service
+          predicates:
+            - Path=/api/cv/**
+
+        - id: recommendation-service
+          uri: lb://recommendation-service
+          predicates:
+            - Path=/api/recommend/**
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payment-plans/**, /api/payment/**
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+
+        # ============ WEBSOCKET ROUTE ============
+        - id: notification-ws
+          uri: lb://notification-service
+          predicates:
+            - Path=/ws-notifications/**
+          filters:
+            - PreserveHostHeader=true
+            - RemoveRequestHeader=Sec-WebSocket-Extensions
+            - RemoveRequestHeader=Authorization
+            - AddRequestHeader=Sec-WebSocket-Protocol, jwt
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka/

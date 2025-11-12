@@ -1,0 +1,74 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ==== Thông tin cha ==== -->
+    <groupId>iuh.fit.se</groupId>
+    <artifactId>svjob-backend</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>SVJob Backend (Parent)</name>
+    <description>Parent Maven POM for all microservices in SVJob project</description>
+
+    <!-- ==== Danh sách các module con ==== -->
+    <modules>
+        <module>admin_service</module>
+        <module>api_gateway</module>
+        <module>application_service</module>
+        <module>auth_service</module>
+        <module>chatbot_service</module>
+        <module>cv_ai_service</module>
+        <module>discovery_service</module>
+        <module>employer_service</module>
+        <module>job_service</module>
+        <module>match_candidate_service</module>
+        <module>notification_service</module>
+        <module>payment_service</module>
+        <module>recommendation_service</module>
+        <module>storage_service</module>
+        <module>user_service</module>
+    </modules>
+
+    <!-- ==== Quản lý dependency versions tập trung ==== -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Boot BOM để đảm bảo version đồng nhất -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>3.2.4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- ==== Plugin config chung ==== -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Plugin build Spring Boot -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+
+                <!-- Plugin compiler -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <source>17</source>
+                        <target>17</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>

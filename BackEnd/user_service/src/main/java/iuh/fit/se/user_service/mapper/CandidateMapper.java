@@ -6,13 +6,12 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", uses = {StringListMapper.class})
+@Mapper(componentModel = "spring")
 public interface CandidateMapper {
 
     @Mapping(target = "school", source = "educations", qualifiedByName = "educationsToSchool")

@@ -1,0 +1,62 @@
+server:
+  port: ${RECOMMENDATION_PORT:8091}
+
+# Database
+spring:
+  application:
+    name: recommendation-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret: ${JWT_SECRET}
+# Elasticsearch
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://elasticsearch:9200}
+    username: ${ELASTICSEARCH_USERNAME:elastic}
+    password: ${ELASTICSEARCH_PASSWORD:FL3xuyOWffeGRqVy96Ko}
+    ssl:
+      verification-mode: none
+  datasource:
+    url: ${DB_RECOMMENDATION_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
+
+# Eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://discovery-service:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET}
+  access:
+    expiration: 3600000
+  refresh:
+    expiration: 604800000
+
+# Gemini AI
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
+    model: text-embedding-004
+
+# Logging
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    feign: DEBUG
+    iuh.fit.se.recommendation_service: DEBUG

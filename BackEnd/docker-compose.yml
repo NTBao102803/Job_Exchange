@@ -1,0 +1,297 @@
+services:
+  # ===================== ZOOKEEPER =====================
+  zookeeper:
+    image: zookeeper:3.9
+    container_name: zookeeper
+    restart: always
+    environment:
+      ZOO_ALLOW_ANONYMOUS_LOGIN: "true"
+    ports:
+      - "2181:2181"
+    networks:
+      - svjob_network
+
+  # ===================== KAFKA =====================
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    restart: always
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - svjob_network
+
+  # ===================== EUREKA DISCOVERY SERVICE =====================
+  discovery-service:
+    build: ./discovery_service
+    container_name: discovery-service
+    restart: always
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    # XÓA: depends_on: - mariadb
+    networks:
+      - svjob_network
+
+  # ===================== API GATEWAY =====================
+  api-gateway:
+    build: ./api_gateway
+    container_name: api-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URI=http://discovery-service:8761/eureka/
+    depends_on:
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== AUTH SERVICE =====================
+  auth-service:
+    build: ./auth_service
+    container_name: auth-service
+    restart: always
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./global.env
+    depends_on:
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== USER SERVICE =====================
+  user-service:
+    build: ./user_service
+    container_name: user-service
+    restart: always
+    ports:
+      - "8082:8082"
+    env_file:
+      - ./global.env
+    depends_on:
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== EMPLOYER SERVICE =====================
+  employer-service:
+    build: ./employer_service
+    container_name: employer-service
+    restart: always
+    ports:
+      - "8086:8086"
+    env_file:
+      - ./global.env
+    depends_on:
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== NOTIFICATION SERVICE =====================
+  notification-service:
+    build: ./notification_service
+    container_name: notification-service
+    restart: always
+    ports:
+      - "8090:8090"
+    env_file:
+      - ./global.env
+    depends_on:
+      - kafka
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== ADMIN SERVICE =====================
+  admin-service:
+    build: ./admin_service
+    container_name: admin-service
+    restart: always
+    ports:
+      - "8085:8085"
+    env_file:
+      - ./global.env
+    depends_on:
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== JOB SERVICE =====================
+  job-service:
+    build: ./job_service
+    container_name: job-service
+    restart: always
+    ports:
+      - "8084:8084"
+    env_file:
+      - ./global.env
+    depends_on:
+      - kafka
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== PAYMENT SERVICE =====================
+  payment-service:
+    build: ./payment_service
+    container_name: payment-service
+    restart: always
+    ports:
+      - "8094:8094"
+    env_file:
+      - ./global.env
+    depends_on:
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== APPLICATION SERVICE =====================
+  application-service:
+    build: ./application_service
+    container_name: application-service
+    restart: always
+    ports:
+      - "8087:8087"
+    env_file:
+      - ./global.env
+    depends_on:
+      - kafka
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== STORAGE SERVICE =====================
+  storage-service:
+    build: ./storage_service
+    container_name: storage-service
+    restart: always
+    ports:
+      - "8083:8083"
+    env_file:
+      - ./global.env
+    depends_on:
+      - minio
+      - discovery-service
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - svjob_network
+
+  # ===================== CHATBOT SERVICE =====================
+  chatbot-service:
+    build: ./chatbot_service
+    container_name: chatbot-service
+    restart: always
+    ports:
+      - "8089:8089"
+    env_file:
+      - ./global.env
+    depends_on:
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== CV-AI SERVICE =====================
+  cv-ai-service:
+    build: ./cv_ai_service
+    container_name: cv-ai-service
+    restart: always
+    ports:
+      - "8093:8093"
+    env_file:
+      - ./global.env
+    depends_on:
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== RECOMMENDATION SERVICE =====================
+  recommendation-service:
+    build: ./recommendation_service
+    container_name: recommendation-service
+    restart: always
+    ports:
+      - "8091:8091"
+    env_file:
+      - ./global.env
+    depends_on:
+      - elasticsearch
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== MATCH CANDIDATE SERVICE =====================
+  match-candidate-service:
+    build: ./match_candidate_service
+    container_name: match-candidate-service
+    restart: always
+    ports:
+      - "8096:8096"
+    env_file:
+      - ./global.env
+    depends_on:
+      - api-gateway
+      - elasticsearch
+      - discovery-service
+    networks:
+      - svjob_network
+
+  # ===================== MINIO =====================
+  minio:
+    image: minio/minio
+    container_name: minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - svjob_network
+
+  # ===================== ELASTICSEARCH =====================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=FL3xuyOWffeGRqVy96Ko
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - svjob_network
+
+# ===================== VOLUMES & NETWORKS =====================
+volumes:
+  minio_data:
+  elasticsearch_data:
+
+networks:
+  svjob_network:
+    driver: bridge

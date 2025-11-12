@@ -1,0 +1,84 @@
+server:
+  port: ${MATCH_PORT:8096}
+
+# Database (MariaDB)
+spring:
+  application:
+    name: match-candidate-service
+  datasource:
+    url: ${DB_MATCH_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret: ${JWT_SECRET}
+
+# Elasticsearch
+
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://elasticsearch:9200}
+    username: ${ELASTICSEARCH_USERNAME:elastic}
+    password: ${ELASTICSEARCH_PASSWORD:FL3xuyOWffeGRqVy96Ko}
+    ssl:
+      verification-mode: none
+
+# Scheduling
+
+  task:
+    scheduling:
+      pool:
+        size: 2
+# Gateway URL
+services:
+  gateway-url: ${GATEWAY_URL:http://api-gateway:8080}
+  job-service-url: ${services.gateway-url}/api/jobs
+  user-service-url: ${services.gateway-url}/api/candidate
+
+# Eureka configuration
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URI:http://discovery-service:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+
+# Matching weights
+matching:
+  weights:
+    skills: 40
+    experience: 20
+    education: 10
+    location: 10
+    career: 20
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET}
+  access:
+    expiration: 3600000
+  refresh:
+    expiration: 604800000
+
+# Logging
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    iuh.fit.se.admin_service.config: DEBUG
+    iuh.fit.se.match_candidate_service.client.UserClient: DEBUG
+    feign: DEBUG
