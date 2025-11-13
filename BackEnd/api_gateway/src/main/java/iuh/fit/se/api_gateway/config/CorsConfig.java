@@ -18,6 +18,7 @@ public class CorsConfig {
         // ✅ Cho phép frontend ở cả local và production
         config.setAllowedOriginPatterns(List.of(
                 "https://www.jobsv.online", // domain production
+                "https://jobsv.online",
                 "http://localhost:5173"     // domain local (Vite)
         ));
 

@@ -24,7 +24,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-notifications")
                 .addInterceptors(authHandshakeInterceptor)
-                .setAllowedOriginPatterns("http://localhost:5173")
+                .setAllowedOriginPatterns(
+                        "http://localhost:5173",
+                        "https://www.jobsv.online",
+                        "https://jobsv.online")
                 .withSockJS();
     }
 }

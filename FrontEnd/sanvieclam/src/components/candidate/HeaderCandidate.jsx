@@ -97,11 +97,13 @@ const HeaderCandidate = ({
       return;
     }
 
-    const socketUrl = `${
-      window.location.protocol === "https:" ? "https" : "http"
-    }://api.jobsv.online/ws-notifications?token=${encodeURIComponent(
-      token.replace("Bearer ", "")
-    )}`;
+    const socketUrl = import.meta.env.PROD
+      ? `https://api.jobsv.online/ws-notifications?token=${encodeURIComponent(
+          token.replace("Bearer ", "")
+        )}`
+      : `http://localhost:8080/ws-notifications?token=${encodeURIComponent(
+          token.replace("Bearer ", "")
+        )}`;
 
     const socket = new SockJS(socketUrl);
     const client = over(socket);
