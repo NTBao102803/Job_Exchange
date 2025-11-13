@@ -98,7 +98,9 @@ const HeaderRecruiter = ({
     console.log("✅ Đã có employerId:", employerId);
 
     // 🔗 Kết nối qua API Gateway
-    const socketUrl = `http://localhost:8080/ws-notifications?token=${encodeURIComponent(
+    const socketUrl = `${
+      window.location.protocol === "https:" ? "https" : "http"
+    }://api.jobsv.online/ws-notifications?token=${encodeURIComponent(
       token.replace("Bearer ", "")
     )}`;
     console.log("🌐 Socket URL:", socketUrl);
