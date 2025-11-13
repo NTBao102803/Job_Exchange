@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/FrontEnd/sanvieclam/index.html"
+    }
+  ]
+}
