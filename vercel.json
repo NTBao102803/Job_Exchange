@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/FrontEnd/sanvieclam/index.html"
+      "destination": "/FrontEnd/sanvieclam/dist/index.html"
     }
   ]
 }
