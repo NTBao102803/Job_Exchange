@@ -1,4 +1,4 @@
-package iuh.fit.se.notification_service.config;
+package iuh.fit.se.comment_service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +26,8 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/ws-notifications/**", "/topic/**", "/app/**").permitAll()
-                        .requestMatchers("/api/notifications/**").authenticated()
+                        .requestMatchers("/ws-comments/**", "/topic/**", "/app/**").permitAll()
+                        .requestMatchers("/api/comments/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(ex -> ex.accessDeniedHandler(customAccessDeniedHandler))
@@ -35,4 +35,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }

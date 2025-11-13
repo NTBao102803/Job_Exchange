@@ -24,6 +24,7 @@
         <option value="$PROJECT_DIR$/application_service/pom.xml" />
         <option value="$PROJECT_DIR$/cv_ai_service/pom.xml" />
         <option value="$PROJECT_DIR$/payment_service/pom.xml" />
+        <option value="$PROJECT_DIR$/comment_service/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
@@ -35,7 +36,6 @@
     </option>
   </component>
   <component name="PWA">
-    <option name="enabled" value="true" />
     <option name="wasEnabledAtLeastOnce" value="true" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="17" project-jdk-type="JavaSDK">

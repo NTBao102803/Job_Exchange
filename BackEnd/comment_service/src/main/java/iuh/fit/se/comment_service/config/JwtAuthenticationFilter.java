@@ -1,4 +1,4 @@
-package iuh.fit.se.notification_service.config;
+package iuh.fit.se.comment_service.config;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -77,7 +77,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Bỏ qua chỉ cho handshake WebSocket
-        return path.startsWith("/ws-notifications");
+        // Bỏ qua WebSocket endpoint
+        return path.startsWith("/ws");
     }
+
 }

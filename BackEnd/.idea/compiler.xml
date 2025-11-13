@@ -10,6 +10,7 @@
         <module name="admin_service" />
         <module name="application_service" />
         <module name="payment_service" />
+        <module name="comment_service" />
         <module name="recommendation_service" />
         <module name="cv_ai_service" />
         <module name="match_candidate_service" />
@@ -54,6 +55,7 @@
       <module name="application_service" options="-parameters" />
       <module name="auth_service" options="-parameters" />
       <module name="chatbot_service" options="-parameters" />
+      <module name="comment_service" options="-parameters" />
       <module name="cv_ai_service" options="-parameters" />
       <module name="discovery_service" options="-parameters" />
       <module name="employer_service" options="-parameters" />
