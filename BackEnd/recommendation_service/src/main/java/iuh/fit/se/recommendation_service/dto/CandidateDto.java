@@ -1,9 +1,8 @@
-package iuh.fit.se.match_candidate_service.dto;
+package iuh.fit.se.recommendation_service.dto;
 
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 

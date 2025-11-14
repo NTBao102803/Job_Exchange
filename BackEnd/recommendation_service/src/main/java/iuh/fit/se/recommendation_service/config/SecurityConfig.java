@@ -18,10 +18,17 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/**", "/error").permitAll()
                         .requestMatchers(
-                                "/api/recommend/**",
-                                "/actuator/**"
-                        ).permitAll() // hoặc để authenticated() nếu muốn bắt buộc đăng nhập
+                                "/api/recommend/jobs/**",
+                                "/api/recommend/jobs"
+                        ).permitAll()
+                        .requestMatchers(
+                                "/api/recommend/candidates/**"
+                        ).hasAnyRole("EMPLOYER", "ADMIN")
+                        .requestMatchers(
+                                "/api/recommend/sync/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

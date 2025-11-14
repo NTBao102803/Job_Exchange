@@ -25,7 +25,6 @@
         <module>discovery_service</module>
         <module>employer_service</module>
         <module>job_service</module>
-        <module>match_candidate_service</module>
         <module>notification_service</module>
         <module>payment_service</module>
         <module>recommendation_service</module>

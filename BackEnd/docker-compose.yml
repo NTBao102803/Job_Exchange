@@ -226,24 +226,10 @@ services:
     env_file:
       - ./global.env
     depends_on:
-      - elasticsearch
-      - discovery-service
-    networks:
-      - svjob_network
-
-  # ===================== MATCH CANDIDATE SERVICE =====================
-  match-candidate-service:
-    build: ./match_candidate_service
-    container_name: match-candidate-service
-    restart: always
-    ports:
-      - "8096:8096"
-    env_file:
-      - ./global.env
-    depends_on:
-      - api-gateway
-      - elasticsearch
-      - discovery-service
+      elasticsearch:
+        condition: service_started
+      discovery-service:
+        condition: service_started
     networks:
       - svjob_network
 
@@ -286,7 +272,12 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - svjob_network
-
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9200 || exit 1" ]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
 # ===================== VOLUMES & NETWORKS =====================
 volumes:
   minio_data:

@@ -1,0 +1,48 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "analyzer": {
+        "vn_text_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": { "type": "keyword" },
+      "employerId": { "type": "keyword" },
+      "title": { "type": "text", "analyzer": "vn_text_analyzer" },
+      "jobType": { "type": "keyword" },
+      "location": { "type": "keyword" },
+      "salary": { "type": "keyword" },
+      "startDate": { "type": "date" },
+      "endDate": { "type": "date" },
+      "description": { "type": "text", "analyzer": "vn_text_analyzer" },
+      "requirements": {
+        "type": "object",
+        "properties": {
+          "skills": { "type": "text", "analyzer": "vn_text_analyzer" },
+          "experience": { "type": "text", "analyzer": "vn_text_analyzer" },
+          "certificates": { "type": "text", "analyzer": "vn_text_analyzer" },
+          "career": { "type": "text", "analyzer": "vn_text_analyzer" },
+          "descriptionRequirements": { "type": "text", "analyzer": "vn_text_analyzer" }
+        }
+      },
+      "benefits": { "type": "text", "analyzer": "vn_text_analyzer" },
+      "status": { "type": "keyword" },
+      "createdAt": { "type": "date" },
+      "updatedAt": { "type": "date" },
+      "embedding": {
+        "type": "dense_vector",
+        "dims": 768,
+        "index": true,
+        "similarity": "cosine"
+      }
+    }
+  }
+}

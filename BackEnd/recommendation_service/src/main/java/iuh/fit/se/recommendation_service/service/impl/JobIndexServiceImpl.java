@@ -3,7 +3,7 @@ package iuh.fit.se.recommendation_service.service.impl;
 import iuh.fit.se.recommendation_service.client.JobClient;
 import iuh.fit.se.recommendation_service.client.UserClient;
 import iuh.fit.se.recommendation_service.dto.*;
-import iuh.fit.se.recommendation_service.repository.JobIndexRepository;
+import iuh.fit.se.recommendation_service.repository.SearchHelper;
 import iuh.fit.se.recommendation_service.service.JobIndexService;
 import iuh.fit.se.recommendation_service.service.GeminiEmbeddingService;
 import lombok.RequiredArgsConstructor;
@@ -28,13 +28,13 @@ public class JobIndexServiceImpl implements JobIndexService {
     private final JobClient jobClient;
     private final UserClient userClient;
     private final GeminiEmbeddingService embeddingService;
-    private final JobIndexRepository indexRepository;
 
     private static final DateTimeFormatter[] DATE_FORMATS = new DateTimeFormatter[]{
             DateTimeFormatter.ISO_DATE_TIME,
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
             DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
     };
+    private final SearchHelper searchHelper;
 
     private LocalDateTime parseDate(Object value) {
         if (value == null) return null;
@@ -155,7 +155,7 @@ public class JobIndexServiceImpl implements JobIndexService {
             doc.put("updatedAt", job.getUpdatedAt());
             doc.put("embedding", emb);
 
-            indexRepository.indexJob(String.valueOf(job.getId()), doc);
+            searchHelper.indexDocument("jobs", String.valueOf(job.getId()), doc);
         } catch (IOException ex) {
             log.error("[JobIndexServiceImpl] Failed to index job {}", job.getId(), ex);
             throw new RuntimeException("Failed to index job " + job.getId(), ex);
@@ -179,7 +179,7 @@ public class JobIndexServiceImpl implements JobIndexService {
         List<Double> qVec = embeddingService.getEmbedding(text);
         log.info("[JobIndexServiceImpl] Candidate embedding size: {}", qVec.size());
 
-        List<Map<String, Object>> hits = indexRepository.semanticSearch(qVec, topK);
+        List<Map<String, Object>> hits = searchHelper.semanticSearch("jobs", qVec, topK);
         log.info("[JobIndexServiceImpl] Search returned {} hits", hits.size());
 
         return hits.stream().map(h -> {

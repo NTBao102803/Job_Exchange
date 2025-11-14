@@ -48,11 +48,6 @@ spring:
           predicates:
             - Path=/api/employers/**, /api/admin/employers/**
 
-        - id: match-candidate-service
-          uri: lb://match-candidate-service
-          predicates:
-            - Path=/api/match/**
-
         - id: application-service
           uri: lb://application-service
           predicates:

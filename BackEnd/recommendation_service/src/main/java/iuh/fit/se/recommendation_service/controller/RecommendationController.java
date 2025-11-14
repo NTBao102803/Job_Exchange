@@ -1,6 +1,8 @@
 package iuh.fit.se.recommendation_service.controller;
 
+import iuh.fit.se.recommendation_service.client.JobClient;
 import iuh.fit.se.recommendation_service.dto.*;
+import iuh.fit.se.recommendation_service.service.CandidateIndexService;
 import iuh.fit.se.recommendation_service.service.JobIndexService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,24 +17,14 @@ import java.util.List;
 public class RecommendationController {
 
     private final JobIndexService jobIndexService;
+    private final CandidateIndexService candidateIndexService;
+    private final JobClient jobClient;
 
     @GetMapping("/jobs/{userId}")
     public ResponseEntity<List<JobMatchDto>> recommendJobsForUser(@PathVariable Long userId,
                                                                   @RequestParam(defaultValue = "10") int topK) {
         try {
             List<JobMatchDto> results = jobIndexService.recommendJobsForUser(userId, topK);
-            return ResponseEntity.ok(results);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(List.of());
-        }
-    }
-
-    // Gợi ý việc làm từ dữ liệu profile gửi trực tiếp (giống cũ)
-    @PostMapping("/jobs")
-    public ResponseEntity<List<JobMatchDto>> recommendJobs(@RequestBody iuh.fit.se.recommendation_service.dto.CandidateProfile candidate,
-                                                           @RequestParam(defaultValue = "10") int topK) {
-        try {
-            List<JobMatchDto> results = jobIndexService.recommendJobsForCandidate(candidate, topK);
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(List.of());
@@ -49,13 +41,24 @@ public class RecommendationController {
         }
     }
 
-    @PostMapping("/sync/job/{id}")
-    public ResponseEntity<String> syncJob(@PathVariable Long id) {
+    @PostMapping("/sync/candidates")
+    public ResponseEntity<String> syncAllCandidates() {
         try {
-            jobIndexService.syncJob(id);
-            return ResponseEntity.ok("Job " + id + " synced");
+            candidateIndexService.syncAllCandidates();
+            return ResponseEntity.ok("Candidates synced to Elasticsearch");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Sync failed: " + e.getMessage());
         }
     }
+
+    @GetMapping("/candidates/{jobId}")
+    public ResponseEntity<List<CandidateMatchDto>> recommendCandidates(@PathVariable Long jobId, @RequestParam(defaultValue = "20") int topK) {
+        try {
+            JobDto job = jobClient.getJobById(jobId);
+            return ResponseEntity.ok(candidateIndexService.recommendCandidatesForJob(job, topK));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(List.of());
+        }
+    }
+
 }

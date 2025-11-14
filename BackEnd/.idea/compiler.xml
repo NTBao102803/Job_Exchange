@@ -8,17 +8,16 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="admin_service" />
+        <module name="storage_service" />
         <module name="application_service" />
         <module name="payment_service" />
-        <module name="recommendation_service" />
-        <module name="cv_ai_service" />
-        <module name="match_candidate_service" />
-        <module name="storage_service" />
         <module name="notification_service" />
+        <module name="recommendation_service" />
         <module name="discovery_service" />
         <module name="chatbot_service" />
         <module name="job_service" />
         <module name="employer_service" />
+        <module name="cv_ai_service" />
       </profile>
       <profile name="Annotation profile for user_service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -50,6 +49,7 @@
     <bytecodeTargetLevel>
       <module name="candidate_matching_service" target="17" />
       <module name="config_service" target="17" />
+      <module name="match_candidate_service" target="17" />
       <module name="messaging_service" target="17" />
       <module name="search_service" target="17" />
     </bytecodeTargetLevel>
