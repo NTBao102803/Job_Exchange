@@ -25,3 +25,25 @@ export const syncAllJobs = async () => {
     throw error;
   }
 };
+
+// Lấy danh sách ứng viên phù hợp cho jobId
+export const getCandidatesForJob = async (jobId, topK) => {
+  try {
+    const response = await axiosClient.get(`/recommend/candidates/${jobId}?topK=${topK}`);
+    return response.data; // Danh sách CandidateMatchDto
+  } catch (error) {
+    console.error(`❌ Lỗi khi gọi API getCandidatesForJob(${jobId}):`, error);
+    throw error;
+  }
+};
+
+// Đồng bộ tất cả candidate từ MariaDB -> Elasticsearch
+export const syncAllCandidates = async () => {
+  try {
+    const response = await axiosClient.post(`/recommend/sync/candidates`);
+    return response.data; // "Synced candidates into Elasticsearch!"
+  } catch (error) {
+    console.error("❌ Lỗi khi gọi API syncAllCandidates:", error);
+    throw error;
+  }
+};

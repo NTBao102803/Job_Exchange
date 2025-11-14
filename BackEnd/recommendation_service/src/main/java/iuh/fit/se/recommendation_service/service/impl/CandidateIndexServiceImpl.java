@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,15 +54,27 @@ public class CandidateIndexServiceImpl implements CandidateIndexService {
         doc.put("id", String.valueOf(dto.getId()));
         doc.put("fullName", dto.getFullName());
         doc.put("email", dto.getEmail());
+        doc.put("phone", dto.getPhone());
+        doc.put("address", dto.getAddress());
+
+        // Skills → List để search chính xác
         doc.put("skills", Arrays.stream(dto.getSkills().split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList()));
+
         doc.put("experience", dto.getExperience());
         doc.put("major", dto.getMajor());
         doc.put("school", dto.getSchool());
-        doc.put("address", dto.getAddress());
+        doc.put("gpa", dto.getGpa());
+        doc.put("graduationYear", dto.getGraduationYear());
+        doc.put("certificates", dto.getCertificates());
+        doc.put("projects", dto.getProjects());
         doc.put("careerGoal", dto.getCareerGoal());
+        doc.put("dob", dto.getDob() != null ? dto.getDob().toString() : null);
+        doc.put("gender", dto.getGender());
+        doc.put("hobbies", dto.getHobbies());
+        doc.put("social", dto.getSocial());
         doc.put("embedding", emb);
 
         searchHelper.indexDocument("candidates", String.valueOf(dto.getId()), doc);
@@ -78,12 +91,26 @@ public class CandidateIndexServiceImpl implements CandidateIndexService {
             dto.setId(Long.valueOf(String.valueOf(hit.get("id"))));
             dto.setFullName((String) hit.get("fullName"));
             dto.setEmail((String) hit.get("email"));
+            dto.setPhone((String) hit.get("phone"));
+            dto.setAddress((String) hit.get("address"));
             dto.setSkills(toSkillsString(hit.get("skills")));
             dto.setExperience((String) hit.get("experience"));
             dto.setMajor((String) hit.get("major"));
             dto.setSchool((String) hit.get("school"));
-            dto.setAddress((String) hit.get("address"));
+            dto.setGpa((String) hit.get("gpa"));
+            dto.setGraduationYear((String) hit.get("graduationYear"));
+
+            dto.setCertificates((String) hit.get("certificates"));
+            dto.setProjects((String) hit.get("projects"));
             dto.setCareerGoal((String) hit.get("careerGoal"));
+
+            // Ngày sinh → LocalDate
+            Object dobObj = hit.get("dob");
+            dto.setDob(dobObj != null ? LocalDate.parse(dobObj.toString()) : null);
+
+            dto.setGender((String) hit.get("gender"));
+            dto.setHobbies((String) hit.get("hobbies"));
+            dto.setSocial((String) hit.get("social"));
 
             double score = Optional.ofNullable(hit.get("_score"))
                     .map(Object::toString).map(Double::parseDouble).orElse(0.0);

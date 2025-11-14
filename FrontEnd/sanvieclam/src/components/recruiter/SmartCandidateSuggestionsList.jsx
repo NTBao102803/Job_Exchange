@@ -5,7 +5,7 @@ import { getJobsByStatusByEmployer } from "../../api/RecruiterApi";
 import {
   getCandidatesForJob,
   syncAllCandidates,
-} from "../../api/MachCandidateApi";
+} from "../../api/RecommendationApi";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -69,39 +69,37 @@ const SmartCandidateSuggestionsList = () => {
   }, [currentPlan]);
 
   // ✅ Lấy danh sách ứng viên khi chọn job
-  useEffect(() => {
+useEffect(() => {
     if (!selectedJob || !currentPlan) return;
 
-    const fetchCandidate = async () => {
+    const fetchCandidates = async () => {
       setLoading(true);
-      console.log("🚀 Gọi API getCandidatesForJob với jobId:", selectedJob);
-
       try {
-        const res = await getCandidatesForJob(selectedJob);
-        const mappedCandidates = res.map((item, index) => {
-          const matchValue =
-            item.score != null
-              ? item.score.toFixed
-                ? item.score.toFixed(2) + "%"
-                : String(item.score)
-              : "N/A";
+        // GỌI ĐÚNG HÀM: getCandidatesForJob(jobId, topK)
+        const res = await getCandidatesForJob(selectedJob, 20); // topK=50 để đủ phân trang
 
-          return {
-            ...item.candidate,
-            match: matchValue,
-            score: item.score,
-          };
-        });
+        const formatMatchScore = (rawScore) => {
+          if (!rawScore || rawScore < 1.0) return "N/A";
+          const percentage = (rawScore - 1.0) * 100;
+          return `${Math.min(percentage, 100).toFixed(1)}%`;
+        };
+
+        const mappedCandidates = res.map((item) => ({
+          ...item.candidate,
+          match:
+            formatMatchScore(item.score)
+        }));
 
         setCandidates(mappedCandidates);
       } catch (err) {
-        console.error("❌ Lỗi load candidate:", err);
+        console.error("Lỗi load candidate:", err);
+        setCandidates([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCandidate();
+    fetchCandidates();
   }, [selectedJob, currentPlan]);
 
   // ✅ Phân trang

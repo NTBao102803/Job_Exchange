@@ -16,8 +16,8 @@ public class CandidateDto {
     private String phone;
     private String address;
 
-    private String skills;       // lưu text (VD: "Java, Spring Boot, MySQL")
-    private String experience;   // text mô tả kinh nghiệm (VD: "2 năm Java")
+    private String skills;
+    private String experience;
     private String major;
     private String school;
     private String gpa;
