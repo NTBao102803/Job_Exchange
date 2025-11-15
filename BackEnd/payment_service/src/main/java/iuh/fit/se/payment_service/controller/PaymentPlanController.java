@@ -1,8 +1,11 @@
 package iuh.fit.se.payment_service.controller;
 
 import iuh.fit.se.payment_service.dto.CurrentSubscriptionDTO;
+import iuh.fit.se.payment_service.dto.SubscriptionDTO;
 import iuh.fit.se.payment_service.entity.PaymentPlan;
+import iuh.fit.se.payment_service.entity.Subscription;
 import iuh.fit.se.payment_service.repository.PaymentPlanRepository;
+import iuh.fit.se.payment_service.repository.SubscriptionRepository;
 import iuh.fit.se.payment_service.service.SubscriptionService;
 import iuh.fit.se.payment_service.config.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -21,16 +24,13 @@ public class PaymentPlanController {
     private final PaymentPlanRepository planRepo;
     private final SubscriptionService subscriptionService;
     private final JwtUtil jwtUtil;
+    private final SubscriptionRepository subRepo;
 
     @GetMapping
     public List<PaymentPlan> all() {
         return planRepo.findAll();
     }
 
-    @GetMapping("/{id}")
-    public PaymentPlan getOne(@PathVariable Long id) {
-        return planRepo.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
-    }
 
     @GetMapping("/current/{recruiterId}")
     public ResponseEntity<?> getCurrentPlanByRecruiterId(@PathVariable Long recruiterId) {
@@ -43,5 +43,10 @@ public class PaymentPlanController {
                     .body("Lỗi khi lấy gói hiện tại: " + e.getMessage());
         }
     }
+    @GetMapping("/subscriptions")
+    public ResponseEntity<List<SubscriptionDTO>> getAllSubscriptionsDTO() {
+        return ResponseEntity.ok(subscriptionService.getAllSubscriptionDTOs());
+    }
+
 
 }
