@@ -1,137 +1,284 @@
-// src/components/RecruiterMessenger.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Send, Search, MoreHorizontal } from "lucide-react";
+import {
+  connectWebSocket,
+  subscribeConversation,
+  sendMessageWS,
+} from "../../services/socket.js";
+import {
+  getConversations,
+  getMessagesByConversation,
+} from "../../api/messageApi.jsx";
+import {getEmployerProfile} from "../../api/RecruiterApi";
 
 const RecruiterMessenger = () => {
+  const [recruiterId, setRecruiterId] = useState(null);
+  const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Danh sách ứng viên mẫu
-  const conversations = [
-    {
-      id: 1,
-      name: "Nguyễn Văn A",
-      lastMessage: "Cảm ơn anh đã phản hồi!",
-      time: "1 giờ trước",
-      unread: 1,
-      avatar: "/default-user.png",
-      messages: [
-        { from: "candidate", text: "Xin chào, tôi đã nộp hồ sơ.", time: "09:30" },
-        { from: "me", text: "Cảm ơn bạn, chúng tôi sẽ liên hệ sớm.", time: "09:35" },
-      ],
-    },
-    {
-      id: 2,
-      name: "Trần Thị B",
-      lastMessage: "Tôi rất quan tâm vị trí này.",
-      time: "Hôm qua",
-      unread: 0,
-      avatar: "/default-user.png",
-      messages: [
-        { from: "candidate", text: "Tôi rất quan tâm vị trí này.", time: "14:00" },
-      ],
-    },
-  ];
+  const subscriptionRef = useRef(null);
+  const stompClientRef = useRef(null); // Lưu stompClient
 
-  const filteredConversations = conversations.filter((c) => {
-    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === "unread" ? c.unread > 0 : true;
-    return matchSearch && matchFilter;
-  });
+  const token = localStorage.getItem("token");
+  console.log("RecruiterMessenger - Token:", !!token);
+  const loadRecruiterId = async () => {
+    try {
+      const data = await getEmployerProfile();
+      if (data?.id) {
+        setRecruiterId(data.id);
+        console.log("Recruiter ID loaded:", data.id);
+      }
+    } catch (error) {
+      console.error("Lỗi lấy employer profile:", error);
+    }
+  };
 
+  useEffect(() => {
+    loadRecruiterId();
+  }, []);
+  // LOG 2: WebSocket kết nối
+  useEffect(() => {
+    if (token) {
+      console.log("Kết nối WebSocket với token:", token.substring(0, 20) + "...");
+      connectWebSocket(
+        token,
+        () => {
+          console.log("WebSocket connected");
+          stompClientRef.current = window.stompClient; // Lấy từ global nếu cần
+        },
+        (err) => console.error("WebSocket error:", err)
+      );
+    } else {
+      console.warn("Không có token → Không kết nối WebSocket");
+    }
+  }, [token]);
+
+  /** LOAD danh sách hội thoại */
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log("Bắt đầu gọi API: GET /api/messages/conversations");
+      const data = await getConversations();
+
+      console.log("API Response (raw):", data);
+
+      if (!Array.isArray(data)) {
+        throw new Error("Dữ liệu hội thoại không hợp lệ");
+      }
+
+      const mapped = data.map((c) => ({
+        id: c.id,
+        otherName: c.otherUserName || "Ẩn danh",           // ĐÚNG FIELD
+        avatar: c.otherUserAvatar || "https://i.pravatar.cc/150?img=3",
+        lastMessage: c.lastMessage || "Chưa có tin nhắn",
+        lastMessageAt: c.lastMessageAt,
+        unread: c.unreadCount || 0,                    // ĐÚNG FIELD
+      }));
+
+      setConversations(mapped);
+      console.log("Tổng số hội thoại:", mapped.length);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách hội thoại:", error);
+      setError("Không thể tải danh sách chat. Vui lòng kiểm tra kết nối hoặc đăng nhập lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** LOAD tin nhắn */
+  const loadMessages = async (id) => {
+    try {
+      console.log(`Tải tin nhắn cho conversation ID: ${id}`);
+      const data = await getMessagesByConversation(id);
+
+      console.log("Tin nhắn thô:", data);
+
+      const mapped = data.map((m) => ({
+        id: m.id,
+        content: m.content,
+        senderId: m.senderId,
+        fromSelf: m.fromSelf,                          // DÙNG TỪ BACKEND
+        time: m.createdAt,
+        avatar: m.senderAvatar || "https://i.pravatar.cc/150?img=5",
+      }));
+
+      console.log("Tin nhắn sau map:", mapped);
+      setMessages(mapped);
+    } catch (error) {
+      console.error("Lỗi tải tin nhắn:", error);
+    }
+  };
+
+  /** Khi chọn chat */
+  const handleSelectChat = async (conv) => {
+    console.log("Chọn conversation:", conv);
+    setSelectedChat(conv);
+
+    // 1. GỌI /app/chat.open → đánh dấu đã đọc + load tin nhắn
+    if (stompClientRef.current?.connected) {
+      stompClientRef.current.publish({
+        destination: "/app/chat.open",
+        body: JSON.stringify({ conversationId: conv.id }),
+      });
+      console.log("Gửi /app/chat.open cho conv:", conv.id);
+    } else {
+      console.warn("WebSocket chưa kết nối → dùng REST");
+    }
+
+    // 2. Load tin nhắn qua REST
+    await loadMessages(conv.id);
+
+    // 3. Hủy subscribe cũ
+    if (subscriptionRef.current) {
+      console.log("Hủy subscribe cũ");
+      subscriptionRef.current.unsubscribe();
+    }
+
+    // 4. Subscribe real-time
+    console.log("Đăng ký WebSocket cho conversation:", conv.id);
+    subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
+      console.log("Tin nhắn mới từ WebSocket:", msg);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: msg.id,
+          content: msg.content,
+          fromSelf: msg.fromSelf,                  // DÙNG TỪ BACKEND
+          time: msg.createdAt,
+          avatar: msg.senderAvatar,
+        },
+      ]);
+    });
+  };
+
+  /** Gửi tin nhắn */
   const handleSend = (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
-    const updated = { ...selectedChat };
-    updated.messages = [
-      ...updated.messages,
-      { from: "me", text: message.trim(), time: "Bây giờ" },
-    ];
-    updated.lastMessage = message.trim();
-    setSelectedChat(updated);
+    console.log("Gửi tin nhắn:", { conversationId: selectedChat.id, content: message.trim() });
+    sendMessageWS(selectedChat.id, message.trim());
+
+    // Optimistic UI
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        content: message.trim(),
+        fromSelf: true,
+        time: new Date().toISOString(),
+        avatar: "https://i.pravatar.cc/150?img=3", // avatar của recruiter
+      },
+    ]);
+
     setMessage("");
   };
 
-  const handleSelectChat = (conv) => setSelectedChat({ ...conv, unread: 0 });
+  // Tải danh sách khi mount
+  useEffect(() => {
+    console.log("Component mount → Tải danh sách hội thoại");
+    loadConversations();
+  }, []);
+
+  // Lọc danh sách
+  const filtered = conversations.filter((c) => {
+    const matchSearch = c.otherName.toLowerCase().includes(search.toLowerCase());
+    const matchFilter = filter === "unread" ? c.unread > 0 : true;
+    return matchSearch && matchFilter;
+  });
+
+  // Format thời gian
+  const formatTime = (isoString) => {
+    if (!isoString) return "";
+    return new Date(isoString).toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  console.log("Danh sách sau lọc:", filtered.length);
 
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-indigo-200/60 via-white/70 to-purple-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
 
-        {/* DANH SÁCH ỨNG VIÊN */}
-        <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-purple-300/70 via-purple-200/60 to-white/70 backdrop-blur-md relative">
+        {/* DANH SÁCH */}
+        <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-purple-300/70 via-purple-200/60 to-white/70 backdrop-blur-md">
+
           {/* Header */}
           <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
-            <MoreHorizontal className="text-gray-500 cursor-pointer hover:text-gray-700 transition" />
+            <MoreHorizontal className="text-gray-500 cursor-pointer" />
           </div>
 
-          {/* Filter buttons */}
-          <div className="flex justify-around border-b border-white/40 text-sm font-medium text-gray-600 bg-white/40 backdrop-blur-sm">
+          {/* Filter */}
+          <div className="flex justify-around border-b border-white/40 text-sm font-medium text-gray-600 bg-white/40">
             <button
-              className={`w-1/2 py-2 transition ${
-                filter === "all"
-                  ? "border-b-2 border-purple-600 text-purple-600 font-semibold"
-                  : "hover:text-gray-800"
-              }`}
+              className={`w-1/2 py-2 ${filter === "all" ? "border-b-2 border-purple-600 text-purple-600" : ""}`}
               onClick={() => setFilter("all")}
             >
               Tất cả
             </button>
             <button
-              className={`w-1/2 py-2 transition ${
-                filter === "unread"
-                  ? "border-b-2 border-purple-600 text-purple-600 font-semibold"
-                  : "hover:text-gray-800"
-              }`}
+              className={`w-1/2 py-2 ${filter === "unread" ? "border-b-2 border-purple-600 text-purple-600" : ""}`}
               onClick={() => setFilter("unread")}
             >
               Chưa đọc
             </button>
           </div>
 
-          {/* Search box */}
+          {/* Search */}
           <div className="p-3">
-            <div className="flex items-center bg-white/70 rounded-full px-3 py-2 shadow-inner backdrop-blur-sm border border-white/30">
+            <div className="flex items-center bg-white/70 rounded-full px-3 py-2 shadow-inner">
               <Search size={18} className="text-gray-500" />
               <input
                 type="text"
                 placeholder="Tìm kiếm ứng viên..."
-                className="bg-transparent flex-1 ml-2 outline-none text-sm text-gray-700 placeholder-gray-500"
+                className="bg-transparent flex-1 ml-2 outline-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
 
-          {/* List */}
-          <div className="overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-gray-300/60 scrollbar-track-transparent p-2">
-            {filteredConversations.map((conv) => (
+          {/* LIST */}
+          <div className="overflow-y-auto flex-1 p-2">
+            {filtered.map((conv) => (
               <div
                 key={conv.id}
                 onClick={() => handleSelectChat(conv)}
-                className={`relative flex items-center gap-3 p-3 cursor-pointer transition rounded-xl mx-1 mb-2 ${
+                className={`relative flex items-center gap-3 p-3 cursor-pointer rounded-xl mx-1 mb-2 ${
                   selectedChat?.id === conv.id
-                    ? "bg-purple-500/20 border border-purple-400/40 shadow-inner"
+                    ? "bg-purple-500/20 border border-purple-400"
                     : "hover:bg-white/40"
                 }`}
               >
                 <img
                   src={conv.avatar}
-                  alt={conv.name}
-                  className="w-12 h-12 rounded-full object-cover border border-white shadow-md"
+                  className="w-12 h-12 rounded-full object-cover border"
                 />
+
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate text-gray-800">{conv.name}</p>
-                  <p className="text-sm text-gray-500 truncate">{conv.lastMessage}</p>
+                  <p className="font-semibold truncate">{conv.otherName}</p>
+                  <p className="text-sm text-gray-500 truncate">
+                    {conv.lastMessage}
+                  </p>
                 </div>
+
                 <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs text-gray-400 whitespace-nowrap">{conv.time}</span>
+                  <span className="text-xs text-gray-400">
+                    {formatTime(conv.lastMessageAt)}
+                  </span>
                   {conv.unread > 0 && (
-                    <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                       {conv.unread}
                     </span>
                   )}
@@ -139,75 +286,61 @@ const RecruiterMessenger = () => {
               </div>
             ))}
           </div>
-
-          {/* Gradient fade bottom */}
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white/80 to-transparent pointer-events-none" />
         </div>
 
         {/* KHUNG CHAT */}
-        <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-purple-100/80 to-indigo-200/70 backdrop-blur-md relative">
+        <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-purple-100/80 to-indigo-200/70">
           {selectedChat ? (
             <>
-              {/* Header */}
-              <div className="flex items-center gap-3 p-4 border-b border-white/40 bg-gradient-to-r from-purple-50/80 to-white/80 backdrop-blur-lg shadow">
+              <div className="flex items-center gap-3 p-4 border-b border-white/40">
                 <img
                   src={selectedChat.avatar}
-                  alt={selectedChat.name}
-                  className="w-10 h-10 rounded-full object-cover border border-white shadow-md"
+                  className="w-10 h-10 rounded-full border"
                 />
                 <div>
-                  <p className="font-semibold text-gray-800">{selectedChat.name}</p>
-                  <p className="text-xs text-green-500 font-medium">Đang hoạt động</p>
+                  <p className="font-semibold">{selectedChat.otherName}</p>
+                  <p className="text-xs text-green-500">Đang hoạt động</p>
                 </div>
               </div>
 
-              {/* Nội dung */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                {selectedChat.messages.map((m, i) => (
-                  <div key={i} className={`flex ${m.from === "me" ? "justify-end" : "justify-start"}`}>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={`flex ${m.fromSelf ? "justify-end" : "justify-start"}`}
+                  >
                     <div
-                      className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm shadow-md transition-all duration-300 ${
-                        m.from === "me"
-                          ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-br-none shadow-purple-300/50"
-                          : "bg-white/80 text-gray-800 rounded-bl-none shadow-gray-200/60"
+                      className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm shadow ${
+                        m.fromSelf
+                          ? "bg-purple-600 text-white"
+                          : "bg-white text-gray-800"
                       }`}
                     >
-                      {m.text}
-                      <div
-                        className={`text-[10px] mt-1 text-right ${
-                          m.from === "me" ? "text-purple-100" : "text-gray-500"
-                        }`}
-                      >
-                        {m.time}
+                      {m.content}
+                      <div className="text-[10px] mt-1 text-right opacity-70">
+                        {formatTime(m.time)}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Input box */}
-              <form
-                onSubmit={handleSend}
-                className="p-4 border-t border-white/40 bg-white/70 backdrop-blur-md flex items-center gap-3 shadow-inner"
-              >
+              <form onSubmit={handleSend} className="p-4 border-t flex items-center gap-3">
                 <input
                   type="text"
                   placeholder="Nhập tin nhắn..."
-                  className="flex-1 border border-gray-300/40 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-400 bg-white/60 backdrop-blur-sm shadow-sm"
+                  className="flex-1 border rounded-full px-4 py-2"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
-                <button
-                  type="submit"
-                  className="p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition shadow-md hover:shadow-purple-400/40"
-                >
+                <button className="p-2 bg-purple-600 text-white rounded-full">
                   <Send size={18} />
                 </button>
               </form>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-400 text-lg font-medium">
-              💬 Chọn một ứng viên để bắt đầu
+            <div className="flex-1 flex items-center justify-center text-gray-500">
+              Chọn một ứng viên để bắt đầu
             </div>
           )}
         </div>

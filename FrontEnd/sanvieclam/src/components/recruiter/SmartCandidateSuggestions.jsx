@@ -4,7 +4,7 @@ import { Sparkles, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CandidateProfileModal from "../candidate/CandidateProfileModal";
 import { getJobsByStatus } from "../../api/RecruiterApi";
-import { getCandidatesForJob } from "../../api/MachCandidateApi";
+import { getCandidatesForJob, syncAllCandidates } from "../../api/RecommendationApi";
 import axios from "axios";
 
 const SmartCandidateSuggestions = () => {
@@ -36,34 +36,48 @@ const SmartCandidateSuggestions = () => {
   // 👉 Lấy danh sách ứng viên nếu có gói dịch vụ
   useEffect(() => {
     if (!currentPlan) return;
-    const fetchData = async () => {
+
+    const fetchAndSyncCandidates = async () => {
       setLoading(true);
       try {
-        const jobs = await getJobsByStatus("APPROVED");
-        if (jobs.length > 0) {
-          const newestJob = [...jobs].sort(
-            (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-          )[0];
 
-          const res = await getCandidatesForJob(newestJob.id);
-          const mapped = res.map((item) => ({
-            ...item.candidate,
-            match:
-              item.score != null
-                ? item.score.toFixed
-                  ? item.score.toFixed(2) + "%"
-                  : String(item.score)
-                : "N/A",
-          }));
-          setCandidates(mapped);
+        await syncAllCandidates(); // GỌI API SYNC
+
+    
+        const jobs = await getJobsByStatus("APPROVED");
+        if (jobs.length === 0) {
+          setCandidates([]);
+          return;
         }
+        const formatMatchScore = (rawScore) => {
+          if (!rawScore || rawScore < 1.0) return "N/A";
+          const percentage = (rawScore - 1.0) * 100;
+          return `${Math.min(percentage, 100).toFixed(1)}%`;
+        };
+
+        const newestJob = [...jobs].sort(
+          (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+        )[0];
+
+        // BƯỚC 3: GỌI GỢI Ý VỚI topK=20
+        const res = await getCandidatesForJob(newestJob.id, 20); // GỌI ĐÚNG HÀM
+
+        const mapped = res.map((item) => ({
+          ...item.candidate,
+          match:
+            formatMatchScore(item.score)
+        }));
+
+        setCandidates(mapped);
       } catch (err) {
-        console.error("❌ Lỗi load SmartCandidateSuggestions:", err);
+        console.error("Lỗi load SmartCandidateSuggestions:", err);
+        setCandidates([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+
+    fetchAndSyncCandidates();
   }, [currentPlan]);
 
   return (
