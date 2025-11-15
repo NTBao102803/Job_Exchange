@@ -12,9 +12,10 @@ public record MessageDto(
         String content,
         boolean isRead,
         LocalDateTime createdAt,
-        String senderAvatar  // THÊM
+        String senderAvatar,  // THÊM
+        boolean fromSelf
 ) {
-    public static MessageDto from(Message m, String avatar) {
+    public static MessageDto from(Message m, String avatar, boolean fromSelf) {
         return new MessageDto(
                 m.getId(),
                 m.getConversationId(),
@@ -23,7 +24,8 @@ public record MessageDto(
                 m.getContent(),
                 m.isRead(),
                 m.getCreatedAt(),
-                avatar
+                avatar,
+                fromSelf
         );
     }
 }

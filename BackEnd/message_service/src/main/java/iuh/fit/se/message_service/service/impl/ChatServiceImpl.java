@@ -12,6 +12,7 @@ import iuh.fit.se.message_service.repository.ConversationRepository;
 import iuh.fit.se.message_service.repository.MessageRepository;
 import iuh.fit.se.message_service.repository.UnreadCountRepository;
 import iuh.fit.se.message_service.service.ChatService;
+import iuh.fit.se.message_service.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 public class ChatServiceImpl implements ChatService {
 
@@ -35,16 +35,7 @@ public class ChatServiceImpl implements ChatService {
     private final EmployerClient employerClient;
     private final UserClient candidateClient;
     private final StorageClient storageClient;
-
-
-
-    @Override
-    public void markAsRead(Long convId, Long userId, String userType) {
-        String senderType = "CANDIDATE".equals(userType) ? "EMPLOYER" : "CANDIDATE";
-        msgRepo.markAsRead(convId, userId); // senderId != userId → là tin nhắn người kia gửi
-        unreadRepo.resetCount(convId, userId, userType);
-    }
-
+    private final MessageService messageService;
 
 
     @Override
@@ -71,74 +62,31 @@ public class ChatServiceImpl implements ChatService {
             log.debug("JOB ADDED | jobId: {} → conv: {}", jobId, conv.getId());
         }
 
-        int unread = getUnreadCount(conv.getId(), "CANDIDATE", candidateId);
-        return toConversationDTO(conv, unread, "CANDIDATE", candidateId);
+        int unread = getUnreadCount(conv.getId(), "USER", candidateId);
+        return toConversationDTO(conv, unread, "USER", candidateId);
     }
 
     @Override
-    public List<MessageDto> getMessages(Long conversationId) {
-        log.info("GET MESSAGES | conv: {}", conversationId);
+    public List<MessageDto> getMessages(Long conversationId, Long userId, String userType) {
+        log.info("GET MESSAGES | conv: {}, user: {} ({})", conversationId, userId, userType);
+
+        // ĐÁNH DẤU ĐÃ ĐỌC
+        messageService.markAsRead(conversationId, userId, userType);
+
         return msgRepo.findByConversationIdOrderByCreatedAtAsc(conversationId).stream()
                 .map(m -> {
-                    String avatar = storageClient.getAvatarUrl(m.getSenderId()); // Success
-                    return MessageDto.from(m, avatar);
+                    String avatar = storageClient.getAvatarUrl(m.getSenderId());
+                    boolean fromSelf = m.getSenderId().equals(userId);
+                    return MessageDto.from(m, avatar, fromSelf);
                 })
                 .toList();
-    }
-
-    @Override
-    public Message saveMessage(MessageDto dto) {
-        log.debug("saveMessage | conv: {}, sender: {}", dto.conversationId(), dto.senderId());
-        Conversation conv = convRepo.findById(dto.conversationId())
-                .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
-
-        if (!dto.senderId().equals(conv.getCandidateId()) && !dto.senderId().equals(conv.getEmployerId())) {
-            log.warn("SECURITY VIOLATION | sender {} not in conv {}", dto.senderId(), conv.getId());
-            throw new SecurityException("Not part of this conversation");
-        }
-
-        Message msg = Message.builder()
-                .conversationId(dto.conversationId())
-                .senderId(dto.senderId())
-                .senderType(dto.senderType())
-                .content(dto.content())
-                .build();
-        msg = msgRepo.save(msg);
-        log.info("MESSAGE SAVED | id: {}", msg.getId());
-
-        conv.setLastMessage(dto.content());
-        conv.setLastMessageAt(LocalDateTime.now());
-        convRepo.save(conv);
-
-        String receiverType = "CANDIDATE".equals(dto.senderType()) ? "EMPLOYER" : "CANDIDATE";
-        Long receiverId = "CANDIDATE".equals(dto.senderType()) ? conv.getEmployerId() : conv.getCandidateId();
-
-        unreadRepo.findByConversationIdAndUserIdAndUserType(dto.conversationId(), receiverId, receiverType)
-                .ifPresentOrElse(
-                        uc -> {
-                            uc.setCount(uc.getCount() + 1);
-                            unreadRepo.save(uc);
-                            log.debug("UNREAD++ | {} → {}", receiverId, uc.getCount());
-                        },
-                        () -> {
-                            unreadRepo.save(UnreadCount.builder()
-                                    .conversationId(dto.conversationId())
-                                    .userId(receiverId)
-                                    .userType(receiverType)
-                                    .count(1)
-                                    .build());
-                            log.debug("UNREAD INIT | {} = 1", receiverId);
-                        }
-                );
-
-        return msg;
     }
 
     @Override
     public List<ConversationDto> getConversations(String userType, Long userId) {
         log.info("getConversations | {}:{}", userType, userId);
         return convRepo.findAll().stream()
-                .filter(c -> "CANDIDATE".equals(userType)
+                .filter(c -> "USER".equals(userType)
                         ? c.getCandidateId().equals(userId)
                         : c.getEmployerId().equals(userId))
                 .map(c -> toConversationDTO(c, getUnreadCount(c.getId(), userType, userId), userType, userId))
@@ -149,7 +97,7 @@ public class ChatServiceImpl implements ChatService {
         String otherName;
         String otherAvatar;
 
-        if ("CANDIDATE".equals(viewerType)) {
+        if ("USER".equals(viewerType)) {
             var employer = employerClient.getEmployerById(c.getEmployerId());
             otherName = employer.getCompanyName();
             otherAvatar = storageClient.getAvatarUrl(c.getEmployerId()); // Success
@@ -173,7 +121,7 @@ public class ChatServiceImpl implements ChatService {
         unreadRepo.save(UnreadCount.builder()
                 .conversationId(conv.getId())
                 .userId(conv.getCandidateId())
-                .userType("CANDIDATE")
+                .userType("USER")
                 .count(0)
                 .build());
         unreadRepo.save(UnreadCount.builder()

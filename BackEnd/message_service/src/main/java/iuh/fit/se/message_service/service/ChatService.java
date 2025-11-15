@@ -12,9 +12,6 @@ public interface ChatService {
 
     List<ConversationDto> getConversations(String userType, Long userId);
 
-    List<MessageDto> getMessages(Long conversationId);
+    List<MessageDto> getMessages(Long conversationId, Long userId, String userType);
 
-    Message saveMessage(MessageDto messageDTO);
-
-    void markAsRead(Long conversationId, Long userId, String userType);
 }

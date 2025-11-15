@@ -22,7 +22,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // WebSocket endpoint
-                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/ws-messages/**").permitAll()
 
                         // API chat: chỉ cần đăng nhập (có JWT)
                         .requestMatchers("/api/messages/**").authenticated()

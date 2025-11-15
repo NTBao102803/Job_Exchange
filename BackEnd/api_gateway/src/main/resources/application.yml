@@ -85,13 +85,12 @@ spring:
 
         # ============ WEBSOCKET ROUTE ============
         - id: message-ws
-          uri: ws://message-service
+          uri: lb://message-service
           predicates:
             - Path=/ws-messages/**
           filters:
-            - PreserveHostHeader=true
+            - RemoveRequestHeader=Sec-WebSocket-Protocol
             - RemoveRequestHeader=Sec-WebSocket-Extensions
-            - AddRequestHeader=Sec-WebSocket-Protocol, jwt
 
 
         - id: notification-ws

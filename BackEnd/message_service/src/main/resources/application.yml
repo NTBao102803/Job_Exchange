@@ -56,6 +56,9 @@ feign:
         connectTimeout: 5000
         readTimeout: 5000
 
+        request-interceptors:
+          - iuh.fit.se.message_service.config.FeignTokenInterceptor
+
 # === Logging ===
 logging:
   level:
