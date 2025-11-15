@@ -78,7 +78,22 @@ spring:
           predicates:
             - Path=/api/notifications/**
 
+        - id: message-service
+          uri: lb://message-service
+          predicates:
+            - Path=/api/messages/**
+
         # ============ WEBSOCKET ROUTE ============
+        - id: message-ws
+          uri: ws://message-service
+          predicates:
+            - Path=/ws-messages/**
+          filters:
+            - PreserveHostHeader=true
+            - RemoveRequestHeader=Sec-WebSocket-Extensions
+            - AddRequestHeader=Sec-WebSocket-Protocol, jwt
+
+
         - id: notification-ws
           uri: lb://notification-service
           predicates:

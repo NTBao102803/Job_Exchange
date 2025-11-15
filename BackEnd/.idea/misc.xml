@@ -25,6 +25,7 @@
         <option value="$PROJECT_DIR$/cv_ai_service/pom.xml" />
         <option value="$PROJECT_DIR$/payment_service/pom.xml" />
         <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/message_service/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">

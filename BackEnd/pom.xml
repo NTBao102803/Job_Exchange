@@ -30,6 +30,7 @@
         <module>recommendation_service</module>
         <module>storage_service</module>
         <module>user_service</module>
+        <module>message_service</module>
     </modules>
 
     <!-- ==== Quản lý dependency versions tập trung ==== -->
