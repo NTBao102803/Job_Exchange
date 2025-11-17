@@ -1,13 +1,15 @@
 // src/pages/RecruiterPage.jsx
 import React, { useState, useEffect, useRef, memo } from "react";
-import { MapPin, Users, Building2, MessageSquare, Star, Send } from "lucide-react";
+import { MapPin, Users, Building2, MessageSquare, Star, Send,Pencil } from "lucide-react";
 import { getEmployerProfile, getAllJobsByEmail, getAvatarUrl } from "../../api/RecruiterApi";
 import { getCommentsByEmployer, submitComment } from "../../api/CommentApi";
 import JobPreviewModal from "./JobPreviewModal";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import { useNavigate } from "react-router-dom";
 
 const RecruiterPage = () => {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const recruiterId = user?.id;
 
@@ -209,10 +211,19 @@ const RecruiterPage = () => {
   return (
     <div className="max-w-6xl mx-auto p-6 pt-32 font-sans bg-gray-50 min-h-screen">
       {/* HEADER */}
-      <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-6 mb-8 flex flex-col md:flex-row items-center gap-6">
-        <img src={avatar || "/default-company.png"} alt="Logo" className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-2xl" />
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-6 mb-8 flex flex-col md:flex-row items-center gap-6 justify-between">
+  
+      {/* LEFT: Avatar + Info */}
+      <div className="flex flex-col md:flex-row items-center gap-6 flex-1">
+        <img
+          src={avatar || "/default-company.png"}
+          alt="Logo"
+          className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-2xl"
+        />
+
         <div className="text-center md:text-left flex-1">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">{recruiter.companyName}</h1>
+
           <div className="flex items-center justify-center md:justify-start gap-1 mb-3">
             {companyRating !== 0 ? (
               <>
@@ -225,6 +236,7 @@ const RecruiterPage = () => {
               <span className="text-md font-medium text-gray-500 ml-2">Chưa có đánh giá</span>
             )}
           </div>
+
           <div className="flex flex-wrap justify-center md:justify-start gap-4 text-gray-600 text-sm">
             <span className="flex items-center gap-1"><Building2 size={18}/> {recruiter.companyField || "Chưa cập nhật"}</span>
             <span className="flex items-center gap-1"><Users size={18}/> {recruiter.companySize || "0-20"}</span>
@@ -232,6 +244,18 @@ const RecruiterPage = () => {
           </div>
         </div>
       </div>
+
+  {/* RIGHT: Edit Button */}
+  <button
+    onClick={() => navigate("/recruiter/recruiterprofile")}
+    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl shadow-md transition"
+  >
+    <Pencil size={18} />
+    Chỉnh sửa
+  </button>
+
+</div>
+
 
       {/* TAB */}
       <div className="flex border-b-2 border-gray-300 mb-8">

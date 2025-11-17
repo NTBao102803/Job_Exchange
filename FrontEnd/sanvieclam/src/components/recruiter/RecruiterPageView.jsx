@@ -1,7 +1,7 @@
 // src/pages/RecruiterPage.jsx
 import React, { useState, useEffect, useRef, memo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MapPin, Users, Building2, MessageSquare, Star, Send } from "lucide-react";
+import { MapPin, Users, Building2, MessageSquare, Star, Send, MessageCircle} from "lucide-react";
 import { getEmployerById, getAvatarUrl } from "../../api/RecruiterApi";
 import { getAllPublicJobs } from "../../api/JobApi";
 import { getCommentsByEmployer, submitCandidateComment } from "../../api/CommentApi";
@@ -230,23 +230,32 @@ const RecruiterPageView = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 pt-32 font-sans bg-gray-50 min-h-screen">
-      {/* HEADER */}
-      <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-6 mb-8 flex flex-col md:flex-row items-center gap-6">
-        <img src={avatar || "/default-company.png"} alt="Logo" className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-2xl" />
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-6 mb-8 flex flex-col md:flex-row items-center gap-6 justify-between">
+  
+      {/* LEFT: Avatar + Info */}
+      <div className="flex flex-col md:flex-row items-center gap-6 flex-1">
+        <img
+          src={avatar || "/default-company.png"}
+          alt="Logo"
+          className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-2xl"
+        />
+
         <div className="text-center md:text-left flex-1">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">{recruiter.companyName}</h1>
+
           <div className="flex items-center justify-center md:justify-start gap-1 mb-3">
-                      {companyRating !== 0 ? (
-                        <>
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={18} fill={i < companyRating ? "#facc15" : "#e5e7eb"} />
-                          ))}
-                          <span className="text-md font-medium text-gray-700 ml-2">{companyRating} / 5</span>
-                        </>
-                      ) : (
-                        <span className="text-md font-medium text-gray-500 ml-2">Chưa có đánh giá</span>
-                      )}
-                    </div>
+            {companyRating !== 0 ? (
+              <>
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={18} fill={i < companyRating ? "#facc15" : "#e5e7eb"} />
+                ))}
+                <span className="text-md font-medium text-gray-700 ml-2">{companyRating} / 5</span>
+              </>
+            ) : (
+              <span className="text-md font-medium text-gray-500 ml-2">Chưa có đánh giá</span>
+            )}
+          </div>
+
           <div className="flex flex-wrap justify-center md:justify-start gap-4 text-gray-600 text-sm">
             <span className="flex items-center gap-1"><Building2 size={18}/> {recruiter.companyField || "Chưa cập nhật"}</span>
             <span className="flex items-center gap-1"><Users size={18}/> {recruiter.companySize || "0-20"}</span>
@@ -254,6 +263,17 @@ const RecruiterPageView = () => {
           </div>
         </div>
       </div>
+
+  {/* RIGHT: Edit Button */}
+  <button
+    onClick={() => navigate("/candidate/dashboard-candidatemessenger")}
+    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl shadow-md transition"
+  >
+    <MessageCircle size={18} />
+    Nhắn tin
+  </button>
+
+</div>
 
       {/* TAB */}
       <div className="flex border-b-2 border-gray-300 mb-8">

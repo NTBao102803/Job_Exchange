@@ -10,7 +10,7 @@ import {
   User,
   Mail,
   Phone,
-  X,
+  X,MessageCircle
 } from "lucide-react";
 import { getEmployerById } from "../../api/JobApi";
 import { applyJob } from "../../api/ApplicationApi";
@@ -234,12 +234,23 @@ const JobDetail = () => {
             >
               <ArrowLeft className="w-4 h-4" /> Quay lại
             </button>
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg shadow hover:from-indigo-600 hover:to-purple-600 transition font-medium"
-            >
-              Ứng tuyển ngay
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate("/candidate/dashboard-candidatemessenger")}
+                className="flex x-6 py-3 items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl shadow-md transition"
+              >
+                <MessageCircle size={18} />
+                Nhắn tin
+              </button>
+
+              <button
+                onClick={() => setShowModal(true)}
+                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg shadow hover:from-indigo-600 hover:to-purple-600 transition font-medium"
+              >
+                Ứng tuyển ngay
+              </button>
+            </div>
+
           </div>
         </div>
       </div>
