@@ -76,7 +76,11 @@ public class ChatServiceImpl implements ChatService {
         return msgRepo.findByConversationIdOrderByCreatedAtAsc(conversationId).stream()
                 .map(m -> {
                     String avatar = storageClient.getAvatarUrl(m.getSenderId());
-                    boolean fromSelf = m.getSenderId().equals(userId);
+                    boolean isSameId = m.getSenderId().equals(userId);
+                    boolean isSameType = m.getSenderType().equals(userType);
+
+                    // Chỉ là tin nhắn của chính mình nếu ID và TYPE đều khớp
+                    boolean fromSelf = isSameId && isSameType;
                     return MessageDto.from(m, avatar, fromSelf);
                 })
                 .toList();
