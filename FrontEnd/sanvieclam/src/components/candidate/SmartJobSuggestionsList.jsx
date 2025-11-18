@@ -36,12 +36,6 @@ const SmartJobSuggestionsList = () => {
 
       console.log("📦 Response từ API:", res);
 
-      const formatMatchScore = (rawScore) => {
-        if (!rawScore || rawScore < 1.0) return "N/A";
-        const percentage = (rawScore - 1.0) * 100;
-        return `${Math.min(percentage, 100).toFixed(1)}%`;
-      };
-
       // Duyệt qua từng job, đồng thời gọi thêm API lấy thông tin employer
       const mappedJobs = await Promise.all(
         res.map(async (item) => {
@@ -67,7 +61,7 @@ const SmartJobSuggestionsList = () => {
             location: job.location || "Không rõ",
             salary: job.salary || "Thỏa thuận",
             type: job.jobType || "Fulltime",
-            match: formatMatchScore(item.score),
+            match: item.score ? `${(item.score * 100).toFixed(1)}%` : "N/A",
             skills: Array.isArray(requirements.skills)
               ? requirements.skills.join(", ")
               : "Không có kỹ năng yêu cầu",

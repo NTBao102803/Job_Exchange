@@ -272,6 +272,21 @@ services:
     networks:
       - svjob_network
 
+  # ===================== COMMENT SERVICE =====================
+  comment-service:
+    build: ./comment_service
+    container_name: comment-service
+    ports:
+      - "8088:8088"
+    env_file:
+      - ./global.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - discovery-service
+    networks:
+      - svjob_network
+
   # ===================== MINIO =====================
   minio:
     image: minio/minio

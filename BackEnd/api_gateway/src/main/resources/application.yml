@@ -83,6 +83,11 @@ spring:
           predicates:
             - Path=/api/messages/**
 
+        - id: comment-service
+          uri: lb://comment-service
+          predicates:
+            - Path=/api/comments/**
+
         # ============ WEBSOCKET ROUTE ============
         - id: message-ws
           uri: lb://message-service
@@ -97,6 +102,16 @@ spring:
           uri: lb://notification-service
           predicates:
             - Path=/ws-notifications/**
+          filters:
+            - PreserveHostHeader=true
+            - RemoveRequestHeader=Sec-WebSocket-Extensions
+            - RemoveRequestHeader=Authorization
+            - AddRequestHeader=Sec-WebSocket-Protocol, jwt
+
+        - id: comment-ws
+          uri: lb://comment-service
+          predicates:
+            - Path=/ws-comments/**
           filters:
             - PreserveHostHeader=true
             - RemoveRequestHeader=Sec-WebSocket-Extensions

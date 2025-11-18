@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/AuthApi";
 import { getEmployerProfile } from "../../api/RecruiterApi";
-import { Bell, MessageCircle } from "lucide-react";
+import { Bell,MessageCircle } from "lucide-react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import {
@@ -33,7 +33,7 @@ const HeaderRecruiter = ({
   const [isReady, setIsReady] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const { avatarUrl } = useUser();
+    const { avatarUrl } = useUser();
 
   // ✅ 1️⃣ Lấy employer profile
   useEffect(() => {
@@ -98,13 +98,9 @@ const HeaderRecruiter = ({
     console.log("✅ Đã có employerId:", employerId);
 
     // 🔗 Kết nối qua API Gateway
-    const socketUrl = import.meta.env.PROD
-      ? `https://api.jobsv.online/ws-notifications?token=${encodeURIComponent(
-          token.replace("Bearer ", "")
-        )}`
-      : `http://localhost:8080/ws-notifications?token=${encodeURIComponent(
-          token.replace("Bearer ", "")
-        )}`;
+    const socketUrl = `http://localhost:8080/ws-notifications?token=${encodeURIComponent(
+      token.replace("Bearer ", "")
+    )}`;
     console.log("🌐 Socket URL:", socketUrl);
 
     // 🧩 Tạo SockJS client
@@ -194,7 +190,7 @@ const HeaderRecruiter = ({
     }
   };
 
-  const toggleMenu = () => {
+const toggleMenu = () => {
     setMenuOpen((prev) => {
       if (!prev) setNotifOpen(false);
       return !prev;
@@ -261,16 +257,16 @@ const HeaderRecruiter = ({
             Liên hệ
           </button>
           <button
-            onClick={() => navigate("/recruiter/dashboard-recruitermessenger")}
-            className="relative p-2 rounded-full hover:bg-white/10 transition"
-          >
-            <MessageCircle className="w-6 h-6" /> {/* ✅ Icon Messenger */}
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
-                {unreadCount}
-              </span>
-            )}
-          </button>
+              onClick={() => navigate("/recruiter/dashboard-recruitermessenger")}
+              className="relative p-2 rounded-full hover:bg-white/10 transition"
+            >
+              <MessageCircle className="w-6 h-6" /> {/* ✅ Icon Messenger */}
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
+                          {unreadCount}
+                        </span>
+                      )}
+            </button>
 
           {/* 🔔 Notification Bell */}
           <div className="relative flex items-center" ref={notifRef}>

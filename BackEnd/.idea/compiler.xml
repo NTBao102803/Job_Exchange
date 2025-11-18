@@ -9,16 +9,17 @@
         <outputRelativeToContentRoot value="true" />
         <module name="message_service" />
         <module name="admin_service" />
-        <module name="storage_service" />
         <module name="application_service" />
         <module name="payment_service" />
-        <module name="notification_service" />
+        <module name="comment_service" />
         <module name="recommendation_service" />
+        <module name="cv_ai_service" />
+        <module name="storage_service" />
+        <module name="notification_service" />
         <module name="discovery_service" />
         <module name="chatbot_service" />
         <module name="job_service" />
         <module name="employer_service" />
-        <module name="cv_ai_service" />
       </profile>
       <profile name="Annotation profile for user_service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -63,6 +64,7 @@
       <module name="auth_service" options="-parameters" />
       <module name="candidate_matching_service" options="-parameters" />
       <module name="chatbot_service" options="-parameters" />
+      <module name="comment_service" options="-parameters" />
       <module name="config_service" options="-parameters" />
       <module name="cv_ai_service" options="-parameters" />
       <module name="discovery_service" options="-parameters" />

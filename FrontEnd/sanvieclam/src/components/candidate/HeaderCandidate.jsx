@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/AuthApi";
-import { Bell, MessageCircle } from "lucide-react";
+import { Bell ,MessageCircle} from "lucide-react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import {
@@ -97,13 +97,9 @@ const HeaderCandidate = ({
       return;
     }
 
-    const socketUrl = import.meta.env.PROD
-      ? `https://api.jobsv.online/ws-notifications?token=${encodeURIComponent(
-          token.replace("Bearer ", "")
-        )}`
-      : `http://localhost:8080/ws-notifications?token=${encodeURIComponent(
-          token.replace("Bearer ", "")
-        )}`;
+    const socketUrl = `http://localhost:8080/ws-notifications?token=${encodeURIComponent(
+      token.replace("Bearer ", "")
+    )}`;
 
     const socket = new SockJS(socketUrl);
     const client = over(socket);
