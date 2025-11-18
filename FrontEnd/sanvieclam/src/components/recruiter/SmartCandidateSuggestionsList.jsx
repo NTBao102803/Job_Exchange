@@ -8,6 +8,7 @@ import {
 } from "../../api/RecommendationApi";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getCurrentPlan } from "../../api/PlanServiceApi";
 
 const SmartCandidateSuggestionsList = () => {
   const [jobs, setJobs] = useState([]);
@@ -28,10 +29,8 @@ const SmartCandidateSuggestionsList = () => {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user?.id) return;
 
-        const res = await axios.get(
-          `http://localhost:8080/api/payment-plans/current/${user.id}`
-        );
-        setCurrentPlan(res.data?.planName || "");
+        const res = await getCurrentPlan(user.id);  // <-- dùng API mới
+        setCurrentPlan(res?.planName || "");
       } catch (err) {
         console.warn("⚠️ Không có gói dịch vụ hiện tại:", err);
       }

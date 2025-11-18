@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { X, AlertTriangle, Loader2 } from "lucide-react";
+import { getCurrentPlan } from  "../../api/PlanServiceApi";
 
 const InfoField = ({ label, value }) => {
   if (!value) {
@@ -53,14 +54,12 @@ const CandidateProfileModal = ({ isOpen, onClose, candidate }) => {
     if (!isOpen) return;
 
     const fetchData = async () => {
+      setLoading(true);
       try {
         if (!user) return;
-        const res = await axios.get(
-          `http://localhost:8080/api/payment-plans/current/${user.id}`
-        );
-        setCurrentPlan(res.data?.planName || "");
+        const data = await getCurrentPlan(user.id);
+        setCurrentPlan(data?.planName || "");
       } catch (err) {
-        console.error("Lỗi khi lấy gói dịch vụ:", err);
         setCurrentPlan("");
       } finally {
         setLoading(false);

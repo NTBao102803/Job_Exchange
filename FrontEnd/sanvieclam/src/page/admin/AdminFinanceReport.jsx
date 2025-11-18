@@ -18,6 +18,8 @@ import {
 } from "recharts";
 import { Download, Briefcase } from "lucide-react";
 import { getAllEmployer } from "../../api/RecruiterApi";
+import {getAllPlans} from "../../api/PlanServiceApi";
+import {getAllPayments} from "../../api/PaymentApi";
 
 const COLORS = ["#6366F1", "#10B981", "#F59E0B", "#EF4444", "#3B82F6", "#A855F7"];
 
@@ -39,15 +41,15 @@ const AdminFinanceReport = () => {
 
         // ✅ 1. Lấy tất cả payment & plan
         const [paymentRes, planRes] = await Promise.all([
-          axios.get("http://localhost:8080/api/payment/all"),
-          axios.get("http://localhost:8080/api/payment-plans"),
+          getAllPayments(),
+          getAllPlans(),
         ]);
 
         // ✅ 2. Lấy employer (đã có token)
         const recruiterData = await getAllEmployer();
 
-        const paymentData = paymentRes.data || [];
-        const planData = planRes.data || [];
+        const paymentData = paymentRes || [];
+        const planData = planRes|| [];
 
         //  Phần mapping sau khi fetch API
 const enriched = paymentData.map((p) => {

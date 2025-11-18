@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, CreditCard } from "lucide-react";
 import axios from "axios";
+import { getAllPayments } from "../../api/PaymentApi";
 
 const AdminPayment = () => {
   const [payments, setPayments] = useState([]);
@@ -26,8 +27,8 @@ const AdminPayment = () => {
   useEffect(() => {
     const fetchPayments = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/payment/all");
-        setPayments(Array.isArray(res.data) ? res.data : []);
+        const data = await getAllPayments(); // dùng API đã tách
+        setPayments(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("❌ Lỗi tải giao dịch:", error);
       }

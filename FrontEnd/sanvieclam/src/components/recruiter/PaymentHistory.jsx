@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { getPaymentsByRecruiter } from "../../api/PaymentApi";
 
 const PaymentHistory = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -10,9 +11,10 @@ const PaymentHistory = () => {
 
   useEffect(() => {
     const fetchPayments = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(`http://localhost:8080/api/payment/recruiter/${user.id}`);
-        setPayments(res.data || []);
+        const data = await getPaymentsByRecruiter(user.id);
+        setPayments(data || []);
       } catch (err) {
         console.error("Lỗi khi lấy danh sách thanh toán:", err);
       } finally {

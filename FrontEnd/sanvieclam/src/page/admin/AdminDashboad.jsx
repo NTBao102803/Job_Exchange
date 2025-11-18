@@ -3,6 +3,7 @@ import axios from "axios";
 import { Users, Briefcase, DollarSign } from "lucide-react";
 import { getAllEmployer } from "../../api/RecruiterApi";
 import { getCandidates } from "../../api/CandidateApi";
+import { getAllPayments } from "../../api/PaymentApi";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -18,12 +19,12 @@ const AdminDashboard = () => {
         const [candidatesRes, employersRes, paymentsRes] = await Promise.all([
           getCandidates(),
           getAllEmployer(),
-          axios.get("http://localhost:8080/api/payment/all"),
+          getAllPayments(),
         ]);
 
         const candidates = candidatesRes?.length || [];
         const employers = employersRes?.length || [];
-        const payments = paymentsRes?.data || [];
+        const payments = paymentsRes || [];
 
         const totalAmount = payments
           .filter((p) => p.status === "SUCCESS" || p.status === "COMPLETED")

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { MessageCircle } from "lucide-react";
+import { sendChatMessage } from "../../api/ChatAiApi";
 
 const ChatBoxAI = () => {
   const [messages, setMessages] = useState([
@@ -23,13 +24,8 @@ const ChatBoxAI = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: input }),
-      });
+      const data = await sendChatMessage(input);
 
-      const data = await response.json();
       const aiMessage = { sender: "ai", text: data.reply };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {

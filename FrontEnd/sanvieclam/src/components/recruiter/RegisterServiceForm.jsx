@@ -6,6 +6,7 @@ import {
   CreditCardIcon,
   QrCodeIcon,
 } from "@heroicons/react/24/solid";
+import { createPayment, simulateScanPayment } from "../../api/PaymentApi";
 
 const RegisterServiceForm = () => {
   const navigate = useNavigate();
@@ -34,13 +35,13 @@ const RegisterServiceForm = () => {
         method: paymentMethod,
       };
 
-      const res = await axios.post("http://localhost:8080/api/payment/create", reqBody);
+      const res = await createPayment(reqBody);
 
-      setOrderId(res.data.orderId);
-      setQrCodeUrl(res.data.qrCodeUrl || res.data.payUrl);
+      setOrderId(res.orderId);
+      setQrCodeUrl(res.qrCodeUrl || res.payUrl);
       setStep(2);
 
-      alert(`✅ Đã tạo đơn hàng ${res.data.orderId}`);
+      alert(`✅ Đã tạo đơn hàng ${res.orderId}`);
     } catch (err) {
       console.error("Create payment error:", err);
       alert("❌ Lỗi khi tạo thanh toán!");
@@ -56,9 +57,7 @@ const RegisterServiceForm = () => {
       return;
     }
     try {
-      await axios.post("http://localhost:8080/api/payment/scan", null, {
-        params: { orderId },
-      });
+      await simulateScanPayment(orderId);
       setStep(3);
       alert("✅ Giả lập thanh toán thành công!");
     } catch (err) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getAllPlans, getCurrentPlan } from "../../api/PlanServiceApi";
 
 const ServicePlans = () => {
   const navigate = useNavigate();
@@ -12,8 +13,8 @@ const ServicePlans = () => {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/payment-plans");
-        setPlans(res.data || []);
+        const data = await getAllPlans();
+        setPlans(data || []);
       } catch (err) {
         console.error("Lỗi khi lấy danh sách gói dịch vụ:", err);
       } finally {
@@ -26,10 +27,8 @@ const ServicePlans = () => {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user?.id) return;
 
-        const res = await axios.get(
-          `http://localhost:8080/api/payment-plans/current/${user.id}`
-        );
-        setCurrentPlan(res.data?.planName || "");
+         const data = await getCurrentPlan(user.id);
+      setCurrentPlan(data?.planName || "");
       } catch (err) {
         console.warn("Không có gói hiện tại hoặc lỗi khi lấy gói hiện tại:", err);
       }
