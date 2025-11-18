@@ -146,27 +146,38 @@ const CandidateMessenger = () => {
   };
 
   /** Gửi tin nhắn */
-  const handleSend = (e) => {
-    e.preventDefault();
-    if (!message.trim() || !selectedChat) return;
+  const handleSend = async (e) => {   // <-- thêm async
+  e.preventDefault();
+  if (!message.trim() || !selectedChat) return;
 
-    console.log("Gửi tin nhắn:", { convId: selectedChat.id, content: message.trim() });
-    sendMessageWS(selectedChat.id, message.trim());
+  const content = message.trim();
+  const convId = selectedChat.id;
 
-    // Optimistic UI
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        content: message.trim(),
-        fromSelf: true,
-        time: new Date().toISOString(),
-        avatar: "https://i.pravatar.cc/150?img=1", // avatar của candidate
-      },
-    ]);
+  console.log("Gửi tin nhắn:", { convId, content });
+  sendMessageWS(convId, content);
 
-    setMessage("");
-  };
+  // Optimistic UI
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: Date.now(),
+      content,
+      fromSelf: true,
+      time: new Date().toISOString(),
+      avatar: "https://i.pravatar.cc/150?img=1",
+    },
+  ]);
+
+  setMessage("");
+
+  // Reload dữ liệu: tin nhắn + danh sách conversation
+  try {
+    await loadMessages(convId);
+    await loadConversations();
+  } catch (err) {
+    console.error("Lỗi khi reload sau gửi tin nhắn:", err);
+  }
+};
 
   // Tải danh sách khi mount
   useEffect(() => {

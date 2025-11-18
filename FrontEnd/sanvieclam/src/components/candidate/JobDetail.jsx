@@ -15,6 +15,8 @@ import {
 import { getEmployerById } from "../../api/JobApi";
 import { applyJob } from "../../api/ApplicationApi";
 
+import { createConversation } from "../../api/messageApi";
+
 const JobDetail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -93,6 +95,21 @@ const JobDetail = () => {
     } catch (err) {
       console.error("❌ Lỗi khi ứng tuyển:", err.message);
       alert("❌ " + err.message);
+    }
+  };
+  const handleMessage = async () => {
+    try {
+      const conversation = await createConversation(job.id);
+
+      navigate("/candidate/dashboard-candidatemessenger", {
+        state: {
+          conversationId: conversation.id,
+          employerId: job.employerId,
+        },
+      });
+    } catch (err) {
+      console.error("❌ Lỗi tạo cuộc hội thoại:", err);
+      alert("Không thể tạo cuộc hội thoại");
     }
   };
 
@@ -236,7 +253,7 @@ const JobDetail = () => {
             </button>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate("/candidate/dashboard-candidatemessenger")}
+                onClick={handleMessage}
                 className="flex x-6 py-3 items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl shadow-md transition"
               >
                 <MessageCircle size={18} />
