@@ -6,6 +6,7 @@ import CandidateProfileModal from "../candidate/CandidateProfileModal";
 import { getJobsByStatus } from "../../api/RecruiterApi";
 import { getCandidatesForJob, syncAllCandidates } from "../../api/RecommendationApi";
 import axios from "axios";
+import { getCurrentPlan } from "../../api/PlanServiceApi";
 
 const SmartCandidateSuggestions = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,10 +23,8 @@ const SmartCandidateSuggestions = () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user?.id) return;
-        const res = await axios.get(
-          `http://localhost:8080/api/payment-plans/current/${user.id}`
-        );
-        setCurrentPlan(res.data?.planName || "");
+        const res = await getCurrentPlan(user.id); 
+        setCurrentPlan(res?.planName || "");
       } catch (err) {
         console.warn("⚠️ Không có gói dịch vụ hiện tại:", err);
       }

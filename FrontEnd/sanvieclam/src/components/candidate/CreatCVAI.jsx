@@ -3,6 +3,8 @@ import { FileDown, Sparkles, Check } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { getCandidateProfile } from "../../api/CandidateApi";
+import { generateCV } from "../../api/CVAIApi";
+
 
 const CreatCVAI = () => {
   const [candidate, setCandidate] = useState(null);
@@ -76,15 +78,8 @@ const CreatCVAI = () => {
     setCvHtml("");
 
     try {
-      const response = await fetch("http://localhost:8080/api/cv/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ candidate, template }),
-      });
+      const data = await generateCV(candidate, template);
 
-      if (!response.ok) throw new Error("Server trả lỗi");
-
-      const data = await response.json();
       setCvHtml(sanitizeCVHtml(data.cvHtml));
 
       setShowToast(true);

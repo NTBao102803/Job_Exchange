@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Info, CreditCard, Search } from "lucide-react";
 import { getAllEmployer } from "../../api/RecruiterApi";
+import {getAllPlans,getAllSubscriptions} from "../../api/PlanServiceApi";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -55,8 +56,8 @@ const AdminServicePlans = () => {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/payment-plans");
-        setPlans(Array.isArray(res.data) ? res.data : []);
+        const data = await getAllPlans();
+        setPlans(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("❌ Lỗi khi lấy danh sách gói dịch vụ:", err);
       } finally {
@@ -70,11 +71,9 @@ const AdminServicePlans = () => {
   useEffect(() => {
     const fetchSubs = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:8080/api/payment-plans/subscriptions"
-        );
-        setSubscriptions(Array.isArray(res.data) ? res.data : []);
-        for (const sub of res.data) {
+        const data = await getAllSubscriptions();
+        setSubscriptions(Array.isArray(data) ? data : []);
+        for (const sub of data) {
           getEmployerName(sub.recruiterId);
         }
       } catch (err) {
@@ -145,7 +144,7 @@ const AdminServicePlans = () => {
               : "bg-gray-200 text-gray-700 hover:bg-gray-300"
           }`}
         >
-          Quản lý subscription
+          Quản lý đăng kí dịch vụ
         </button>
       </div>
 
@@ -190,7 +189,7 @@ const AdminServicePlans = () => {
                       className={`px-3 py-1 rounded-full text-white text-sm font-semibold ${
                         isActive
                           ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                          : "bg-gray-400"
+                          : "bg-green-500"
                       }`}
                     >
                       {plan.status || "Đang hoạt động"}
@@ -263,7 +262,7 @@ const AdminServicePlans = () => {
                     className="bg-white/10 backdrop-blur-xl hover:bg-white/20 transition border-b border-white/30"
                   >
                     <td className="p-4 font-semibold text-white">{sub.id}</td>
-                    <td className="p-4 text-white ">
+                    <td className="p-4 text-white truncate overflow-hidden whitespace-nowrap max-w-[300px]">
                         {employerNames[sub.recruiterId] || "Đang tải..."}
                     </td>
                     <td className="p-4 text-white">{sub.planName}</td>
@@ -274,7 +273,7 @@ const AdminServicePlans = () => {
                     <td className="p-4 text-white">
                       {new Date(sub.endAt).toLocaleDateString()}
                     </td>
-                    <td className="p-4 text-white">
+                    <td className="p-4 text-white truncate overflow-hidden whitespace-nowrap max-w-[200px]">
                       <span
                         className={`px-3 py-1 rounded-full text-white text-xs font-semibold ${
                           statusClassMap[sub.status] || "bg-gray-400"

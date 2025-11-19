@@ -5,6 +5,7 @@ import JobPreviewModal from "./JobPreviewModal";
 import { createJob, getEmployerProfile } from "../../api/RecruiterApi";
 import axios from "axios";
 import {getAllPenDingJobs,getAllPublicJobs }  from "../../api/JobApi";
+import { getCurrentPlan } from "../../api/PlanServiceApi";
 
 const PostJob = () => {
   const navigate = useNavigate();
@@ -172,8 +173,8 @@ const PostJob = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user?.id) return;
 
-    const res = await axios.get(`http://localhost:8080/api/payment-plans/current/${user.id}`);
-    setCurrentPlan(res.data?.planName || "");
+    const plan = await getCurrentPlan(user.id);
+    setCurrentPlan(plan?.planName || "");
   } catch (err) {
     console.warn("Không có gói hiện tại hoặc lỗi khi lấy gói hiện tại:", err);
   }
