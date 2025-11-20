@@ -45,3 +45,13 @@ export const getAllPayments = async () => {
     throw error;
   }
 };
+// Lấy danh sách tất cả thanh toán
+export const getAllSepay = async () => {
+  try {
+    const res = await axiosClient.get("/payment/transactions"); 
+    return res.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách sepay:", error);
+    throw error;
+  }
+};
