@@ -289,7 +289,7 @@ services:
 
   # ===================== MINIO =====================
   minio:
-    image: minio/minio
+    image: minio/minio:latest
     container_name: minio
     restart: always
     ports:
@@ -298,11 +298,33 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
     volumes:
-      - minio_data:/data
+      - /opt/svjob/minio_data:/data
+    command: server /data --console-address ":9001"
     networks:
       - svjob_network
+
+  minio-init:
+    image: minio/mc
+    container_name: minio-init
+    depends_on:
+      - minio
+    networks:
+      - svjob_network
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        echo "Waiting for MinIO...";
+        until mc alias set local http://minio:9000 minioadmin minioadmin; do
+          echo "MinIO not ready, retrying...";
+          sleep 2;
+        done;
+        echo "Creating bucket 'storage-files'...";
+        mc mb local/storage-files || true;
+        echo "Setting bucket 'storage-files' public download...";
+        mc anonymous set download local/storage-files || true;
+        echo "Init done.";
+
 
   # ===================== ELASTICSEARCH =====================
   elasticsearch:
@@ -334,7 +356,6 @@ services:
       start_period: 30s
 # ===================== VOLUMES & NETWORKS =====================
 volumes:
-  minio_data:
   elasticsearch_data:
 
 networks:
