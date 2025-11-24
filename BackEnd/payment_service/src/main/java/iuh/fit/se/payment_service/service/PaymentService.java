@@ -22,7 +22,6 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentPlanRepository planRepository;
     private final SubscriptionRepository subscriptionRepository;
-    private final MomoPaymentClient momoClient;
 
     public List<PaymentResponseDTO> getPaymentsByRecruiter(Long recruiterId) {
         return paymentRepository.findByRecruiterIdOrderByCreatedAtDesc(recruiterId)
@@ -81,13 +80,6 @@ public class PaymentService {
                 .build();
 
         paymentRepository.save(payment);
-
-        // gọi provider (Momo) - nhận DTO
-        var momoResp = momoClient.createPayment(orderId, plan.getPrice(), "Thanh toán gói: " + plan.getName());
-
-        // cập nhật payment với payUrl/qrCode
-        payment.setPayUrl(momoResp.getPayUrl());
-        payment.setQrCodeUrl(momoResp.getQrCodeUrl());
         paymentRepository.save(payment);
 
         return PaymentResponseDTO.builder()
