@@ -95,11 +95,18 @@ public class AuthController {
         return ResponseEntity.ok("OTP đã được gửi về email của bạn");
     }
 
+    @PostMapping("/verify-otp-password")
+    public ResponseEntity<String> verifyOtpPassword(@RequestBody VerifyOtpRequest request) {
+        authService.verifyOtpPassword(request);
+        return ResponseEntity.ok("Xác thực OTP thành công");
+    }
+
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPassOnlyRequest request) {
         authService.resetPassword(request);
         return ResponseEntity.ok("Đổi mật khẩu thành công");
     }
+
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")

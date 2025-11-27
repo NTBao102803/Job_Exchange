@@ -42,26 +42,19 @@ export const logout = async () => {
   }
 };
 
+// Quên mật khẩu - gửi OTP
+export const forgotPassword = async (email) => {
+  return await axiosClient.post("/auth/forgot-password", { email });
+};
 
-// // VERIFY USER
-// export const verifyUser = async () => {
-//   return await axiosClient.get("/auth/verifyUser");
-// };
+export const verifyOtpPassword = async (email, otp) => {
+  return await axiosClient.post("/auth/verify-otp-password", { email, otp });
+};
 
-// // GET USER BY ID
-// export const getUserById = async (userId) => {
-//   return await axiosClient.get(`/user/${userId}`);
-// };
-
-// // Quên mật khẩu - gửi OTP
-// export const forgotPassword = async (email) => {
-//   return await axiosClient.post("/auth/forgot-password", { email });
-// };
-
-// // Reset password bằng OTP
-// export const resetPassword = async ({ email, otp, newPassword }) => {
-//   return await axiosClient.post("/auth/reset-password", { email, otp, newPassword });
-// };
+// Reset password bằng OTP
+export const resetPassword = async ({ email, otp, newPassword }) => {
+  return await axiosClient.post("/auth/reset-password", { email, otp, newPassword });
+};
 
 // Đổi mật khẩu
 export const changePassword = async (data) => {

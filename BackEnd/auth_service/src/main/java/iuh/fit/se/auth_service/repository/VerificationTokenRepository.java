@@ -14,4 +14,6 @@ public interface VerificationTokenRepository extends JpaRepository<VerificationT
 
     boolean existsByEmailAndExpiryDateAfter(String email, LocalDateTime now);
     List<VerificationToken> findAllByExpiryDateBefore(LocalDateTime now);
+
+    String email(String email);
 }

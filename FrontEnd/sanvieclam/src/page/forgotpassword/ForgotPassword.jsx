@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import {
+  forgotPassword,
+  resetPassword,
+  verifyOtpPassword,
+} from "../../api/AuthApi";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -16,6 +21,12 @@ const ForgotPassword = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    // Xóa hết token cũ khi vào trang quên mật khẩu
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  }, []);
+
   // ✅ Reset lỗi khi đổi bước
   useEffect(() => setError(""), [step]);
 
@@ -28,23 +39,32 @@ const ForgotPassword = () => {
   }, [step, timeLeft]);
 
   // ✅ Gửi OTP
-  const handleSendOTP = (e) => {
+  const handleSendOTP = async (e) => {
     e.preventDefault();
+    setError("");
+
     if (!email.trim()) return setError("Vui lòng nhập email để nhận mã OTP.");
 
     setLoading(true);
-    setTimeout(() => {
-      alert(`✅ Mã OTP đã được gửi tới ${email}`);
+    try {
+      await forgotPassword(email);
+      alert(`✅ Mã OTP đã gửi tới ${email}`);
+
       setStep("otp");
       setTimeLeft(60);
-      setLoading(false);
-    }, 800);
+    } catch (err) {
+      setError(err.response?.data?.message || "Gửi OTP thất bại.");
+    }
+    setLoading(false);
   };
 
   // ✅ Xác thực OTP
-  const handleVerifyOTP = (e) => {
+  const handleVerifyOTP = async (e) => {
     e.preventDefault();
-    const otpCode = otp.join("");
+    setError("");
+
+    const otpCode = otp.join("").trim();
+
     if (otpCode.length !== 6) {
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
@@ -52,45 +72,64 @@ const ForgotPassword = () => {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      alert("✅ Mã OTP hợp lệ!");
+    try {
+      await verifyOtpPassword(email, otpCode);
+      alert("✅ OTP hợp lệ!");
+
       setStep("reset");
-      setLoading(false);
-    }, 800);
+    } catch (err) {
+      setError(err.response?.data?.message || "OTP không hợp lệ.");
+    }
+    setLoading(false);
   };
 
   // ✅ Gửi lại OTP
-  const resendOtp = () => {
-    if (timeLeft === 0) {
-      alert(`🔁 Gửi lại OTP tới ${email}`);
+  const resendOtp = async () => {
+    if (timeLeft > 0) return;
+
+    try {
+      await forgotPassword(email);
+      alert("🔁 OTP mới đã được gửi!");
+
       setOtp(Array(6).fill(""));
       setTimeLeft(60);
+    } catch (err) {
+      setError("Không thể gửi lại OTP.");
     }
   };
 
   // ✅ Đổi mật khẩu
-  const handleResetPassword = (e) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
+    setError("");
+
     if (form.newPassword.length < 8)
       return setError("Mật khẩu phải có ít nhất 8 ký tự.");
+
     if (form.newPassword !== form.confirmPassword)
       return setError("Mật khẩu nhập lại không khớp.");
 
+    const otpCode = otp.join("");
+
     setLoading(true);
-    setTimeout(() => {
-      alert("✅ Đổi mật khẩu thành công! Hãy đăng nhập lại.");
-      setEmail("");
-      setOtp(Array(6).fill(""));
-      setForm({ newPassword: "", confirmPassword: "" });
-      setStep("email");
-      setLoading(false);
-      navigate("/login"); // 🔁 Chuyển sang trang đăng nhập
-    }, 800);
+    try {
+      await resetPassword({
+        email,
+        otp: otpCode,
+        newPassword: form.newPassword,
+      });
+
+      alert("✅ Đổi mật khẩu thành công! Hãy đăng nhập.");
+      navigate("/login");
+    } catch (err) {
+      setError(err.response?.data?.message || "Đổi mật khẩu thất bại.");
+    }
+    setLoading(false);
   };
 
   // ✅ OTP logic
   const handleChangeOtp = (value, index) => {
-    if (!/^[0-9]?$/.test(value)) return;
+    if (!/^[0-9]?$/.test(value) || value === " ") return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
@@ -168,7 +207,8 @@ const ForgotPassword = () => {
                   Quên mật khẩu?
                 </h1>
                 <p className="text-gray-500 mb-6">
-                  Hãy nhập email của bạn để nhận mã xác thực khôi phục tài khoản.
+                  Hãy nhập email của bạn để nhận mã xác thực khôi phục tài
+                  khoản.
                 </p>
 
                 <input
@@ -212,7 +252,8 @@ const ForgotPassword = () => {
                 </h1>
                 <p className="text-gray-600 text-center mb-6">
                   Vui lòng nhập mã gồm{" "}
-                  <span className="font-semibold">6 chữ số</span> được gửi đến email.
+                  <span className="font-semibold">6 chữ số</span> được gửi đến
+                  email.
                 </p>
 
                 <motion.form
@@ -240,7 +281,9 @@ const ForgotPassword = () => {
                   </div>
 
                   {error && (
-                    <p className="text-red-500 text-center text-sm mb-2">{error}</p>
+                    <p className="text-red-500 text-center text-sm mb-2">
+                      {error}
+                    </p>
                   )}
 
                   <button
@@ -257,7 +300,10 @@ const ForgotPassword = () => {
 
                   <div className="mt-6 text-center text-sm text-gray-600">
                     {timeLeft > 0 ? (
-                      <>Gửi lại OTP sau <span className="font-semibold">{timeLeft}s</span></>
+                      <>
+                        Gửi lại OTP sau{" "}
+                        <span className="font-semibold">{timeLeft}s</span>
+                      </>
                     ) : (
                       <button
                         onClick={resendOtp}
@@ -299,7 +345,7 @@ const ForgotPassword = () => {
                 <div className="relative">
                   <input
                     type={show ? "text" : "password"}
-                    placeholder="🔑 Mật khẩu mới"
+                    placeholder="Mật khẩu mới"
                     value={form.newPassword}
                     onChange={(e) =>
                       setForm({ ...form, newPassword: e.target.value })
@@ -315,15 +361,26 @@ const ForgotPassword = () => {
                   </button>
                 </div>
 
-                <input
-                  type={show ? "text" : "password"}
-                  placeholder="Nhập lại mật khẩu"
-                  value={form.confirmPassword}
-                  onChange={(e) =>
-                    setForm({ ...form, confirmPassword: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                />
+                {/* Nhập lại mật khẩu */}
+                <div className="relative">
+                  <input
+                    type={show.confirm ? "text" : "password"}
+                    placeholder="Nhập lại mật khẩu"
+                    value={form.confirmPassword}
+                    onChange={(e) =>
+                      setForm({ ...form, confirmPassword: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 pr-12"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShow({ ...show, confirm: !show.confirm })}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition"
+                  >
+                    {show.confirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
 
                 {error && <p className="text-red-500 text-sm">{error}</p>}
 

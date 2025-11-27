@@ -205,7 +205,7 @@ public class AuthServiceImpl implements AuthService {
         VerificationToken token = new VerificationToken();
         token.setEmail(email);
         token.setOtp(otp);
-        token.setExpiryDate(LocalDateTime.now().plusMinutes(3));
+        token.setExpiryDate(LocalDateTime.now().plusMinutes(1));
         verificationTokenRepository.save(token);
 
         String content = "<p>Mã OTP khôi phục mật khẩu của bạn là: <strong>" + otp + "</strong></p>";
@@ -213,22 +213,25 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void resetPassword(ResetPasswordRequest request) {
+    public void resetPassword(ResetPassOnlyRequest request) {
+        // 1. Check OTP hợp lệ
         VerificationToken token = verificationTokenRepository
                 .findByEmailAndOtp(request.getEmail(), request.getOtp())
-                .orElseThrow(() -> new RuntimeException("OTP không hợp lệ hoặc đã hết hạn"));
+                .orElseThrow(() -> new RuntimeException("OTP không hợp lệ"));
 
         if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("OTP đã hết hạn");
         }
 
+        // 2. Tìm user
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
+        // 3. Đổi mật khẩu
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
-        // Xóa OTP sau khi dùng
+        // 4. Xóa OTP
         verificationTokenRepository.delete(token);
     }
 
@@ -323,6 +326,19 @@ public class AuthServiceImpl implements AuthService {
         return users.stream()
                 .map(this::convertToUserResponse) // Sử dụng hàm chuyển đổi
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void verifyOtpPassword(VerifyOtpRequest request) {
+        VerificationToken token = verificationTokenRepository
+                .findByEmailAndOtp(request.getEmail(), request.getOtp())
+                .orElseThrow(() -> new RuntimeException("OTP không hợp lệ"));
+
+        if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("OTP đã hết hạn");
+        }
+
+        // Không làm gì thêm — chỉ cần xác thực thành công
     }
 
     // Hàm chuyển đổi từ User Entity sang UserResponse DTO
