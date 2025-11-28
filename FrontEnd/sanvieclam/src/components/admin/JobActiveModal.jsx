@@ -26,8 +26,10 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
   const [showRejectReason, setShowRejectReason] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
+  // Nếu chưa có job thì không render gì
   if (!job) return null;
 
+  // Helper hiển thị fallback
   const displayValue = (val) => (val && val !== "" ? val : "Chưa có thông tin");
 
   const formatDate = (dateStr) => {
@@ -41,6 +43,7 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
     });
   };
 
+  // Lấy thông tin employer theo employerId
   useEffect(() => {
     const fetchEmployer = async () => {
       if (!job?.employerId) return;
@@ -48,6 +51,7 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
       setError(null);
       try {
         const data = await getEmployerById(job.employerId);
+        console.log("Employer data: ", data);
         setEmployer(data);
       } catch (err) {
         console.error("❌ Lỗi lấy employer:", err);
@@ -141,14 +145,66 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
               </p>
             </div>
 
-            {/* Nội dung công việc */}
+            {/* NỘI DUNG CÔNG VIỆC – giống JobDetail */}
             <div className="mt-8 space-y-6 text-gray-700 leading-relaxed">
+              {/* Mô tả */}
               <div>
                 <h2 className="text-xl font-semibold text-indigo-600">
                   📝 Mô tả công việc
                 </h2>
                 <p className="mt-2 whitespace-pre-line">
                   {displayValue(job.description)}
+                </p>
+              </div>
+
+              {/* Yêu cầu ứng viên */}
+              <div>
+                <h2 className="text-xl font-semibold text-indigo-600">
+                  ✅ Yêu cầu ứng viên
+                </h2>
+                <p className="mt-2 whitespace-pre-line">
+                  {displayValue(job.requirements?.descriptionRequirements)}
+                </p>
+              </div>
+
+              {/* Yêu cầu bắt buộc */}
+              {(job.requirements?.skills ||
+                job.requirements?.experience ||
+                job.requirements?.certificates) && (
+                <div className="mt-6">
+                  <h2 className="text-lg font-semibold text-red-600 ml-4">
+                    ⚠️ Yêu cầu bắt buộc
+                  </h2>
+                  <div className="mt-2 ml-6 space-y-2 text-gray-700">
+                    {job.requirements?.skills && (
+                      <p>
+                        <span className="font-medium">Kỹ năng: </span>
+                        {displayValue(job.requirements.skills)}
+                      </p>
+                    )}
+                    {job.requirements?.experience && (
+                      <p>
+                        <span className="font-medium">Kinh nghiệm: </span>
+                        {displayValue(job.requirements.experience)}
+                      </p>
+                    )}
+                    {job.requirements?.certificates && (
+                      <p>
+                        <span className="font-medium">Trình độ học vấn: </span>
+                        {displayValue(job.requirements.certificates)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Quyền lợi */}
+              <div>
+                <h2 className="text-xl font-semibold text-indigo-600">
+                  🎁 Quyền lợi
+                </h2>
+                <p className="mt-2 whitespace-pre-line">
+                  {displayValue(job.benefits)}
                 </p>
               </div>
             </div>

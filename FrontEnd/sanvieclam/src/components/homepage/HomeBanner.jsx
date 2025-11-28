@@ -32,8 +32,6 @@ const HeroBanner = ({ onStartClick }) => {
 
       const applications = appsRes || [];
       const jobs = jobsRes|| [];
-      console.log("Ứng dụng:", appsRes);
-      console.log("Công việc:", jobs);
       const approved = applications.filter((a) => a.status != "PENDING").length;
       const matched = applications.filter((a) => a.status === "APPROVED").length;
       const notMatched = applications.filter((a) => a.status === "REJECTED").length;

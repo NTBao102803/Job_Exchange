@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Search, Trash2, Briefcase } from "lucide-react";
 import JobActiveModal from "../../components/admin/JobActiveModal";
-import { getAllJobs, approveJob, rejectJob, getJobsByStatus, getPendingJobs } from "../../api/AdminApi";
+import {
+  getAllJobs,
+  approveJob,
+  rejectJob,
+  getJobsByStatus,
+  getPendingJobs,
+} from "../../api/AdminApi";
 
 const AdminJob = () => {
   const [jobs, setJobs] = useState([]);
@@ -189,7 +195,10 @@ const AdminJob = () => {
                   </td>
                   <td className="p-4 text-center space-x-2">
                     <button
-                      onClick={() => setSelectedJob(j)}
+                      onClick={() => {
+                        console.log("Job click xét duyệt: ", j);
+                        setSelectedJob(j);
+                      }}
                       disabled={
                         j.status === "APPROVED" || j.status === "REJECTED"
                       }

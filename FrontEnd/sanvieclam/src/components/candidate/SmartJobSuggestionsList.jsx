@@ -53,7 +53,6 @@ const SmartJobSuggestionsList = () => {
           if (job.employerId) {
             try {
               const employer = await getEmployerById(job.employerId);
-              console.log("📦 Response employer từ API:", employer)
               companyName = employer?.companyName || `Công ty ID ${job.employerId}`;
             } catch (error) {
               console.warn(`⚠️ Lỗi lấy employer ${job.employerId}:`, error);

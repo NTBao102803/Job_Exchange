@@ -23,7 +23,6 @@ const SmartJobSuggestions = () => {
       try {
         setLoading(true);
         await syncAllJobs();
-        console.log("✅ Đồng bộ job thành công!");
 
         if (userId) {
           await fetchRecommendedJobs();
@@ -43,10 +42,7 @@ const SmartJobSuggestions = () => {
   const fetchRecommendedJobs = async () => {
     setLoading(true);
     try {
-      console.log(`🚀 Gọi API getSmartJobRecommendations(${userId})`);
       const res = await getSmartJobRecommendations(userId, 10);
-
-      console.log("📦 Response từ API:", res);
 
       const formatMatchScore = (rawScore) => {
           if (!rawScore || rawScore < 1.0) return "N/A";
@@ -64,7 +60,6 @@ const SmartJobSuggestions = () => {
           if (job.employerId) {
             try {
               const employer = await getEmployerById(job.employerId);
-              console.log("📦 Response employer:", employer);
               companyName =
                 employer?.companyName ||
                 employer?.company ||
@@ -91,7 +86,6 @@ const SmartJobSuggestions = () => {
         })
       );
 
-      console.log("📌 mappedJobs (đã có companyName):", mappedJobs);
       setJobs(mappedJobs);
     } catch (err) {
       console.error("❌ Lỗi load job recommendations:", err);

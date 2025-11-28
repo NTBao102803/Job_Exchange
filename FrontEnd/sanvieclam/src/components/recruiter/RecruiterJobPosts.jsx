@@ -74,11 +74,15 @@ const RecruiterJobPosts = () => {
   };
 
   // 👉 Lọc theo trạng thái
-  const filteredJobs =
+  const filteredJobsRaw  =
     filterStatus === "all"
       ? jobPosts
       : jobPosts.filter((job) => job.status === filterStatus);
 
+  const filteredJobs = [...filteredJobsRaw].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+  
   // 👉 Tính toán phân trang
   const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
   const startIndex = (page - 1) * jobsPerPage;
