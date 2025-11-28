@@ -29,29 +29,32 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Value("${minio.bucket}")
     private String bucketName;
 
-    @Value("${minio.url}")
-    private String minioUrl; // ví dụ http://localhost:9000
+//    @Value("${minio.url}")
+//    private String minioUrl; // ví dụ http://localhost:9000
+    @Value("${minio.public-url}")
+    private String minioPublicUrl;
 
     private String buildFileUrl(String objectName, String category) {
         try {
             // Nếu là ảnh đại diện → tạo URL public tạm thời (presigned)
-            if ("AVATAR".equalsIgnoreCase(category)) {
-                return minioClient.getPresignedObjectUrl(
-                        GetPresignedObjectUrlArgs.builder()
-                                .bucket(bucketName)
-                                .object(objectName)
-                                .method(Method.GET)
-                                .expiry(7 * 24 * 60 * 60) // 7 ngày
-                                .build()
-                );
-            }
+//            if ("AVATAR".equalsIgnoreCase(category)) {
+//                String internalUrl = minioClient.getPresignedObjectUrl(
+//                        GetPresignedObjectUrlArgs.builder()
+//                                .bucket(bucketName)
+//                                .object(objectName)
+//                                .method(Method.GET)
+//                                .expiry(7 * 24 * 60 * 60) // 7 ngày
+//                                .build()
+//                );
+//                return internalUrl.replace("http://minio:9000", minioPublicUrl);
+//            }
 
             // Ngược lại (CV, PDF, DOCX...) → dùng link trực tiếp
-            return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
+            return String.format("%s/%s/%s", minioPublicUrl, bucketName, objectName);
 
         } catch (Exception e) {
             log.warn("⚠️ Không tạo được presigned URL cho objectName={}: {}", objectName, e.getMessage());
-            return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
+            return String.format("%s/%s/%s", minioPublicUrl, bucketName, objectName);
         }
     }
 
@@ -167,21 +170,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Override
     public Optional<String> getAvatarUrl(Long userId) {
         return fileRepository.findByUserIdAndCategoryIgnoreCase(userId, "AVATAR")
-                .map(file -> {
-                    try {
-                        return minioClient.getPresignedObjectUrl(
-                                GetPresignedObjectUrlArgs.builder()
-                                        .bucket(bucketName)
-                                        .object(file.getObjectName())
-                                        .method(Method.GET)
-                                        .expiry(7 * 24 * 60 * 60) // 7 ngày
-                                        .build()
-                        );
-                    } catch (Exception e) {
-                        log.error("❌ Lỗi tạo presigned URL cho avatar userId={}: {}", userId, e.getMessage());
-                        return null;
-                    }
-                });
+                .map(file -> buildFileUrl(file.getObjectName(), file.getCategory()));
     }
 
     public FileResponse getFileByObjectName(String objectName) {

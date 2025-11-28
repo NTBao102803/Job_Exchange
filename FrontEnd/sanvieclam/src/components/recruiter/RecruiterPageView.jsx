@@ -71,7 +71,7 @@ const RecruiterPageView = () => {
         const data = await getEmployerById(recruiterId);
         setRecruiter(data);
         let link =
-          data.avatarUrl || (data.id ? await getAvatarUrl(data.id) : null);
+          data.avatarUrl || (data.authUserId ? await getAvatarUrl(data.authUserId) : null);
         setAvatar(link);
         fetchComments(data.authUserId);
       } catch (err) {

@@ -5,10 +5,11 @@ import {
   uploadAvatar,
   getAvatarUrl,
 } from "../../api/RecruiterApi";
-import { useUser } from "../../context/UserContext"; // ✅ dùng context để cập nhật avatar toàn app
-
+import { useUser } from "../../context/UserContext";
 const RecruiterProfile = () => {
   const [formData, setFormData] = useState({
+    id: null,
+    authUserId: null,
     fullName: "",
     email: "",
     phone: "",
@@ -36,12 +37,13 @@ const RecruiterProfile = () => {
         const data = await getEmployerProfile();
         setFormData((prev) => ({ ...prev, ...data }));
 
+        const authId = data.authUserId;
         let avatarLink = data.avatarUrl || null;
-        if (!avatarLink && data.id) {
+        if (!avatarLink && authId ) {
           try {
-            avatarLink = await getAvatarUrl(data.id);
+            avatarLink = await getAvatarUrl(authId);
           } catch {
-            console.warn("⚠️ Không có avatar cho employer:", data.id);
+            console.warn("⚠️ Không có avatar cho employer:", authId);
           }
         }
 
@@ -73,7 +75,7 @@ const RecruiterProfile = () => {
       }
 
       // Upload ảnh
-      const res = await uploadAvatar(file, formData.id);
+      const res = await uploadAvatar(file, formData.authUserId);
       console.log("✅ Upload avatar success:", res.fileUrl);
 
       // Cập nhật DB

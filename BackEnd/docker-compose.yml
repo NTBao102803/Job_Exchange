@@ -299,7 +299,7 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
-      - /opt/svjob/minio_data:/data
+      - D:\svjob\minio_data:/data
     command: server /data --console-address ":9001"
     networks:
       - svjob_network

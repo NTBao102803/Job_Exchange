@@ -2,9 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { FileDown, Sparkles, Check } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { getCandidateProfile } from "../../api/CandidateApi";
+import { getCandidateProfile, getAvatarUrl } from "../../api/CandidateApi";
 import { generateCV } from "../../api/CVAIApi";
-
 
 const CreatCVAI = () => {
   const [candidate, setCandidate] = useState(null);
@@ -22,7 +21,11 @@ const CreatCVAI = () => {
       try {
         const data = await getCandidateProfile();
 
-        // Map giới tính để hiển thị tiếng Việt
+        // ✅ Lấy id user
+        const userId = data.id || data.userId;
+        console.log("userId", userId)
+
+        // ✅ Map giới tính sang tiếng Việt
         const genderVN =
           data.gender === "Male"
             ? "Nam"
@@ -48,7 +51,7 @@ const CreatCVAI = () => {
           careerGoal: data.careerGoal,
           hobbies: data.hobbies,
           social: data.social,
-          avatarUrl: data.avatarUrl,
+          avatarUrl: avatarUrl,
         });
       } catch (err) {
         console.error("❌ Lỗi khi tải hồ sơ:", err);
@@ -80,7 +83,22 @@ const CreatCVAI = () => {
     try {
       const data = await generateCV(candidate, template);
 
-      setCvHtml(sanitizeCVHtml(data.cvHtml));
+      let html = sanitizeCVHtml(data.cvHtml);
+
+      // // ✅ Nếu có avatarUrl thì chèn thêm ảnh vào đầu body
+      // if (candidate.avatarUrl) {
+      //   html = html.replace(
+      //     "<body>",
+      //     `<body>
+      //      <div style="text-align:center;margin-bottom:16px">
+      //        <img src="${candidate.avatarUrl}"
+      //             alt="Avatar"
+      //             style="width:120px;height:120px;border-radius:50%;object-fit:cover;" />
+      //      </div>`
+      //   );
+      // }
+
+      setCvHtml(html);
 
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -99,7 +117,8 @@ const CreatCVAI = () => {
       iframeRef.current.contentDocument ||
       iframeRef.current.contentWindow.document;
 
-    const cvElement = iframeDoc.body.querySelector(".cv-container") || iframeDoc.body;
+    const cvElement =
+      iframeDoc.body.querySelector(".cv-container") || iframeDoc.body;
 
     const canvas = await html2canvas(cvElement, {
       scale: 2,
@@ -158,8 +177,9 @@ const CreatCVAI = () => {
           ✨ Trình tạo CV AI thông minh
         </h1>
         <p className="mt-3 text-gray-600 text-lg max-w-2xl mx-auto">
-          Công cụ này giúp bạn biến dữ liệu hồ sơ cá nhân thành CV chuyên nghiệp,
-          thiết kế đẹp mắt và có thể xuất ra PDF chỉ với vài cú nhấp chuột.
+          Công cụ này giúp bạn biến dữ liệu hồ sơ cá nhân thành CV chuyên
+          nghiệp, thiết kế đẹp mắt và có thể xuất ra PDF chỉ với vài cú nhấp
+          chuột.
         </p>
       </div>
 
@@ -180,7 +200,8 @@ const CreatCVAI = () => {
           <option value="an-tuong">🔥 Ấn tượng</option>
         </select>
         <p className="mt-2 text-sm text-gray-500">
-          Mỗi phong cách sẽ thay đổi bố cục và màu sắc khác nhau phù hợp từng vị trí ứng tuyển.
+          Mỗi phong cách sẽ thay đổi bố cục và màu sắc khác nhau phù hợp từng vị
+          trí ứng tuyển.
         </p>
       </div>
 

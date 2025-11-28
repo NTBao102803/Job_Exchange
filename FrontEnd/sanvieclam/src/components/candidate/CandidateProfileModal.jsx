@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { X, AlertTriangle, Loader2 } from "lucide-react";
-import { getCurrentPlan } from  "../../api/PlanServiceApi";
+import { getCurrentPlan } from "../../api/PlanServiceApi";
 
 const InfoField = ({ label, value }) => {
   if (!value) {
     return (
       <div>
-        <label className="block text-gray-700 font-semibold mb-1">{label}</label>
+        <label className="block text-gray-700 font-semibold mb-1">
+          {label}
+        </label>
         <div className="w-full p-3 border rounded-lg bg-gray-50 shadow-sm text-gray-800">
           —
         </div>
@@ -19,7 +21,9 @@ const InfoField = ({ label, value }) => {
   if (Array.isArray(value)) {
     return (
       <div>
-        <label className="block text-gray-700 font-semibold mb-1">{label}</label>
+        <label className="block text-gray-700 font-semibold mb-1">
+          {label}
+        </label>
         <div className="w-full p-3 border rounded-lg bg-gray-50 shadow-sm text-gray-800 flex flex-col gap-1">
           {value.map((item, index) => (
             <div key={index}>{item}</div>
@@ -49,6 +53,20 @@ const CandidateProfileModal = ({ isOpen, onClose, candidate }) => {
   const [loading, setLoading] = useState(true);
 
   const user = JSON.parse(localStorage.getItem("user"));
+
+  const mapGenderToVietnamese = (gender) => {
+    if (!gender) return "";
+    switch (gender) {
+      case "Male":
+        return "Nam";
+      case "Female":
+        return "Nữ";
+      case "other":
+        return "Khác";
+      default:
+        return gender;
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -81,7 +99,7 @@ const CandidateProfileModal = ({ isOpen, onClose, candidate }) => {
       </div>
     );
   }
-  if ((!currentPlan || currentPlan === "Gói Cơ Bản")&&(user?.role?.id==3)) {
+  if ((!currentPlan || currentPlan === "Gói Cơ Bản") && user?.role?.id == 3) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
         <div className=" relative bg-white p-10 rounded-2xl shadow-2xl max-w-lg text-center">
@@ -97,7 +115,8 @@ const CandidateProfileModal = ({ isOpen, onClose, candidate }) => {
             Gói dịch vụ của bạn không đủ quyền!
           </h2>
           <p className="text-gray-600 mb-4">
-            Vui lòng <b>nâng cấp lên Gói Nâng Cao hoặc Chuyên Nghiệp</b> để xem hồ sơ ứng viên chi tiết.
+            Vui lòng <b>nâng cấp lên Gói Nâng Cao hoặc Chuyên Nghiệp</b> để xem
+            hồ sơ ứng viên chi tiết.
           </p>
           <button
             onClick={() => {
@@ -129,10 +148,12 @@ const CandidateProfileModal = ({ isOpen, onClose, candidate }) => {
 
         {/* Thông tin cá nhân */}
         <div className="space-y-4 border-b pb-6">
-          <h2 className="text-2xl font-bold text-indigo-500">👤 Thông tin cá nhân</h2>
+          <h2 className="text-2xl font-bold text-indigo-500">
+            👤 Thông tin cá nhân
+          </h2>
           <InfoField label="Họ và tên" value={candidate.fullName} />
           <InfoField label="Ngày sinh" value={candidate.dob} />
-          <InfoField label="Giới tính" value={candidate.gender} />
+          <InfoField label="Giới tính" value={mapGenderToVietnamese(candidate.gender)} />
           <InfoField label="Email" value={candidate.email} />
           <InfoField label="Số điện thoại" value={candidate.phone} />
           <InfoField label="Địa chỉ" value={candidate.address} />
@@ -140,7 +161,9 @@ const CandidateProfileModal = ({ isOpen, onClose, candidate }) => {
 
         {/* Thông tin học vấn */}
         <div className="space-y-4 border-b pb-6 mt-6">
-          <h2 className="text-2xl font-bold text-green-600">🎓 Thông tin học vấn</h2>
+          <h2 className="text-2xl font-bold text-green-600">
+            🎓 Thông tin học vấn
+          </h2>
           <InfoField label="Trường học" value={candidate.school} />
           <InfoField label="Chuyên ngành" value={candidate.major} />
           <InfoField label="GPA" value={candidate.gpa} />
@@ -149,22 +172,31 @@ const CandidateProfileModal = ({ isOpen, onClose, candidate }) => {
 
         {/* Kinh nghiệm & Dự án */}
         <div className="space-y-4 border-b pb-6 mt-6">
-          <h2 className="text-2xl font-bold text-yellow-600">💼 Kinh nghiệm & Dự án</h2>
+          <h2 className="text-2xl font-bold text-yellow-600">
+            💼 Kinh nghiệm & Dự án
+          </h2>
           <InfoField label="Kinh nghiệm" value={candidate.experience} />
           <InfoField label="Dự án" value={candidate.projects} />
         </div>
 
         {/* Kỹ năng & Chứng chỉ */}
         <div className="space-y-4 border-b pb-6 mt-6">
-          <h2 className="text-2xl font-bold text-purple-600">🛠️ Kỹ năng & Chứng chỉ</h2>
+          <h2 className="text-2xl font-bold text-purple-600">
+            🛠️ Kỹ năng & Chứng chỉ
+          </h2>
           <InfoField label="Kỹ năng" value={candidate.skills} />
           <InfoField label="Chứng chỉ" value={candidate.certificates} />
         </div>
 
         {/* Thông tin bổ sung */}
         <div className="space-y-4 mt-6">
-          <h2 className="text-2xl font-bold text-pink-600">🌐 Thông tin bổ sung</h2>
-          <InfoField label="Mục tiêu nghề nghiệp" value={candidate.careerGoal} />
+          <h2 className="text-2xl font-bold text-pink-600">
+            🌐 Thông tin bổ sung
+          </h2>
+          <InfoField
+            label="Mục tiêu nghề nghiệp"
+            value={candidate.careerGoal}
+          />
           <InfoField label="Sở thích" value={candidate.hobbies} />
           <InfoField label="Mạng xã hội / Liên kết" value={candidate.social} />
         </div>
