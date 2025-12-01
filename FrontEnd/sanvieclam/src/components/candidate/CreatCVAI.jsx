@@ -23,7 +23,7 @@ const CreatCVAI = () => {
 
         // ✅ Lấy id user
         const userId = data.id || data.userId;
-        console.log("userId", userId)
+        console.log("userId", userId);
 
         // ✅ Map giới tính sang tiếng Việt
         const genderVN =
@@ -32,7 +32,14 @@ const CreatCVAI = () => {
             : data.gender === "Female"
             ? "Nữ"
             : "Khác";
-
+        let avatarUrl = data.avatarUrl || null;
+        if (!avatarUrl && userId) {
+          try {
+            avatarUrl = await getAvatarUrl(userId);
+          } catch (err) {
+            console.warn("⚠️ Không lấy được avatar từ getAvatarUrl:", err);
+          }
+        }
         setCandidate({
           fullName: data.fullName,
           dob: data.dob,

@@ -13,22 +13,32 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { getEmployerById } from "../../api/RecruiterApi";
 
-const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
+// Thêm isSubmitting vào props
+const JobActiveModal = ({
+  job,
+  onClose,
+  onApprove,
+  onReject,
+  isSubmitting,
+}) => {
   const [employer, setEmployer] = useState({
     fullName: "",
     email: "",
     phone: "",
     companyName: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [showRejectReason, setShowRejectReason] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
-  // Nếu chưa có job thì không render gì
-  if (!job) return null;
-
+  // console.log đã được xóa
+  if (!job) {
+    // console.log đã được xóa
+    return null;
+  }
   // Helper hiển thị fallback
   const displayValue = (val) => (val && val !== "" ? val : "Chưa có thông tin");
 
@@ -43,17 +53,19 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
     });
   };
 
-  // Lấy thông tin employer theo employerId
+  // ✅ Tối ưu hóa: Gọi API lấy employer
   useEffect(() => {
     const fetchEmployer = async () => {
       if (!job?.employerId) return;
+
       setLoading(true);
       setError(null);
+
       try {
         const data = await getEmployerById(job.employerId);
-        console.log("Employer data: ", data);
         setEmployer(data);
       } catch (err) {
+        // console.error đã được giữ lại để debug lỗi API
         console.error("❌ Lỗi lấy employer:", err);
         setError("Không thể tải thông tin nhà tuyển dụng");
       } finally {
@@ -63,14 +75,23 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
     fetchEmployer();
   }, [job?.employerId]);
 
+  // ✅ Xử lý gửi lý do từ chối
   const handleRejectWithReason = () => {
     if (!rejectReason.trim()) {
       alert("Vui lòng nhập lý do thất bại!");
       return;
     }
-    onReject({ id: job.id, status: "Xét duyệt thất bại", reason: rejectReason });
+    // console.log đã được xóa
+    // Gửi đối tượng { id, reason }
+    onReject({ id: job.id, reason: rejectReason });
     setShowRejectReason(false);
+    setRejectReason("");
   };
+
+  // Component Loading Spinner đơn giản (CSS Tailwind)
+  const Spinner = () => (
+    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+  );
 
   return (
     <AnimatePresence>
@@ -93,7 +114,8 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
             {/* ❌ Nút đóng */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+              disabled={isSubmitting} // Vô hiệu hóa khi đang submit
             >
               <X size={28} />
             </button>
@@ -111,7 +133,7 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
                 : displayValue(employer?.companyName)}
             </p>
 
-            {/* Thông tin nhanh */}
+            {/* ... (Các phần thông tin khác giữ nguyên) ... */}
             <div className="mt-5 flex flex-wrap gap-x-8 gap-y-3 text-gray-700">
               <p className="flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-red-500" />
@@ -127,7 +149,6 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
               </p>
             </div>
 
-            {/* Ngày tuyển dụng */}
             <div className="mt-5 flex flex-wrap gap-x-8 gap-y-3 text-gray-700">
               <p className="flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-purple-500" />
@@ -145,9 +166,7 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
               </p>
             </div>
 
-            {/* NỘI DUNG CÔNG VIỆC – giống JobDetail */}
             <div className="mt-8 space-y-6 text-gray-700 leading-relaxed">
-              {/* Mô tả */}
               <div>
                 <h2 className="text-xl font-semibold text-indigo-600">
                   📝 Mô tả công việc
@@ -157,48 +176,52 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
                 </p>
               </div>
 
-              {/* Yêu cầu ứng viên */}
               <div>
                 <h2 className="text-xl font-semibold text-indigo-600">
                   ✅ Yêu cầu ứng viên
                 </h2>
-                <p className="mt-2 whitespace-pre-line">
-                  {displayValue(job.requirements?.descriptionRequirements)}
-                </p>
+                {job.requirements ? (
+                  <p className="mt-2 whitespace-pre-line">
+                    {displayValue(job.requirements.descriptionRequirements)}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-gray-500 italic">
+                    Chưa có thông tin yêu cầu
+                  </p>
+                )}
               </div>
 
-              {/* Yêu cầu bắt buộc */}
-              {(job.requirements?.skills ||
-                job.requirements?.experience ||
-                job.requirements?.certificates) && (
-                <div className="mt-6">
-                  <h2 className="text-lg font-semibold text-red-600 ml-4">
-                    ⚠️ Yêu cầu bắt buộc
-                  </h2>
-                  <div className="mt-2 ml-6 space-y-2 text-gray-700">
-                    {job.requirements?.skills && (
-                      <p>
-                        <span className="font-medium">Kỹ năng: </span>
-                        {displayValue(job.requirements.skills)}
-                      </p>
-                    )}
-                    {job.requirements?.experience && (
-                      <p>
-                        <span className="font-medium">Kinh nghiệm: </span>
-                        {displayValue(job.requirements.experience)}
-                      </p>
-                    )}
-                    {job.requirements?.certificates && (
-                      <p>
-                        <span className="font-medium">Trình độ học vấn: </span>
-                        {displayValue(job.requirements.certificates)}
-                      </p>
-                    )}
+              {job.requirements &&
+                (job.requirements.skills ||
+                  job.requirements.experience ||
+                  job.requirements.certificates) && (
+                  <div className="mt-6">
+                    <h2 className="text-lg font-semibold text-red-600 ml-4">
+                      ⚠️ Yêu cầu bắt buộc
+                    </h2>
+                    <div className="mt-2 space-y-2 text-gray-700 ml-6">
+                      {job.requirements.skills && (
+                        <p>
+                          <span className="font-medium">Kỹ năng: </span>
+                          {displayValue(job.requirements.skills)}
+                        </p>
+                      )}
+                      {job.requirements.experience && (
+                        <p>
+                          <span className="font-medium">Kinh nghiệm: </span>
+                          {displayValue(job.requirements.experience)}
+                        </p>
+                      )}
+                      {job.requirements.certificates && (
+                        <p>
+                          <span className="font-medium">Chứng chỉ: </span>
+                          {displayValue(job.requirements.certificates)}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Quyền lợi */}
               <div>
                 <h2 className="text-xl font-semibold text-indigo-600">
                   🎁 Quyền lợi
@@ -209,7 +232,6 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
               </div>
             </div>
 
-            {/* Thông tin liên hệ */}
             <div className="mt-10 border-t pt-6">
               <h2 className="text-2xl font-bold text-indigo-700">
                 📞 Thông tin liên hệ
@@ -229,26 +251,41 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
                 </p>
               </div>
             </div>
+            {/* End of info sections */}
 
             {/* Footer buttons */}
             <div className="flex justify-center gap-4 mt-10">
+              {/* Nút Đồng ý xét duyệt */}
               <button
-                onClick={() => onApprove({ id: job.id, status: "Đã xét duyệt" })}
-                className="px-6 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition"
+                onClick={() =>
+                  onApprove({ id: job.id, status: "Đã xét duyệt" })
+                }
+                className="px-6 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition disabled:bg-green-400 disabled:cursor-not-allowed flex items-center gap-2"
+                disabled={isSubmitting} // Vô hiệu hóa khi đang submit
               >
-                ✅ Đồng ý xét duyệt
+                {isSubmitting ? (
+                  <>
+                    <Spinner /> Đang xử lý...
+                  </>
+                ) : (
+                  <>✅ Đồng ý xét duyệt</>
+                )}
               </button>
 
+              {/* Nút Xét duyệt thất bại */}
               <button
                 onClick={() => setShowRejectReason(true)}
-                className="px-6 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
+                className="px-6 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition disabled:bg-red-400 disabled:cursor-not-allowed"
+                disabled={isSubmitting} // Vô hiệu hóa khi đang submit
               >
                 ❌ Xét duyệt thất bại
               </button>
 
+              {/* Nút Hủy */}
               <button
                 onClick={onClose}
-                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg shadow hover:bg-gray-400 transition"
+                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg shadow hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting} // Vô hiệu hóa khi đang submit
               >
                 🔙 Hủy
               </button>
@@ -280,17 +317,26 @@ const JobActiveModal = ({ job, onClose, onApprove, onReject }) => {
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="Nhập lý do..."
+                      disabled={isSubmitting} // Vô hiệu hóa textarea
                     />
                     <div className="flex justify-end gap-3">
                       <button
                         onClick={handleRejectWithReason}
-                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:bg-red-400 disabled:cursor-not-allowed flex items-center gap-2"
+                        disabled={isSubmitting} // Vô hiệu hóa nút Gửi
                       >
-                        Gửi
+                        {isSubmitting ? (
+                          <>
+                            <Spinner /> Đang gửi...
+                          </>
+                        ) : (
+                          <>Gửi</>
+                        )}
                       </button>
                       <button
                         onClick={() => setShowRejectReason(false)}
-                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isSubmitting} // Vô hiệu hóa nút Hủy
                       >
                         Hủy
                       </button>
