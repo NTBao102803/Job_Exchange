@@ -15,7 +15,8 @@ export default function JobDetail({ job, employer, onClose }) {
         "application/pdf",
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/doc"
+        "application/doc",
+        "application/docx",
       ],
     });
     if (!result.canceled && result.assets && result.assets.length > 0) {
