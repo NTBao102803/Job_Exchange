@@ -91,11 +91,11 @@ public class ApplicationServiceImpl implements ApplicationService {
                 job.employerId()
         );
 
-        sendNotificationViaRest(event, "application-submitted");
+//        sendNotificationViaRest(event, "application-submitted");
 
         if (eventProducer != null) {
             try {
-                eventProducer.publishApplicationSubmittedEvent(event);
+                eventProducer.sendApplicationSubmittedEvent(event);
             } catch (Exception e) {
                 logger.warn("Kafka send failed", e);
             }
@@ -153,12 +153,12 @@ public class ApplicationServiceImpl implements ApplicationService {
                 "APPROVED",
                 null
         );
-        sendNotificationViaRest(event, "application-status-changed");
+//        sendNotificationViaRest(event, "application-status-changed");
 
         // GỬI KAFKA (nếu bật)
         if (eventProducer != null) {
             try {
-                eventProducer.publishApplicationStatusChangedEvent(event);
+                eventProducer.sendApplicationStatusChangedEvent(event);
                 logger.info("Kafka: Đã gửi ApplicationStatusChangedEvent (APPROVED)");
             } catch (Exception e) {
                 logger.warn("Kafka send failed (APPROVED)", e);
@@ -187,12 +187,12 @@ public class ApplicationServiceImpl implements ApplicationService {
                 "REJECTED",
                 apply.getRejectReason()
         );
-        sendNotificationViaRest(event, "application-status-changed");
+//        sendNotificationViaRest(event, "application-status-changed");
 
         // GỬI KAFKA (nếu bật)
         if (eventProducer != null) {
             try {
-                eventProducer.publishApplicationStatusChangedEvent(event);
+                eventProducer.sendApplicationStatusChangedEvent(event);
                 logger.info("Kafka: Đã gửi ApplicationStatusChangedEvent (REJECTED)");
             } catch (Exception e) {
                 logger.warn("Kafka send failed (REJECTED)", e);

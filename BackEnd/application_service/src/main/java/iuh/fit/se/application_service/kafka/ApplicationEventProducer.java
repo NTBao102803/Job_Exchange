@@ -3,24 +3,28 @@ package iuh.fit.se.application_service.kafka;
 import iuh.fit.se.application_service.dto.ApplicationStatusChangedEvent;
 import iuh.fit.se.application_service.dto.ApplicationSubmittedEvent;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
+@Slf4j
 public class ApplicationEventProducer {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
     private static final String TOPIC = "application-events";
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publishApplicationSubmittedEvent(ApplicationSubmittedEvent event) {
-        kafkaTemplate.send(TOPIC, event);
+    public void sendApplicationSubmittedEvent(ApplicationSubmittedEvent event) {
+        // Key có thể là applicationSubmitted (dễ phân biệt ở Consumer)
+        kafkaTemplate.send(TOPIC, "applicationSubmitted", event);
+        log.info("✅ Sent ApplicationSubmittedEvent to Kafka: CandidateId={}", event.getCandidateId());
     }
 
-    public void publishApplicationStatusChangedEvent(ApplicationStatusChangedEvent event) {
-        String key = event.getStatus().toLowerCase(); // "approved" or "rejected"
-        kafkaTemplate.send(TOPIC, key, event);
+    public void sendApplicationStatusChangedEvent(ApplicationStatusChangedEvent event) {
+        // Key có thể là applicationStatusChanged
+        kafkaTemplate.send(TOPIC, "applicationStatusChanged", event);
+        log.info("✅ Sent ApplicationStatusChangedEvent to Kafka: Status={}, JobTitle={}",
+                event.getStatus(), event.getJobTitle());
     }
 }
