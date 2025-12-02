@@ -45,6 +45,7 @@ export default function Login() {
       await SecureStore.setItemAsync("token", accessToken);
       await SecureStore.setItemAsync("role", user.role.roleName);
       await SecureStore.setItemAsync("userId", String(user.id));
+      await SecureStore.setItemAsync("userName", String(user.fullName));
       router.replace("/candidate/home");
     } catch (err: any) {
       console.log("Login error:", err.response?.data || err.message);

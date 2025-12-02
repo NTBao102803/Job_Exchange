@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOp
 import { getAllPublicJobs, getEmployerById } from "../../api/JobApi";
 import HeaderJob from "../../components/header/HeaderJob";
 import JobDetail from "../../components/jobdetail";
+import RecruiterPageView from "../../components/RecruiterPageView";
 import { useMenu } from "../../context/MenuContext";
 
 export default function Jobs() {
@@ -13,6 +14,7 @@ export default function Jobs() {
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecruiter, setSelectedRecruiter] = useState<any>(null);
 
   const categories = [
     { label: "Công nghệ thông tin", icon: <Flame size={16} color="red" /> },
@@ -70,12 +72,26 @@ export default function Jobs() {
       </View>
     );
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#F7F7F9" }}>
-      <HeaderJob onMenuPress={openMenu} />
+  // -------------------------
+  // Chỉ hiển thị 1 màn hình tại 1 thời điểm
+  // -------------------------
+  if (selectedRecruiter) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#F7F7F9" }}>
+        <HeaderJob onMenuPress={openMenu} />
+        <RecruiterPageView
+          employerId={selectedRecruiter}
+          onBack={() => setSelectedRecruiter(null)}
+        />
+      </View>
+    );
+  }
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        {selectedJob ? (
+  if (selectedJob) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#F7F7F9" }}>
+        <HeaderJob onMenuPress={openMenu} />
+        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           <JobDetail
             job={selectedJob}
             employer={{
@@ -85,64 +101,78 @@ export default function Jobs() {
             }}
             onClose={() => setSelectedJob(null)}
           />
-        ) : (
-          <>
-            <Text style={styles.title}>Danh sách công việc</Text>
+        </ScrollView>
+      </View>
+    );
+  }
 
-            <View style={styles.searchWrapper}>
-              <Search size={20} color="#666" style={styles.searchIcon} />
-              <TextInput
-                placeholder="Tìm kiếm công việc..."
-                value={search}
-                onChangeText={setSearch}
-                style={styles.searchInput}
-              />
-            </View>
+  // -------------------------
+  // Màn hình danh sách công việc
+  // -------------------------
+  return (
+    <View style={{ flex: 1, backgroundColor: "#F7F7F9" }}>
+      <HeaderJob onMenuPress={openMenu} />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>Danh sách công việc</Text>
 
-            {/* Ngành nghề HOT */}
-            <View>
-              <Text style={styles.filterTitle}>Ngành nghề HOT</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {categories.map((cat, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[styles.categoryChip, selectedCategory === cat.label && styles.categoryChipActive]}
-                    onPress={() => setSelectedCategory(selectedCategory === cat.label ? "" : cat.label)}
-                  >
-                    {cat.icon}
-                    <Text style={[styles.categoryChipText, selectedCategory === cat.label && { fontWeight: "700" }]}>
-                      {cat.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+        <View style={styles.searchWrapper}>
+          <Search size={20} color="#666" style={styles.searchIcon} />
+          <TextInput
+            placeholder="Tìm kiếm công việc..."
+            value={search}
+            onChangeText={setSearch}
+            style={styles.searchInput}
+          />
+        </View>
 
-            <View style={{ marginTop: 15 }}>
-              {filtered.map((job) => (
-                <View key={job.id} style={styles.card}>
-                  <Text style={styles.jobTitle}>{job.title}</Text>
-                  <Text style={styles.company}>{job.companyName}</Text>
-                  <Text style={styles.location}>
-                    📍 {job.location || "Đang cập nhật"} | ⏰ {job.jobType || "Đang cập nhật"}
-                  </Text>
-                  <Text style={styles.salary}>💰 {job.salary || "Liên hệ"}</Text>
-
-                  <TouchableOpacity style={styles.applyBtn} onPress={() => setSelectedJob(job)}>
-                    <Text style={styles.applyText}>Ứng tuyển</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-
-              {filtered.length === 0 && (
-                <Text style={{ marginTop: 20, fontStyle: "italic", textAlign: "center" }}>
-                  Không tìm thấy công việc phù hợp.
+        {/* Ngành nghề HOT */}
+        <View>
+          <Text style={styles.filterTitle}>Ngành nghề HOT</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {categories.map((cat, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.categoryChip, selectedCategory === cat.label && styles.categoryChipActive]}
+                onPress={() => setSelectedCategory(selectedCategory === cat.label ? "" : cat.label)}
+              >
+                {cat.icon}
+                <Text style={[styles.categoryChipText, selectedCategory === cat.label && { fontWeight: "700" }]}>
+                  {cat.label}
                 </Text>
-              )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={{ marginTop: 15 }}>
+          {filtered.map((job) => (
+            <View key={job.id} style={styles.card}>
+              <Text style={styles.jobTitle}>{job.title}</Text>
+              <TouchableOpacity
+                onPress={() => setSelectedRecruiter(job.employerId)}
+              >
+                <Text style={[styles.company, { color: "#1d4ed8", fontWeight: "600" }]}>
+                  {job.companyName}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.location}>
+                📍 {job.location || "Đang cập nhật"} | ⏰ {job.jobType || "Đang cập nhật"}
+              </Text>
+              <Text style={styles.salary}>💰 {job.salary || "Liên hệ"}</Text>
+
+              <TouchableOpacity style={styles.applyBtn} onPress={() => setSelectedJob(job)}>
+                <Text style={styles.applyText}>Ứng tuyển</Text>
+              </TouchableOpacity>
             </View>
-            <View style={{ height: 40 }} />
-          </>
-        )}
+          ))}
+
+          {filtered.length === 0 && (
+            <Text style={{ marginTop: 20, fontStyle: "italic", textAlign: "center" }}>
+              Không tìm thấy công việc phù hợp.
+            </Text>
+          )}
+        </View>
+        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );

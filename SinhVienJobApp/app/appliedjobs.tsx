@@ -81,6 +81,7 @@ export default function AppliedJobsMobileExpo() {
       </View>
     );
   }
+  
   return (
     <View style={styles.container}>
       <TouchableOpacity

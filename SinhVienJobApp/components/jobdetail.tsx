@@ -2,12 +2,13 @@ import * as DocumentPicker from "expo-document-picker";
 import { ArrowLeft, Building2, CalendarDays, Clock, DollarSign, Mail, MapPin, Phone, User, X } from "lucide-react-native";
 import React, { useState } from "react";
 import { Alert, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { applyJob } from "../api/ApplicationApi"; // <-- import API applyJob
+import { applyJob } from "../api/ApplicationApi";
+import RecruiterPageView from "../components/RecruiterPageView";
 
-export default function JobDetail({ job, employer, onClose }) {
+export default function JobDetail({ job, employer, onClose }:any) {
   const [showModal, setShowModal] = useState(false);
   const [cvFile, setCvFile] = useState<any>(null);
-
+  const [selectedRecruiter, setSelectedRecruiter] = useState<any>(null);
   // Chọn file CV
   const pickDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -42,6 +43,16 @@ export default function JobDetail({ job, employer, onClose }) {
 
   const displayValue = (val: string | undefined) => (val ? val : "Chưa có thông tin");
   const formatDate = (str: string | undefined) => (str ? new Date(str).toLocaleDateString("vi-VN") : "Chưa có thông tin");
+  if (selectedRecruiter) {
+      return (
+        <View style={{ flex: 1, backgroundColor: "#F7F7F9" }}>
+          <RecruiterPageView
+            employerId={selectedRecruiter}
+            onBack={() => setSelectedRecruiter(null)}
+          />
+        </View>
+      );
+    }
 
   return (
     <ScrollView className="flex-1 bg-gray-100 pt-1 px-1 pb-20">
@@ -57,11 +68,12 @@ export default function JobDetail({ job, employer, onClose }) {
         <Text className="text-2xl font-bold text-indigo-700">{displayValue(job.title)}</Text>
 
         {/* Công ty */}
+        <TouchableOpacity onPress={() => setSelectedRecruiter(job.employerId)}>
         <View className="mt-1 flex-row items-center gap-2">
           <Building2 size={20} color="#6366f1" />
           <Text className="text-lg text-gray-600">{displayValue(job.companyName)}</Text>
         </View>
-
+        </TouchableOpacity>
         {/* Thông tin nhanh */}
         <View className="mt-4 space-y-3 flex-row justify-between">
           <View className="flex-row gap-3 items-center">
