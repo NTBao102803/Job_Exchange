@@ -30,6 +30,10 @@ spring:
     consumer:
       group-id: ${KAFKA_GROUP_ID:job-group}
       auto-offset-reset: ${KAFKA_AUTO_OFFSET_RESET:earliest}
+    producer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 eureka:
   client:
@@ -42,7 +46,7 @@ jwt:
   secret: ${JWT_SECRET}
 
 kafka:
-  enabled: ${KAFKA_ENABLED:false}
+  enabled: ${KAFKA_ENABLED:true}
 
 logging:
   level:

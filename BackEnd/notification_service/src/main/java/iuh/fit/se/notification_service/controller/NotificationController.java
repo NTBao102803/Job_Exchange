@@ -4,11 +4,9 @@ import iuh.fit.se.notification_service.dto.ApplicationStatusChangedEvent;
 import iuh.fit.se.notification_service.dto.ApplicationSubmittedEvent;
 import iuh.fit.se.notification_service.dto.JobApprovedEvent;
 import iuh.fit.se.notification_service.dto.JobRejectedEvent;
-import iuh.fit.se.notification_service.kafka.JobEventConsumer;
+import iuh.fit.se.notification_service.kafka.AllEventConsumer;
 import iuh.fit.se.notification_service.model.Notification;
-import iuh.fit.se.notification_service.repository.NotificationRepository;
 import iuh.fit.se.notification_service.service.NotificationService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.Message;
@@ -26,7 +24,7 @@ public class NotificationController {
     private NotificationService notificationService;
 
     @Autowired
-    private JobEventConsumer jobEventConsumer;
+    private AllEventConsumer allEventConsumer;
 
     // ✅ Test gửi notification thủ công (Postman)
     @PostMapping("/send")

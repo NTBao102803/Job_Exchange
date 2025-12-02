@@ -196,7 +196,7 @@ public class JobServiceImpl implements JobService {
                 approvedJob.getTitle()
         );
         // Gửi REST
-        sendNotificationViaRest(event, "job-approved");
+//        sendNotificationViaRest(event, "job-approved");
 
         // Gửi Kafka nếu có
         jobEventProducer.ifPresent(producer -> {
@@ -227,7 +227,7 @@ public class JobServiceImpl implements JobService {
         JobRejectedEvent event = new JobRejectedEvent(rejectedJob.getId(), rejectedJob.getEmployerId(), rejectedJob.getTitle(), reason);
 
         // Gửi REST
-        sendNotificationViaRest(event, "job-rejected");
+//        sendNotificationViaRest(event, "job-rejected");
 
         // Gửi Kafka nếu có
         jobEventProducer.ifPresent(producer -> {

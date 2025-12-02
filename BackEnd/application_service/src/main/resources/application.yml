@@ -39,7 +39,7 @@ application:
   check-remote: ${APPLICATION_CHECK_REMOTE:true}
 
 kafka:
-  enabled: ${KAFKA_ENABLED:false}
+  enabled: ${KAFKA_ENABLED:true}
 
 logging:
   level:
