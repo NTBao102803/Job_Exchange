@@ -19,3 +19,7 @@ export const createConversation = async (jobId) => {
   const res = await axiosClient.post("/messages/conversations", { jobId });
   return res.data;
 };
+export const getUnreadMessageCount = async () => {
+  const res = await axiosClient.get("/messages/unread-count"); 
+  return res.data;
+};

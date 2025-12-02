@@ -63,5 +63,20 @@ public class ChatRestController {
         List<MessageDto> messages = chatService.getMessages(id, userId, userType);
         return ResponseEntity.ok(messages);
     }
+    @GetMapping("/unread-count")
+    public ResponseEntity<Integer> getTotalUnreadCount() {
+        String token = (String) SecurityContextHolder.getContext()
+                .getAuthentication().getCredentials();
 
+        Long entityId = tokenParser.extractEntityId(token);
+        String userType = tokenParser.extractSenderType(token);
+
+        log.info("GET TOTAL UNREAD COUNT for | userId: {}, userType: {}", entityId, userType);
+
+        // Gọi phương thức từ ChatService
+        int count = chatService.getTotalUnreadCount(userType, entityId);
+
+        log.info("TOTAL UNREAD COUNT: {}", count);
+        return ResponseEntity.ok(count);
+    }
 }

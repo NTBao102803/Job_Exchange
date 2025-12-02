@@ -157,7 +157,39 @@ const RecruiterMessenger = () => {
         },
       ]);
     });
+    await loadConversations();
   };
+
+  // ✅ 1. TẢI DANH SÁCH BAN ĐẦU VÀ CẬP NHẬT MỖI 3 GIÂY
+  useEffect(() => {
+    console.log("RecruiterMessenger - Component mount → Tải danh sách hội thoại");
+    loadConversations(); // Initial load
+
+    // Cài đặt interval 3s
+    const intervalId = setInterval(() => {
+      console.log("RecruiterMessenger - Refreshing conversations (3s interval)");
+      loadConversations();
+    }, 3000); 
+
+    // Cleanup khi component unmount
+    return () => clearInterval(intervalId); 
+  }, []);
+
+  // ✅ 2. TỰ ĐỘNG CHỌN CUỘC HỘI THOẠI GẦN NHẤT KHI VÀO UI
+  useEffect(() => {
+    // Chỉ chạy khi danh sách đã tải xong, có dữ liệu và chưa có chat nào được chọn
+    if (conversations.length > 0 && !selectedChat && !loading) {
+      console.log("RecruiterMessenger - Tự động chọn cuộc hội thoại gần nhất.");
+
+      // Sắp xếp theo thời gian tin nhắn cuối cùng (mới nhất đầu tiên)
+      const sorted = [...conversations].sort(
+        (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+      );
+
+      // Tự động chọn
+      handleSelectChat(sorted[0]);
+    }
+  }, [conversations, selectedChat, loading]);
 
   /** Gửi tin nhắn */
     const handleSend = async (e) => {   // <-- thêm async

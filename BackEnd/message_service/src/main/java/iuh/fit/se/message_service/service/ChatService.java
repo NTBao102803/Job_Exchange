@@ -13,5 +13,5 @@ public interface ChatService {
     List<ConversationDto> getConversations(String userType, Long userId);
 
     List<MessageDto> getMessages(Long conversationId, Long userId, String userType);
-
+    public int getTotalUnreadCount(String userType, Long userId);
 }

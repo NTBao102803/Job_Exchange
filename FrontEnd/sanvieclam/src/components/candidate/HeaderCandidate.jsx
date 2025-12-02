@@ -11,6 +11,7 @@ import {
 } from "../../api/NotificationApi";
 import { useUser } from "../../context/UserContext";
 import { getCandidateProfile } from "../../api/CandidateApi";
+import { getUnreadMessageCount } from "../../api/messageApi";
 
 const HeaderCandidate = ({
   onHomeClick,
@@ -30,6 +31,7 @@ const HeaderCandidate = ({
   const [stompClient, setStompClient] = useState(null);
   const [candidateId, setCandidateId] = useState(null);
   const [isReady, setIsReady] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   const headerRef = useRef(null);
   const menuRef = useRef(null);
@@ -61,9 +63,10 @@ const HeaderCandidate = ({
 
     const fetchNotifications = async () => {
       try {
-        const [notifs, count] = await Promise.all([
+        const [notifs, count, messageCount] = await Promise.all([
           getNotifications(candidateId),
           getUnreadCount(candidateId),
+          getUnreadMessageCount(),
         ]);
 
         const formatted = notifs
@@ -77,13 +80,14 @@ const HeaderCandidate = ({
 
         setNotifications(formatted);
         setUnreadCount(count);
+        setUnreadMessageCount(messageCount);
       } catch (err) {
-        console.error("Lỗi tải thông báo:", err.message);
+        console.error("Lỗi tải thông báo/tin nhắn:", err.message);
       }
     };
 
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // cập nhật mỗi 30s
+    const interval = setInterval(fetchNotifications, 3000); // cập nhật mỗi 30s
     return () => clearInterval(interval);
   }, [candidateId]);
 
@@ -256,11 +260,11 @@ const HeaderCandidate = ({
             onClick={() => navigate("/candidate/dashboard-candidatemessenger")}
             className="relative p-2 rounded-full hover:bg-white/10 transition"
           >
-            <MessageCircle className="w-6 h-6" /> {/* ✅ Icon Messenger */}
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
-                {unreadCount}
-              </span>
+            <MessageCircle className="w-6 h-6" />
+            {unreadMessageCount > 0 && ( 
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
+              {unreadMessageCount}
+            </span>
             )}
           </button>
 

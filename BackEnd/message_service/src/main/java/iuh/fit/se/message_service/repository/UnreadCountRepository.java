@@ -14,4 +14,7 @@ public interface UnreadCountRepository extends JpaRepository<UnreadCount, Long> 
     @Modifying
     @Query("UPDATE UnreadCount SET count = 0 WHERE conversationId = :convId AND userId = :userId AND userType = :userType")
     void resetCount(@Param("convId") Long convId, @Param("userId") Long userId, @Param("userType") String userType);
+
+    @Query("SELECT COALESCE(SUM(uc.count), 0) FROM UnreadCount uc WHERE uc.userId = :userId AND uc.userType = :userType")
+    int sumCountByUser(@Param("userId") Long userId, @Param("userType") String userType);
 }

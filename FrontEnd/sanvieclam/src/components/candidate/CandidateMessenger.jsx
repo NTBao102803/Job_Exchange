@@ -28,7 +28,11 @@ const CandidateMessenger = () => {
 
   // LOG 1: Kiểm tra token & userId
   console.log("CandidateMessenger - Token:", !!token);
-  console.log("CandidateMessenger - Candidate ID:", candidateId, typeof candidateId);
+  console.log(
+    "CandidateMessenger - Candidate ID:",
+    candidateId,
+    typeof candidateId
+  );
 
   // LOG 2: WebSocket kết nối
   useEffect(() => {
@@ -51,7 +55,9 @@ const CandidateMessenger = () => {
       setLoading(true);
       setError(null);
 
-      console.log("CandidateMessenger - Gọi API: GET /api/messages/conversations");
+      console.log(
+        "CandidateMessenger - Gọi API: GET /api/messages/conversations"
+      );
       const data = await getConversations();
 
       console.log("CandidateMessenger - API Response:", data);
@@ -62,11 +68,11 @@ const CandidateMessenger = () => {
 
       const mapped = data.map((c) => ({
         id: c.id,
-        otherName: c.otherUserName || "Ẩn danh",           // ĐÚNG FIELD
+        otherName: c.otherUserName || "Ẩn danh", // ĐÚNG FIELD
         avatar: c.otherUserAvatar || "https://i.pravatar.cc/150?img=1",
         lastMessage: c.lastMessage || "Chưa có tin nhắn",
-        lastMessageAt: c.lastMessageAt,                // ĐÚNG FIELD
-        unread: c.unreadCount || 0,                    // ĐÚNG FIELD
+        lastMessageAt: c.lastMessageAt, // ĐÚNG FIELD
+        unread: c.unreadCount || 0, // ĐÚNG FIELD
       }));
 
       setConversations(mapped);
@@ -91,7 +97,7 @@ const CandidateMessenger = () => {
         id: m.id,
         content: m.content,
         senderId: m.senderId,
-        fromSelf: m.fromSelf,                          // DÙNG TỪ BACKEND
+        fromSelf: m.fromSelf, // DÙNG TỪ BACKEND
         time: m.createdAt,
         avatar: m.senderAvatar || "https://i.pravatar.cc/150?img=5",
       }));
@@ -137,47 +143,81 @@ const CandidateMessenger = () => {
         {
           id: msg.id,
           content: msg.content,
-          fromSelf: msg.fromSelf,                  // DÙNG TỪ BACKEND
+          fromSelf: msg.fromSelf, // DÙNG TỪ BACKEND
           time: msg.createdAt,
           avatar: msg.senderAvatar,
         },
       ]);
     });
+    await loadConversations();
   };
+  // ✅ 1. TẢI DANH SÁCH BAN ĐẦU VÀ CẬP NHẬT MỖI 3 GIÂY
+  useEffect(() => {
+    console.log("CandidateMessenger - Component mount → loadConversations");
+    loadConversations(); // Initial load
+
+    // Cài đặt interval 3s
+    const intervalId = setInterval(() => {
+      console.log(
+        "CandidateMessenger - Refreshing conversations (3s interval)"
+      );
+      loadConversations();
+    }, 3000);
+
+    // Cleanup khi component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // ✅ 2. TỰ ĐỘNG CHỌN CUỘC HỘI THOẠI GẦN NHẤT KHI VÀO UI
+  useEffect(() => {
+    // Chỉ chạy khi danh sách đã tải xong, có dữ liệu và chưa có chat nào được chọn
+    if (conversations.length > 0 && !selectedChat && !loading) {
+      console.log("CandidateMessenger - Tự động chọn cuộc hội thoại gần nhất.");
+
+      // Sắp xếp theo thời gian tin nhắn cuối cùng (mới nhất đầu tiên)
+      const sorted = [...conversations].sort(
+        (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+      );
+
+      // Tự động chọn
+      handleSelectChat(sorted[0]);
+    }
+  }, [conversations, selectedChat, loading]); // Phụ thuộc vào conversations, selectedChat, loading
 
   /** Gửi tin nhắn */
-  const handleSend = async (e) => {   // <-- thêm async
-  e.preventDefault();
-  if (!message.trim() || !selectedChat) return;
+  const handleSend = async (e) => {
+    // <-- thêm async
+    e.preventDefault();
+    if (!message.trim() || !selectedChat) return;
 
-  const content = message.trim();
-  const convId = selectedChat.id;
+    const content = message.trim();
+    const convId = selectedChat.id;
 
-  console.log("Gửi tin nhắn:", { convId, content });
-  sendMessageWS(convId, content);
+    console.log("Gửi tin nhắn:", { convId, content });
+    sendMessageWS(convId, content);
 
-  // Optimistic UI
-  setMessages((prev) => [
-    ...prev,
-    {
-      id: Date.now(),
-      content,
-      fromSelf: true,
-      time: new Date().toISOString(),
-      avatar: "https://i.pravatar.cc/150?img=1",
-    },
-  ]);
+    // Optimistic UI
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        content,
+        fromSelf: true,
+        time: new Date().toISOString(),
+        avatar: "https://i.pravatar.cc/150?img=1",
+      },
+    ]);
 
-  setMessage("");
+    setMessage("");
 
-  // Reload dữ liệu: tin nhắn + danh sách conversation
-  try {
-    await loadMessages(convId);
-    await loadConversations();
-  } catch (err) {
-    console.error("Lỗi khi reload sau gửi tin nhắn:", err);
-  }
-};
+    // Reload dữ liệu: tin nhắn + danh sách conversation
+    try {
+      await loadMessages(convId);
+      await loadConversations();
+    } catch (err) {
+      console.error("Lỗi khi reload sau gửi tin nhắn:", err);
+    }
+  };
 
   // Tải danh sách khi mount
   useEffect(() => {
@@ -187,7 +227,9 @@ const CandidateMessenger = () => {
 
   // Lọc danh sách
   const filteredConversations = conversations.filter((c) => {
-    const matchSearch = c.otherName.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = c.otherName
+      .toLowerCase()
+      .includes(search.toLowerCase());
     const matchFilter = filter === "unread" ? c.unread > 0 : true;
     return matchSearch && matchFilter;
   });
@@ -206,7 +248,6 @@ const CandidateMessenger = () => {
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-blue-200/60 via-white/70 to-indigo-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-
         {/* LIST */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-blue-300/70 via-blue-200/60 to-white/70 backdrop-blur-md relative">
           <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
@@ -318,7 +359,9 @@ const CandidateMessenger = () => {
                 {messages.map((m, i) => (
                   <div
                     key={i}
-                    className={`flex ${m.fromSelf ? "justify-end" : "justify-start"}`}
+                    className={`flex ${
+                      m.fromSelf ? "justify-end" : "justify-start"
+                    }`}
                   >
                     <div
                       className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm shadow ${

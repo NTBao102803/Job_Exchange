@@ -96,6 +96,12 @@ public class ChatServiceImpl implements ChatService {
                 .map(c -> toConversationDTO(c, getUnreadCount(c.getId(), userType, userId), userType, userId))
                 .toList();
     }
+    // Tính tổng số tin nhắn chưa đọc của người dùng
+    @Override
+    public int getTotalUnreadCount(String userType, Long userId) {
+        log.info("GET TOTAL UNREAD COUNT | userId: {}, userType: {}", userId, userType);
+        return unreadRepo.sumCountByUser(userId, userType);
+    }
 
     private ConversationDto toConversationDTO(Conversation c, int unread, String viewerType, Long viewerId) {
         String otherName;
