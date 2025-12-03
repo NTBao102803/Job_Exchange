@@ -141,7 +141,8 @@ export default function Login() {
               </LinearGradient>
 
               {/* Forgot password */}
-              <TouchableOpacity className="mt-3">
+              <TouchableOpacity className="mt-3"
+                                 onPress={() => router.replace("/forgotpassword")} >
                 <Text className="text-indigo-600 text-sm text-center">
                   Quên mật khẩu?
                 </Text>

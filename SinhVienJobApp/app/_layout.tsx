@@ -10,6 +10,7 @@ export default function RootLayout() {
       <Stack.Screen name="messages" />
       <Stack.Screen name="changepassword" />
       <Stack.Screen name="appliedjobs" />
+      <Stack.Screen name="forgotpassword" />
 
       {/* Candidate Tab Stack */}
       <Stack.Screen name="candidate/_layout" />

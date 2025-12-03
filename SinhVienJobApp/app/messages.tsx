@@ -1,194 +1,232 @@
-// MessengerMobile.tsx
-import { useRouter } from "expo-router";
-import { ArrowLeft, Search, Send } from "lucide-react-native";
-import React, { useState } from "react";
-import {
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useRef, useState } from "react";
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-interface Conversation {
-  id: number;
-  otherName: string;
-  avatar: string;
-  lastMessage: string;
-  lastMessageAt: string;
-  unread: number;
-}
+const ForgotPasswordMobile = () => {
+  const [step, setStep] = useState("email");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [form, setForm] = useState({ newPassword: "", confirmPassword: "" });
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState("");
+  const inputRef = useRef<TextInput>(null);
 
-interface Message {
-  id: number;
-  content: string;
-  fromSelf: boolean;
-  time: string;
-  avatar: string;
-}
+  useEffect(() => setError(""), [step]);
 
-const dummyConversations: Conversation[] = [
-  {
-    id: 1,
-    otherName: "Nguyen Van A",
-    avatar: "https://i.pravatar.cc/150?img=1",
-    lastMessage: "Xin chào, bạn khỏe không?",
-    lastMessageAt: "2025-11-27T10:30:00",
-    unread: 2,
-  },
-  {
-    id: 2,
-    otherName: "Tran Thi B",
-    avatar: "https://i.pravatar.cc/150?img=2",
-    lastMessage: "Cảm ơn nhé!",
-    lastMessageAt: "2025-11-27T09:15:00",
-    unread: 0,
-  },
-];
+  useEffect(() => {
+    if (step === "otp" && timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [step, timeLeft]);
 
-const dummyMessages: Message[] = [
-  { id: 1, content: "Xin chào!", fromSelf: false, time: "10:30", avatar: "https://i.pravatar.cc/150?img=1" },
-  { id: 2, content: "Chào bạn, mình khỏe!", fromSelf: true, time: "10:31", avatar: "https://i.pravatar.cc/150?img=3" },
-];
-
-export default function MessengerMobile() {
-  const [selectedChat, setSelectedChat] = useState<Conversation | null>(null);
-  const [message, setMessage] = useState<string>("");
-  const [search, setSearch] = useState<string>("");
-  const [filter, setFilter] = useState<"all" | "unread">("all");
-  const router = useRouter();
-
-  const formatTime = (iso: string) => {
-    const date = new Date(iso);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const handleSendOTP = () => {
+    if (!email.trim()) return setError("Vui lòng nhập email!");
+    Alert.alert("OTP đã gửi", `Mã OTP đã gửi tới ${email}`);
+    setStep("otp");
+    setTimeLeft(60);
   };
 
-  // Lọc conversation theo tab + search
-  const filteredConversations = dummyConversations
-    .filter((c) => (filter === "unread" ? c.unread > 0 : true))
-    .filter((c) => c.otherName.toLowerCase().includes(search.toLowerCase()));
+  const handleVerifyOTP = () => {
+    if (otp.length !== 6) return setError("Mã OTP phải đủ 6 chữ số!");
+    Alert.alert("Thành công", "OTP hợp lệ!");
+    setStep("reset");
+  };
 
-  if (!selectedChat) {
-    return (
-      <View style={{ flex: 1, backgroundColor: "#121212" }}>
-        {/* HEADER */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", padding: 16, borderBottomWidth: 1, borderColor: "#333", backgroundColor: "#1e1e1e" ,paddingTop: Platform.OS === "ios" ? 50 : 16}}>
-          <TouchableOpacity onPress={() => router.replace("/candidate/home")}>
-      <ArrowLeft size={24} color="#fff" />
-    </TouchableOpacity>
-          <Text style={{ fontSize: 20, fontWeight: "bold", color: "#fff" }}>Tin nhắn</Text>
-          <Text></Text>
+  const handleResetPassword = () => {
+    if (form.newPassword.length < 8) return setError("Mật khẩu phải có ít nhất 8 ký tự.");
+    if (form.newPassword !== form.confirmPassword) return setError("Mật khẩu không khớp.");
+
+    Alert.alert("Thành công", "Đổi mật khẩu thành công!");
+    setStep("email");
+    setEmail("");
+    setOtp("");
+    setForm({ newPassword: "", confirmPassword: "" });
+  };
+
+  const resendOtp = () => {
+    if (timeLeft === 0) {
+      Alert.alert("OTP mới", `OTP mới đã gửi tới ${email}`);
+      setOtp("");
+      setTimeLeft(60);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* HEADER */}
+      <Text style={styles.title}>
+        {step === "email"
+          ? "Quên mật khẩu"
+          : step === "otp"
+          ? "Nhập mã OTP"
+          : "Đặt lại mật khẩu"}
+      </Text>
+
+      {/* BACK BUTTON */}
+      {step !== "email" && (
+        <TouchableOpacity onPress={() => setStep(step === "otp" ? "email" : "otp")}>
+          <Text style={styles.backBtn}>← Quay lại</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* STEP 1 – EMAIL */}
+      {step === "email" && (
+        <View style={styles.box}>
+          <TextInput
+            placeholder="Nhập email"
+            value={email}
+            onChangeText={setEmail}
+            style={styles.input}
+          />
+          {error !== "" && <Text style={styles.error}>{error}</Text>}
+          <TouchableOpacity style={styles.btn} onPress={handleSendOTP}>
+            <Text style={styles.btnText}>Gửi mã OTP</Text>
+          </TouchableOpacity>
         </View>
+      )}
 
-        {/* SEARCH BAR */}
-        <View style={{ padding: 12 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#2a2a2a", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 }}>
-            <Search size={18} color="#aaa" />
-            <TextInput
-              placeholder="Tìm kiếm..."
-              placeholderTextColor="#aaa"
-              style={{ marginLeft: 8, flex: 1, color: "#fff" }}
-              value={search}
-              onChangeText={setSearch}
-            />
-          </View>
-        </View>
+      {/* STEP 2 – OTP ENTER FAST */}
+      {step === "otp" && (
+        <View style={styles.box}>
+          <TextInput
+            ref={inputRef}
+            style={styles.otpInput}
+            value={otp}
+            onChangeText={(text) => {
+              if (/^\d{0,6}$/.test(text)) setOtp(text);
+            }}
+            autoFocus
+            maxLength={6}
+            keyboardType="numeric"
+          />
+          {error !== "" && <Text style={styles.error}>{error}</Text>}
 
-        {/* TABS ALL / UNREAD */}
-        <View style={{ flexDirection: "row", borderBottomWidth: 1, borderColor: "#333", backgroundColor: "#1e1e1e" }}>
-          {["all", "unread"].map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setFilter(tab as "all" | "unread")}
-              style={{
-                flex: 1,
-                paddingVertical: 12,
-                alignItems: "center",
-                borderBottomWidth: filter === tab ? 2 : 0,
-                borderBottomColor: "#0b93f6",
-              }}
-            >
-              <Text style={{ color: "#fff", fontWeight: filter === tab ? "bold" : "normal" }}>
-                {tab === "all" ? "Tất cả" : "Chưa đọc"}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+          <TouchableOpacity style={styles.btn} onPress={handleVerifyOTP}>
+            <Text style={styles.btnText}>Xác nhận OTP</Text>
+          </TouchableOpacity>
 
-        {/* LIST OF CONVERSATIONS */}
-        <FlatList
-          data={filteredConversations}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => setSelectedChat(item)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                padding: 12,
-                borderBottomWidth: 1,
-                borderColor: "#333",
-              }}
-            >
-              <Image source={{ uri: item.avatar }} style={{ width: 50, height: 50, borderRadius: 25, marginRight: 12 }} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: "bold", color: "#fff" }}>{item.otherName}</Text>
-                <Text style={{ color: "#aaa" }} numberOfLines={1}>{item.lastMessage}</Text>
-              </View>
-              {item.unread > 0 && (
-                <View style={{ backgroundColor: "red", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 }}>
-                  <Text style={{ color: "#fff", fontSize: 12 }}>{item.unread}</Text>
-                </View>
-              )}
+          {timeLeft > 0 ? (
+            <Text style={styles.timer}>Gửi lại OTP sau {timeLeft}s</Text>
+          ) : (
+            <TouchableOpacity onPress={resendOtp}>
+              <Text style={styles.resend}>Gửi lại OTP</Text>
             </TouchableOpacity>
           )}
-        />
-      </View>
-    );
-  }
+        </View>
+      )}
 
-  // CHAT PANEL
-  return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#121212" }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      {/* HEADER */}
-      <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderColor: "#333", backgroundColor: "#1e1e1e" ,paddingTop: Platform.OS === "ios" ? 50 : 16}}>
-        <TouchableOpacity onPress={() => setSelectedChat(null)}>
-          <ArrowLeft size={24} color="#fff" />
-        </TouchableOpacity>
-        <Image source={{ uri: selectedChat.avatar }} style={{ width: 40, height: 40, borderRadius: 20, marginLeft: 12 }} />
-        <Text style={{ fontWeight: "bold", color: "#fff", marginLeft: 12, fontSize: 16 }}>{selectedChat.otherName}</Text>
-      </View>
-
-      {/* MESSAGES */}
-      <ScrollView style={{ flex: 1, padding: 12 }}>
-        {dummyMessages.map((m) => (
-          <View key={m.id} style={{ flexDirection: m.fromSelf ? "row-reverse" : "row", marginBottom: 8, alignItems: "flex-end" }}>
-            <Image source={{ uri: m.avatar }} style={{ width: 36, height: 36, borderRadius: 18, marginHorizontal: 6 }} />
-            <View style={{ maxWidth: "70%", backgroundColor: m.fromSelf ? "#0b93f6" : "#2a2a2a", padding: 10, borderRadius: 16 }}>
-              <Text style={{ color: m.fromSelf ? "#fff" : "#fff" }}>{m.content}</Text>
-              <Text style={{ fontSize: 10, color: "#aaa", textAlign: "right" }}>{m.time}</Text>
-            </View>
+      {/* STEP 3 – RESET PASSWORD */}
+      {step === "reset" && (
+        <View style={styles.box}>
+          <View style={styles.passwordRow}>
+            <TextInput
+              placeholder="Mật khẩu mới"
+              secureTextEntry={!show}
+              value={form.newPassword}
+              onChangeText={(t) => setForm({ ...form, newPassword: t })}
+              style={[styles.input, { flex: 1 }]}
+            />
+            <TouchableOpacity onPress={() => setShow(!show)}>
+              <Ionicons name={show ? "eye-off" : "eye"} size={22} />
+            </TouchableOpacity>
           </View>
-        ))}
-      </ScrollView>
 
-      {/* INPUT */}
-      <View style={{ flexDirection: "row", alignItems: "center", padding: 10, borderTopWidth: 1, borderColor: "#333", backgroundColor: "#1e1e1e" ,paddingBottom: Platform.OS === "ios" ? 30 : 10}}>
-        <TextInput
-          style={{ flex: 1, borderWidth: 1, borderColor: "#555", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, color: "#fff" }}
-          placeholder="Nhập tin nhắn..."
-          placeholderTextColor="#aaa"
-          value={message}
-          onChangeText={setMessage}
-        />
-        <TouchableOpacity onPress={() => setMessage("")} style={{ marginLeft: 8, backgroundColor: "#0b93f6", padding: 10, borderRadius: 20 }}>
-          <Send size={18} color="#fff" />
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+          <TextInput
+            placeholder="Nhập lại mật khẩu"
+            secureTextEntry={!show}
+            value={form.confirmPassword}
+            onChangeText={(t) => setForm({ ...form, confirmPassword: t })}
+            style={styles.input}
+          />
+
+          {error !== "" && <Text style={styles.error}>{error}</Text>}
+
+          <TouchableOpacity style={styles.btn} onPress={handleResetPassword}>
+            <Text style={styles.btnText}>Xác nhận đổi mật khẩu</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#f5f5f5",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  backBtn: {
+    color: "#4f46e5",
+    marginBottom: 12,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  box: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 16,
+    elevation: 3,
+  },
+  input: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: "#fff",
+  },
+  otpInput: {
+    fontSize: 28,
+    letterSpacing: 20,
+    textAlign: "center",
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 14,
+    backgroundColor: "#fff",
+  },
+  error: {
+    color: "red",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  btn: {
+    backgroundColor: "#4f46e5",
+    padding: 14,
+    borderRadius: 12,
+    marginTop: 10,
+  },
+  btnText: {
+    color: "white",
+    textAlign: "center",
+    fontWeight: "700",
+  },
+  timer: {
+    marginTop: 12,
+    textAlign: "center",
+    color: "#555",
+  },
+  resend: {
+    color: "#4f46e5",
+    textAlign: "center",
+    marginTop: 12,
+    fontWeight: "600",
+  },
+  passwordRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+});
+
+export default ForgotPasswordMobile;
