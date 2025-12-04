@@ -18,12 +18,10 @@ const JobList = () => {
     const fetchJobs = async () => {
       try {
         const jobList = await getAllPublicJobs();
-        console.log("JobList từ API:", jobList);
         const jobsWithEmployer = await Promise.all(
           jobList.map(async (job) => {
             try {
               const employer = await getEmployerById(job.employerId);
-              console.log("Employer:", employer);
               return {
                 ...job,
                 companyName: employer.companyName,

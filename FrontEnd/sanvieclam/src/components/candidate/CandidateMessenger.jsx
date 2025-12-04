@@ -9,6 +9,7 @@ import {
   getConversations,
   getMessagesByConversation,
 } from "../../api/messageApi";
+import { useLocation } from "react-router-dom";
 
 const CandidateMessenger = () => {
   const [conversations, setConversations] = useState([]);
@@ -21,27 +22,20 @@ const CandidateMessenger = () => {
   const [error, setError] = useState(null);
 
   const subscriptionRef = useRef(null);
-  const stompClientRef = useRef(null); // Lưu stompClient
+  const stompClientRef = useRef(null);
 
   const token = localStorage.getItem("token");
   const candidateId = Number(localStorage.getItem("userId"));
 
-  // LOG 1: Kiểm tra token & userId
-  console.log("CandidateMessenger - Token:", !!token);
-  console.log(
-    "CandidateMessenger - Candidate ID:",
-    candidateId,
-    typeof candidateId
-  );
+  const location = useLocation();
+  const navigatedConversationId = location.state?.conversationId;
 
   // LOG 2: WebSocket kết nối
   useEffect(() => {
     if (token) {
-      console.log("CandidateMessenger - Kết nối WebSocket...");
       connectWebSocket(
         token,
         () => {
-          console.log("WebSocket connected");
           stompClientRef.current = window.stompClient; // Lấy từ global
         },
         (err) => console.error("WebSocket error:", err)
@@ -55,12 +49,7 @@ const CandidateMessenger = () => {
       setLoading(true);
       setError(null);
 
-      console.log(
-        "CandidateMessenger - Gọi API: GET /api/messages/conversations"
-      );
       const data = await getConversations();
-
-      console.log("CandidateMessenger - API Response:", data);
 
       if (!Array.isArray(data)) {
         throw new Error("Dữ liệu hội thoại không hợp lệ");
@@ -76,7 +65,6 @@ const CandidateMessenger = () => {
       }));
 
       setConversations(mapped);
-      console.log("Tổng hội thoại:", mapped.length);
     } catch (error) {
       console.error("CandidateMessenger - Lỗi load conversations:", error);
       setError("Không tải được tin nhắn. Vui lòng thử lại.");
@@ -88,21 +76,17 @@ const CandidateMessenger = () => {
   /** LOAD tin nhắn */
   const loadMessages = async (id) => {
     try {
-      console.log(`CandidateMessenger - Tải tin nhắn cho conv ID: ${id}`);
       const data = await getMessagesByConversation(id);
-
-      console.log("Tin nhắn thô:", data);
 
       const mapped = data.map((m) => ({
         id: m.id,
         content: m.content,
         senderId: m.senderId,
-        fromSelf: m.fromSelf, // DÙNG TỪ BACKEND
+        fromSelf: m.fromSelf,
         time: m.createdAt,
         avatar: m.senderAvatar || "https://i.pravatar.cc/150?img=5",
       }));
 
-      console.log("Tin nhắn sau map:", mapped);
       setMessages(mapped);
     } catch (error) {
       console.error("CandidateMessenger - Lỗi load messages:", error);
@@ -111,7 +95,6 @@ const CandidateMessenger = () => {
 
   /** Chọn chat */
   const handleSelectChat = async (conv) => {
-    console.log("CandidateMessenger - Chọn chat:", conv);
     setSelectedChat(conv);
 
     // 1. GỌI /app/chat.open → đánh dấu đã đọc + load tin nhắn
@@ -120,7 +103,6 @@ const CandidateMessenger = () => {
         destination: "/app/chat.open",
         body: JSON.stringify({ conversationId: conv.id }),
       });
-      console.log("Gửi /app/chat.open cho conv:", conv.id);
     } else {
       console.warn("WebSocket chưa kết nối → dùng REST");
     }
@@ -130,14 +112,11 @@ const CandidateMessenger = () => {
 
     // 3. Hủy subscribe cũ
     if (subscriptionRef.current) {
-      console.log("Hủy subscribe cũ");
       subscriptionRef.current.unsubscribe();
     }
 
     // 4. Subscribe real-time
-    console.log("Đăng ký WebSocket cho conv:", conv.id);
     subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
-      console.log("Tin nhắn mới (WS):", msg);
       setMessages((prev) => [
         ...prev,
         {
@@ -153,14 +132,10 @@ const CandidateMessenger = () => {
   };
   // ✅ 1. TẢI DANH SÁCH BAN ĐẦU VÀ CẬP NHẬT MỖI 3 GIÂY
   useEffect(() => {
-    console.log("CandidateMessenger - Component mount → loadConversations");
     loadConversations(); // Initial load
 
     // Cài đặt interval 3s
     const intervalId = setInterval(() => {
-      console.log(
-        "CandidateMessenger - Refreshing conversations (3s interval)"
-      );
       loadConversations();
     }, 3000);
 
@@ -168,21 +143,39 @@ const CandidateMessenger = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // ✅ 2. TỰ ĐỘNG CHỌN CUỘC HỘI THOẠI GẦN NHẤT KHI VÀO UI
+  // ✅ 2. TỰ ĐỘNG CHỌN CUỘC HỘI THOẠI: Ưu tiên conversationId từ navigation state
   useEffect(() => {
-    // Chỉ chạy khi danh sách đã tải xong, có dữ liệu và chưa có chat nào được chọn
+    // Chỉ chạy khi danh sách đã tải xong, chưa có chat nào được chọn, và không còn loading
     if (conversations.length > 0 && !selectedChat && !loading) {
-      console.log("CandidateMessenger - Tự động chọn cuộc hội thoại gần nhất.");
+      let conversationToSelect = null;
 
-      // Sắp xếp theo thời gian tin nhắn cuối cùng (mới nhất đầu tiên)
-      const sorted = [...conversations].sort(
-        (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
-      );
+      // 1. Ưu tiên: Conversation ID từ navigation state (khi click nút Nhắn tin)
+      if (navigatedConversationId) {
+        conversationToSelect = conversations.find(
+          (c) => c.id === navigatedConversationId
+        );
+        if (conversationToSelect) {
+          console.log(
+            "CandidateMessenger - Trỏ tới cuộc hội thoại đã tạo từ navigation state:",
+            navigatedConversationId
+          );
+        }
+      }
 
-      // Tự động chọn
-      handleSelectChat(sorted[0]);
+      // 2. Fallback: Cuộc hội thoại gần nhất (khi click icon Message trên Header)
+      if (!conversationToSelect) {
+        const sorted = [...conversations].sort(
+          (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+        );
+        conversationToSelect = sorted[0];
+      }
+
+      // 3. Tiến hành chọn
+      if (conversationToSelect) {
+        handleSelectChat(conversationToSelect);
+      }
     }
-  }, [conversations, selectedChat, loading]); // Phụ thuộc vào conversations, selectedChat, loading
+  }, [conversations, selectedChat, loading, navigatedConversationId]);
 
   /** Gửi tin nhắn */
   const handleSend = async (e) => {
@@ -193,7 +186,6 @@ const CandidateMessenger = () => {
     const content = message.trim();
     const convId = selectedChat.id;
 
-    console.log("Gửi tin nhắn:", { convId, content });
     sendMessageWS(convId, content);
 
     // Optimistic UI
@@ -221,7 +213,6 @@ const CandidateMessenger = () => {
 
   // Tải danh sách khi mount
   useEffect(() => {
-    console.log("CandidateMessenger - Component mount → loadConversations");
     loadConversations();
   }, []);
 
@@ -233,8 +224,6 @@ const CandidateMessenger = () => {
     const matchFilter = filter === "unread" ? c.unread > 0 : true;
     return matchSearch && matchFilter;
   });
-
-  console.log("Danh sách sau lọc:", filteredConversations.length);
 
   // Format time
   const formatTime = (isoString) => {

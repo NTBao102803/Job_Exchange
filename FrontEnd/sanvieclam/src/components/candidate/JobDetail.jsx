@@ -31,7 +31,7 @@ const JobDetail = () => {
 
   useEffect(() => {
     if (!job) {
-      // fetch(`/api/jobs/${id}`).then(res => res.json()).then(setJob);
+      
     }
   }, [id, job]);
 
