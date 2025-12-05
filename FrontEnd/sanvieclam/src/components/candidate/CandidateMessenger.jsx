@@ -23,12 +23,17 @@ const CandidateMessenger = () => {
 
   const subscriptionRef = useRef(null);
   const stompClientRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const token = localStorage.getItem("token");
   const candidateId = Number(localStorage.getItem("userId"));
 
   const location = useLocation();
   const navigatedConversationId = location.state?.conversationId;
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // LOG 2: WebSocket kết nối
   useEffect(() => {
@@ -366,6 +371,7 @@ const CandidateMessenger = () => {
                     </div>
                   </div>
                 ))}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* INPUT */}
