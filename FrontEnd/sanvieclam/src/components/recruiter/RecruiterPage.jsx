@@ -78,7 +78,7 @@ const RecruiterPage = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const url = `http://localhost:8080/ws-comments?token=${encodeURIComponent(token.replace("Bearer ", ""))}`;
+    const url = `${import.meta.env.VITE_API_URL}/ws-comments?token=${encodeURIComponent(token.replace("Bearer ", ""))}`;
     const client = new Client({ webSocketFactory: () => new SockJS(url), reconnectDelay: 5000 });
 
     client.onConnect = () => {

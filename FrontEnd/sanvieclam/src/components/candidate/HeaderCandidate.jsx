@@ -101,7 +101,7 @@ const HeaderCandidate = ({
       return;
     }
 
-    const socketUrl = `http://localhost:8080/ws-notifications?token=${encodeURIComponent(
+    const socketUrl = `${import.meta.env.VITE_API_URL}/ws-notifications?token=${encodeURIComponent(
       token.replace("Bearer ", "")
     )}`;
 

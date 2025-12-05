@@ -108,7 +108,7 @@ const RecruiterPageView = () => {
     }
 
     const cleanToken = token.replace("Bearer ", "");
-    const url = `http://localhost:8080/ws-comments?token=${encodeURIComponent(
+    const url = `${import.meta.env.VITE_API_URL}/ws-comments?token=${encodeURIComponent(
       cleanToken
     )}`;
     console.log("🔗 Kết nối WS tới:", url);
