@@ -1,10 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Send, Search, MoreHorizontal } from "lucide-react";
-import {
-  connectWebSocket,
-  subscribeConversation,
-  sendMessageWS,
-} from "../../services/socket";
+import { sendMessageWS } from "../../services/socket";
 import {
   getConversations,
   getMessagesByConversation,
@@ -20,32 +16,17 @@ const CandidateMessenger = () => {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  const messagesContainerRef = useRef(null); // ← Thanh trượt chỉ trong khung chat
-  const pollCountRef = useRef(0); // ← Đếm số lần polling
-  const pollIntervalRef = useRef(null); // ← Lưu interval
-
-  const token = localStorage.getItem("token");
+  const messagesContainerRef = useRef(null); // Thanh trượt chỉ trong khung chat
   const location = useLocation();
   const navigatedConversationId = location.state?.conversationId;
 
-  // THANH TRƯỢT CHỈ TRONG KHUNG CHAT – MƯỢT NHƯ ZALO
+  // Cuộn xuống dưới cùng khi có tin mới
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
-
-  // Kết nối WebSocket (giữ nguyên)
-  useEffect(() => {
-    if (token) {
-      connectWebSocket(
-        token,
-        () => {},
-        (err) => console.error("WebSocket error:", err)
-      );
-    }
-  }, [token]);
 
   const loadConversations = async () => {
     try {
@@ -63,7 +44,7 @@ const CandidateMessenger = () => {
         setConversations(mapped);
       }
     } catch (error) {
-      console.error("Lỗi load conversations:", error);
+      console.error("Lỗi tải danh sách chat:", error);
     } finally {
       setLoading(false);
     }
@@ -81,7 +62,7 @@ const CandidateMessenger = () => {
       }));
       setMessages(mapped);
     } catch (error) {
-      console.error("Lỗi load messages:", error);
+      console.error("Lỗi tải tin nhắn:", error);
     }
   };
 
@@ -91,31 +72,15 @@ const CandidateMessenger = () => {
     await loadMessages(conv.id);
   };
 
-  // BẮT ĐẦU POLLING 3s x 4 lần (12 giây)
-  const startPolling = () => {
-    pollCountRef.current = 0;
-    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-
-    pollIntervalRef.current = setInterval(() => {
-      loadConversations();
-      pollCountRef.current += 1;
-      if (pollCountRef.current >= 4) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
-      }
-    }, 3000);
-  };
-
-  // TẢI LẦN ĐẦU + BẮT ĐẦU POLLING 12s
+  // TẢI LẦN ĐẦU KHI MỞ TRANG
   useEffect(() => {
     loadConversations();
-    startPolling();
   }, []);
 
-  // TỰ ĐỘNG CHỌN CHAT
+  // TỰ ĐỘNG CHỌN CUỘC TRÒ CHUYỆN (ưu tiên từ navigation hoặc mới nhất)
   useEffect(() => {
     if (conversations.length > 0 && !selectedChat && !loading) {
-      let target =
+      const target =
         conversations.find((c) => c.id === navigatedConversationId) ||
         [...conversations].sort(
           (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
@@ -124,22 +89,25 @@ const CandidateMessenger = () => {
     }
   }, [conversations, selectedChat, loading, navigatedConversationId]);
 
-  // GỬI TIN NHẮN → RELOAD + BẬT LẠI POLLING 12s
+  // GỬI TIN NHẮN → ĐỢI 5 GIÂY → TỰ ĐỘNG RELOAD LẠI
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
     const content = message.trim();
-    setMessage("");
+    setMessage(""); // Xóa ô nhập ngay
 
     try {
       await sendMessageWS(selectedChat.id, content);
-      await loadConversations();
-      await loadMessages(selectedChat.id);
-      startPolling(); // Bật lại polling 12s sau khi gửi
+
+      // ĐỢI 5 GIÂY ĐỂ SERVER LƯU XONG → SAU ĐÓ TỰ RELOAD
+      setTimeout(async () => {
+        await loadConversations();
+        await loadMessages(selectedChat.id);
+      }, 5000);
     } catch (err) {
       alert("Gửi tin nhắn thất bại!");
-      setMessage(content);
+      setMessage(content); // Trả lại tin nhắn nếu lỗi
     }
   };
 
@@ -162,7 +130,7 @@ const CandidateMessenger = () => {
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-blue-200/60 via-white/70 to-indigo-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-        {/* DANH SÁCH – GIỮ NGUYÊN 100% */}
+        {/* DANH SÁCH CHAT */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-blue-300/70 via-blue-200/60 to-white/70 backdrop-blur-md relative">
           <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
@@ -243,10 +211,11 @@ const CandidateMessenger = () => {
           </div>
         </div>
 
-        {/* KHUNG CHAT – THANH TRƯỢT CHỈ Ở ĐÂY */}
+        {/* KHUNG CHAT CHÍNH */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-blue-100/80 to-indigo-200/70 backdrop-blur-md relative">
           {selectedChat ? (
             <>
+              {/* HEADER */}
               <div className="flex items-center gap-3 p-4 border-b border-white/40 bg-white/70 shadow">
                 <img
                   src={selectedChat.avatar}
@@ -262,7 +231,7 @@ const CandidateMessenger = () => {
                 </div>
               </div>
 
-              {/* KHUNG TIN NHẮN – CÓ THANH TRƯỢT RIÊNG */}
+              {/* TIN NHẮN – THANH TRƯỢT CHỈ Ở ĐÂY */}
               <div
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
@@ -290,6 +259,7 @@ const CandidateMessenger = () => {
                 ))}
               </div>
 
+              {/* FORM GỬI TIN */}
               <form
                 onSubmit={handleSend}
                 className="p-4 border-t border-white/40 bg-white/70 flex items-center gap-3"
