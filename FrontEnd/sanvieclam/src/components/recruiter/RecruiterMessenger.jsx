@@ -304,7 +304,7 @@ const RecruiterMessenger = () => {
           // update conversation entry lastMessage/unread locally
           setConversations((prev) =>
             prev.map((c) =>
-              c.id === selectedChat.id
+              c.id === conversationId
                 ? { ...c, lastMessage: msg.content, unread: 0, lastMessageAt: msg.createdAt }
                 : c
             )
