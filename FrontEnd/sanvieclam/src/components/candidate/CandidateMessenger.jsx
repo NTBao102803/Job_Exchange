@@ -22,13 +22,13 @@ const CandidateMessenger = () => {
 
   const subscriptionRef = useRef(null);
   const stompClientRef = useRef(null);
-  const messagesEndRef = useRef(null); // để auto scroll
+  const messagesEndRef = useRef(null);
 
   const token = localStorage.getItem("token");
   const location = useLocation();
   const navigatedConversationId = location.state?.conversationId;
 
-  // Auto scroll xuống dưới cùng khi có tin mới
+  // Auto scroll xuống dưới
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -46,12 +46,11 @@ const CandidateMessenger = () => {
     }
   }, [token]);
 
-  // Load danh sách hội thoại
+  // Load danh sách hội thoại (chỉ gọi 1 lần khi mở trang)
   const loadConversations = async () => {
     try {
       setLoading(true);
       const data = await getConversations();
-
       if (!Array.isArray(data)) return;
 
       const mapped = data.map((c) => ({
@@ -71,7 +70,7 @@ const CandidateMessenger = () => {
     }
   };
 
-  // Load tin nhắn của một cuộc chat
+  // Load tin nhắn khi chọn chat
   const loadMessages = async (id) => {
     try {
       const data = await getMessagesByConversation(id);
@@ -88,7 +87,7 @@ const CandidateMessenger = () => {
     }
   };
 
-  // Chọn một cuộc chat
+  // Khi chọn một cuộc chat
   const handleSelectChat = async (conv) => {
     if (selectedChat?.id === conv.id) return;
 
@@ -109,13 +108,11 @@ const CandidateMessenger = () => {
       subscriptionRef.current.unsubscribe();
     }
 
-    // Subscribe real-time
+    // Subscribe tin nhắn mới → cập nhật cả khung chat + danh sách hội thoại
     subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
       setMessages((prev) => {
-        // Tránh duplicate
         if (prev.some((m) => m.id === msg.id)) return prev;
 
-        // Xóa tin nhắn tạm (optimistic) nếu có
         const filtered = prev.filter(
           (m) =>
             !(
@@ -136,24 +133,18 @@ const CandidateMessenger = () => {
           },
         ];
       });
-    });
 
-    // Cập nhật lại danh sách để reset unread
-    loadConversations();
+      // CẬP NHẬT DANH SÁCH HỘI THOẠI NGAY KHI CÓ TIN MỚI
+      loadConversations();
+    });
   };
 
-  // TẢI BAN ĐẦU + POLLING CHỈ 1 LẦN DUY NHẤT – SẠCH SẼ, KHÔNG LOG LOẠN
+  // CHỈ GỌI 1 LẦN KHI MỞ TRANG – KHÔNG CÒN POLLING
   useEffect(() => {
     loadConversations();
-
-    const interval = setInterval(() => {
-      loadConversations();
-    }, 8000); // 8 giây 1 lần → nhẹ server
-
-    return () => clearInterval(interval);
   }, []);
 
-  // TỰ ĐỘNG CHỌN CUỘC CHAT: ưu tiên từ navigation → fallback chat mới nhất
+  // TỰ ĐỘNG CHỌN CUỘC CHAT: ưu tiên từ navigation → fallback mới nhất
   useEffect(() => {
     if (conversations.length > 0 && !selectedChat && !loading) {
       let target = null;
@@ -175,16 +166,14 @@ const CandidateMessenger = () => {
     }
   }, [conversations, selectedChat, loading, navigatedConversationId]);
 
-  // GỬI TIN NHẮN – MƯỢT, KHÔNG RELOAD API
+  // GỬI TIN NHẮN → cập nhật danh sách ngay lập tức
   const handleSend = (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
     const content = message.trim();
-
     sendMessageWS(selectedChat.id, content);
 
-    // Optimistic UI
     const tempId = `temp-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
@@ -198,6 +187,9 @@ const CandidateMessenger = () => {
     ]);
 
     setMessage("");
+
+    // Cập nhật danh sách hội thoại ngay khi gửi
+    loadConversations();
   };
 
   // Lọc danh sách
@@ -342,7 +334,7 @@ const CandidateMessenger = () => {
                     </div>
                   </div>
                 ))}
-                {/* <div ref={messagesEndRef} /> */}
+                <div ref={messagesEndRef} />
               </div>
 
               <form

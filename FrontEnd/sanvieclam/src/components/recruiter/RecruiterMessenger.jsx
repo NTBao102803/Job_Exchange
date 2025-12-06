@@ -23,11 +23,11 @@ const RecruiterMessenger = () => {
 
   const subscriptionRef = useRef(null);
   const stompClientRef = useRef(null);
-  const messagesEndRef = useRef(null); // để auto scroll
+  const messagesEndRef = useRef(null);
 
   const token = localStorage.getItem("token");
 
-  // Auto scroll xuống dưới cùng khi có tin mới
+  // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -58,7 +58,7 @@ const RecruiterMessenger = () => {
     }
   }, [token]);
 
-  // Load danh sách hội thoại
+  // Load danh sách hội thoại (chỉ gọi 1 lần khi mở trang)
   const loadConversations = async () => {
     try {
       setLoading(true);
@@ -82,7 +82,7 @@ const RecruiterMessenger = () => {
     }
   };
 
-  // Load tin nhắn (chỉ gọi khi chọn chat)
+  // Load tin nhắn khi chọn chat
   const loadMessages = async (id) => {
     try {
       const data = await getMessagesByConversation(id);
@@ -99,13 +99,12 @@ const RecruiterMessenger = () => {
     }
   };
 
-  // Chọn chat
+  // Khi chọn chat
   const handleSelectChat = async (conv) => {
     if (selectedChat?.id === conv.id) return;
 
     setSelectedChat(conv);
 
-    // Đánh dấu đã đọc
     if (stompClientRef.current?.connected) {
       stompClientRef.current.publish({
         destination: "/app/chat.open",
@@ -115,13 +114,13 @@ const RecruiterMessenger = () => {
 
     await loadMessages(conv.id);
 
-    // Hủy subscribe cũ
     if (subscriptionRef.current) {
       subscriptionRef.current.unsubscribe();
     }
 
-    // Subscribe real-time cho cuộc chat này
+    // Subscribe tin nhắn mới trong cuộc chat này
     subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
+      // Cập nhật tin nhắn trong khung chat
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
 
@@ -145,22 +144,16 @@ const RecruiterMessenger = () => {
           },
         ];
       });
-    });
 
-    // Cập nhật lại danh sách để reset unread
-    loadConversations();
+      // TỰ ĐỘNG CẬP NHẬT DANH SÁCH HỘI THOẠI KHI CÓ TIN MỚI
+      loadConversations();
+    });
   };
 
-  // TẢI BAN ĐẦU + POLLING CHỈ 1 LẦN DUY NHẤT – ĐÃ SỬA SẠCH
+  // CHỈ GỌI 1 LẦN KHI MỞ TRANG – KHÔNG CÒN POLLING 8S
   useEffect(() => {
-    loadConversations(); // Load lần đầu
-
-    const interval = setInterval(() => {
-      loadConversations(); // Chỉ gọi mỗi 8 giây → nhẹ server, không log loạn
-    }, 8000);
-
-    return () => clearInterval(interval); // Dọn dẹp khi rời trang
-  }, []); // ← Chỉ chạy 1 lần khi mount
+    loadConversations();
+  }, []);
 
   // TỰ ĐỘNG CHỌN CUỘC CHAT MỚI NHẤT
   useEffect(() => {
@@ -172,13 +165,12 @@ const RecruiterMessenger = () => {
     }
   }, [conversations, selectedChat, loading]);
 
-  // GỬI TIN NHẮN – MƯỢT, KHÔNG RELOAD
+  // GỬI TIN NHẮN
   const handleSend = (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
     const content = message.trim();
-
     sendMessageWS(selectedChat.id, content);
 
     const tempId = `temp-${Date.now()}`;
@@ -194,9 +186,11 @@ const RecruiterMessenger = () => {
     ]);
 
     setMessage("");
+
+    // Khi gửi tin → tự động cập nhật danh sách hội thoại
+    loadConversations();
   };
 
-  // Lọc danh sách
   const filtered = conversations.filter((c) => {
     const matchSearch = c.otherName
       .toLowerCase()
@@ -216,7 +210,7 @@ const RecruiterMessenger = () => {
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-indigo-200/60 via-white/70 to-purple-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-        {/* DANH SÁCH – GIỮ NGUYÊN 100% */}
+        {/* DANH SÁCH */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-purple-300/70 via-purple-200/60 to-white/70 backdrop-blur-md">
           <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
@@ -295,7 +289,7 @@ const RecruiterMessenger = () => {
           </div>
         </div>
 
-        {/* KHUNG CHAT – GIỮ NGUYÊN 100% */}
+        {/* KHUNG CHAT */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-purple-100/80 to-indigo-200/70">
           {selectedChat ? (
             <>
@@ -332,8 +326,7 @@ const RecruiterMessenger = () => {
                     </div>
                   </div>
                 ))}
-                {/* <div ref={messagesEndRef} />{" "} */}
-                {/* ← Đã thêm lại để scroll mượt */}
+                <div ref={messagesEndRef} />
               </div>
 
               <form
