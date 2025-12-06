@@ -10,7 +10,6 @@ import {
 import {
   getConversations,
   getMessagesByConversation,
-  clearConversationCache,
 } from "../../api/messageApi";
 import { getEmployerProfile } from "../../api/RecruiterApi";
 
@@ -27,30 +26,16 @@ const RecruiterMessenger = () => {
   const subscriptionRef = useRef(null);
   const stompClientRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const autoSelectedRef = useRef(false);
 
   const token = localStorage.getItem("token");
-  const autoSelectedRef = useRef(false); // ensure auto select only once
-  const isMountedRef = useRef(true);
 
+  // Load recruiter profile once
   useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
+    getEmployerProfile().catch(() => {});
   }, []);
 
-  // load recruiter id if needed
-  useEffect(() => {
-    const loadRecruiterId = async () => {
-      try {
-        await getEmployerProfile();
-      } catch (err) {
-        console.error("Lỗi lấy employer profile:", err);
-      }
-    };
-    loadRecruiterId();
-  }, []);
-
-  // scroll to bottom when messages change
+  // Scroll bottom when messages change
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -58,288 +43,173 @@ const RecruiterMessenger = () => {
     }
   }, [messages, selectedChat]);
 
-  // Connect WebSocket once
+  // WebSocket Connect ONCE
   useEffect(() => {
-    if (!token) {
-      console.warn("No token, WS will not connect");
-      return;
-    }
+    if (!token) return;
 
     connectWebSocket(
       token,
       () => {
-        // onConnected
         stompClientRef.current = getStompClient();
-        console.log("WS connected");
       },
-      (err) => {
-        console.error("WS error", err);
-      }
+      () => {}
     );
 
     return () => {
-      // Cleanup on unmount
-      if (subscriptionRef.current) {
-        try {
-          subscriptionRef.current.unsubscribe();
-        } catch (e) {}
-        subscriptionRef.current = null;
-      }
+      subscriptionRef.current?.unsubscribe?.();
       disconnectWebSocket();
-      stompClientRef.current = null;
     };
-    // only on mount/unmount
   }, [token]);
 
-  // Load conversations (initial + periodic fallback)
-  const loadConversations = async ({ force = false } = {}) => {
+  // Load conversations with cache + fallback refresh
+  const loadConversations = async () => {
     try {
-      if (!force && conversations.length === 0) {
-        setLoading(true);
-        setError(null);
-      }
-      const data = await getConversations({ force });
-      if (!Array.isArray(data)) throw new Error("Invalid conversations");
+      setLoading(true);
+      const data = await getConversations();
 
-      const mapped = data.map((c) => ({
-        id: c.id,
-        otherName: c.otherUserName || "Ẩn danh",
-        avatar: c.otherUserAvatar || "https://i.pravatar.cc/150?img=3",
-        lastMessage: c.lastMessage || "Chưa có tin nhắn",
-        lastMessageAt: c.lastMessageAt,
-        unread: c.unreadCount || 0,
-      }));
-
-      if (isMountedRef.current) setConversations(mapped);
+      setConversations(
+        data.map((c) => ({
+          id: c.id,
+          otherName: c.otherUserName,
+          avatar: c.otherUserAvatar,
+          lastMessage: c.lastMessage || "Chưa có tin nhắn",
+          unread: c.unreadCount || 0,
+          lastMessageAt: c.lastMessageAt,
+        }))
+      );
     } catch (err) {
-      console.error("RecruiterMessenger - Error loading conversations:", err);
-      if (isMountedRef.current) setError("Không thể tải danh sách chat.");
+      setError("Không thể tải hội thoại");
     } finally {
-      if (isMountedRef.current) setLoading(false);
+      setLoading(false);
     }
   };
 
-  // load messages for conversation (uses messageApi cache)
+  // Load messages of selected conversation
   const loadMessages = async (conversationId) => {
     try {
       const data = await getMessagesByConversation(conversationId);
-      const mapped = data.map((m) => ({
-        id: m.id,
-        content: m.content,
-        senderId: m.senderId,
-        fromSelf: m.fromSelf,
-        time: m.createdAt,
-        avatar: m.senderAvatar || "https://i.pravatar.cc/150?img=5",
-      }));
-      if (isMountedRef.current) setMessages(mapped);
-    } catch (err) {
-      console.error("Error loading messages", err);
-      if (isMountedRef.current) setMessages([]);
+      setMessages(
+        data.map((m) => ({
+          id: m.id,
+          content: m.content,
+          fromSelf: m.fromSelf,
+          time: m.createdAt,
+        }))
+      );
+    } catch {
+      setMessages([]);
     }
   };
 
-  // subscribe to conversation (and handle inbound messages)
+  // Websocket subscription
   const setupSubscription = (conversationId) => {
-    // unsubscribe old
-    if (subscriptionRef.current) {
-      try {
-        subscriptionRef.current.unsubscribe();
-      } catch (e) {}
-      subscriptionRef.current = null;
-    }
-
-    const sub = subscribeConversation(conversationId, (msg) => {
-      // msg must include conversationId, content, createdAt, fromSelf, senderAvatar, id
-      const payload = {
+    subscriptionRef.current?.unsubscribe?.();
+    subscriptionRef.current = subscribeConversation(conversationId, (msg) => {
+      const mapped = {
         id: msg.id,
         content: msg.content,
         fromSelf: msg.fromSelf,
         time: msg.createdAt,
-        avatar: msg.senderAvatar,
       };
 
-      // If the message belongs to current selected conversation, append to messages
-      if (selectedChat && msg.conversationId === selectedChat.id) {
-        setMessages((prev) => [...prev, payload]);
+      if (selectedChat?.id === msg.conversationId) {
+        setMessages((prev) => [...prev, mapped]);
+      }
 
-        // mark conversation unread=0 locally
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === selectedChat.id
-              ? {
-                  ...c,
-                  lastMessage: msg.content,
-                  unread: 0,
-                  lastMessageAt: msg.createdAt,
-                }
-              : c
-          )
-        );
-      } else {
-        // Message belongs to other conversation: update the conversations list locally
-        setConversations((prev) => {
-          const found = prev.find((c) => c.id === msg.conversationId);
-          if (found) {
-            return prev.map((c) =>
-              c.id === msg.conversationId
-                ? {
-                    ...c,
-                    lastMessage: msg.content,
-                    unread: (c.unread || 0) + 1,
-                    lastMessageAt: msg.createdAt,
-                  }
-                : c
-            );
-          } else {
-            // If not present, prepend a new conversation entry (lightweight)
-            return [
-              {
-                id: msg.conversationId,
-                otherName: msg.senderName || "Ẩn danh",
-                avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=3",
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === msg.conversationId
+            ? {
+                ...c,
                 lastMessage: msg.content,
                 lastMessageAt: msg.createdAt,
-                unread: 1,
-              },
-              ...prev,
-            ];
-          }
-        });
-      }
+                unread:
+                  selectedChat?.id === msg.conversationId ? 0 : c.unread + 1,
+              }
+            : c
+        )
+      );
     });
-
-    subscriptionRef.current = sub;
   };
 
-  // handle select chat
   const handleSelectChat = async (conv) => {
-    // immediate UI updates
     setSelectedChat(conv);
     setMessages([]);
 
-    // send chat.open to mark read on server (if connected)
-    const client = stompClientRef.current;
-    if (client?.connected) {
-      try {
-        client.publish({
-          destination: "/app/chat.open",
-          body: JSON.stringify({ conversationId: conv.id }),
-        });
-      } catch (e) {
-        console.warn("chat.open publish failed", e);
-      }
-    }
+    stompClientRef.current?.publish({
+      destination: "/app/chat.open",
+      body: JSON.stringify({ conversationId: conv.id }),
+    });
 
-    // load messages (cache-enabled)
     await loadMessages(conv.id);
 
-    // subscription for real-time updates
-    if (client?.connected) {
+    if (stompClientRef.current?.connected) {
       setupSubscription(conv.id);
     }
 
-    // locally set unread to 0 for this conversation to avoid extra fetch
     setConversations((prev) =>
       prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c))
     );
   };
 
-  // initial load + periodic polling fallback
   useEffect(() => {
     loadConversations();
-
-    const intervalId = setInterval(() => {
-      // fallback poll; you can increase interval or disable if server sends unread updates
-      loadConversations();
-    }, 20_000); // 20 seconds
-
-    return () => {
-      clearInterval(intervalId);
-    };
-    // empty deps -> run once
+    const interval = setInterval(loadConversations, 20000);
+    return () => clearInterval(interval);
   }, []);
 
-  // auto-select one conversation only once
+  // Auto select latest chat once
   useEffect(() => {
-    if (
-      !autoSelectedRef.current &&
-      !loading &&
-      conversations.length > 0 &&
-      !selectedChat
-    ) {
+    if (!autoSelectedRef.current && conversations.length > 0 && !loading) {
       autoSelectedRef.current = true;
       const sorted = [...conversations].sort(
         (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
       );
       handleSelectChat(sorted[0]);
     }
-  }, [conversations, loading, selectedChat]);
+  }, [conversations, loading]);
 
-  // send message
-  const handleSend = async (e) => {
+  const handleSend = (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
-    const content = message.trim();
+    const text = message.trim();
     const convId = selectedChat.id;
 
-    // optimistic UI append
-    const optimistic = {
-      id: Date.now(),
-      content,
-      fromSelf: true,
-      time: new Date().toISOString(),
-      avatar: selectedChat.avatar,
-    };
-    setMessages((prev) => [...prev, optimistic]);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        content: text,
+        fromSelf: true,
+        time: new Date().toISOString(),
+      },
+    ]);
 
-    // update conversations local lastMessage
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === convId
-          ? {
-              ...c,
-              lastMessage: content,
-              lastMessageAt: new Date().toISOString(),
-            }
-          : c
-      )
-    );
-
+    sendMessageWS(convId, text);
     setMessage("");
-
-    // send via ws (if fails, consider fallback to REST)
-    const ok = sendMessageWS(convId, content);
-    if (!ok) {
-      console.error("WS send failed — consider retry or REST fallback");
-      // Optionally fallback to a REST endpoint to persist message
-    }
   };
 
-  // filter list
-  const filtered = conversations.filter((c) => {
-    const matchSearch = c.otherName
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchFilter = filter === "unread" ? c.unread > 0 : true;
-    return matchSearch && matchFilter;
-  });
+  const filtered = conversations.filter(
+    (c) =>
+      c.otherName.toLowerCase().includes(search.toLowerCase()) &&
+      (filter === "all" || c.unread > 0)
+  );
 
-  const formatTime = (isoString) => {
-    if (!isoString) return "";
-    return new Date(isoString).toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (t) =>
+    t
+      ? new Date(t).toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
 
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-indigo-200/60 via-white/70 to-purple-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-        {/* DANH SÁCH */}
+        {/* LIST */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-purple-300/70 via-purple-200/60 to-white/70 backdrop-blur-md">
-          {/* Header */}
-          <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
+          <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
             <MoreHorizontal className="text-gray-500 cursor-pointer" />
           </div>
@@ -347,7 +217,7 @@ const RecruiterMessenger = () => {
           {/* Filter */}
           <div className="flex justify-around border-b border-white/40 text-sm font-medium text-gray-600 bg-white/40">
             <button
-              className={`w-1/2 py-2 transition ${
+              className={`w-1/2 py-2 ${
                 filter === "all"
                   ? "border-b-2 border-purple-600 text-purple-600 font-semibold"
                   : "hover:text-gray-800"
@@ -357,7 +227,7 @@ const RecruiterMessenger = () => {
               Tất cả
             </button>
             <button
-              className={`w-1/2 py-2 transition ${
+              className={`w-1/2 py-2 ${
                 filter === "unread"
                   ? "border-b-2 border-purple-600 text-purple-600 font-semibold"
                   : "hover:text-gray-800"
@@ -382,62 +252,45 @@ const RecruiterMessenger = () => {
             </div>
           </div>
 
-          {/* LIST */}
-          {/* ✅ Thêm scrollbar-thin */}
-          <div className="overflow-y-auto flex-1 p-2 scrollbar-thin scrollbar-thumb-purple-400/50 scrollbar-track-transparent">
-            {loading && (
-              <div className="text-center p-4 text-gray-500">Đang tải...</div>
-            )}
-            {error && (
-              <div className="text-center p-4 text-red-500">{error}</div>
-            )}
-            {!loading && filtered.length === 0 && (
-              <div className="text-center p-4 text-gray-500">
-                Không tìm thấy hội thoại.
-              </div>
-            )}
-            {filtered.map((conv) => (
+          {/* Conversation List */}
+          <div className="overflow-y-auto flex-1 p-2 scrollbar-thin scrollbar-thumb-purple-400/50">
+            {filtered.map((c) => (
               <div
-                key={conv.id}
-                onClick={() => handleSelectChat(conv)}
-                className={`relative flex items-center gap-3 p-3 cursor-pointer rounded-xl mx-1 mb-2 transition ${
-                  selectedChat?.id === conv.id
+                key={c.id}
+                onClick={() => handleSelectChat(c)}
+                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${
+                  selectedChat?.id === c.id
                     ? "bg-purple-500/20 border border-purple-400/40"
                     : "hover:bg-white/40"
                 }`}
               >
                 <img
-                  src={conv.avatar}
-                  className="w-12 h-12 rounded-full object-cover border border-white shadow-md"
-                  alt={conv.otherName}
+                  src={c.avatar}
+                  className="w-12 h-12 rounded-full object-cover border shadow-md"
                 />
-
-                <div className="flex-1 min-w-0">
+                <div className="flex-1">
                   <p
-                    className={`font-semibold truncate ${
-                      conv.unread > 0 ? "text-gray-800" : "text-gray-600"
+                    className={`font-semibold ${
+                      c.unread ? "text-gray-800" : "text-gray-600"
                     }`}
                   >
-                    {conv.otherName}
+                    {c.otherName}
                   </p>
                   <p
-                    className={`text-sm ${
-                      conv.unread > 0
-                        ? "text-gray-700 font-medium"
-                        : "text-gray-500"
-                    } truncate`}
+                    className={`text-sm truncate ${
+                      c.unread ? "text-gray-700 font-medium" : "text-gray-500"
+                    }`}
                   >
-                    {conv.lastMessage}
+                    {c.lastMessage}
                   </p>
                 </div>
-
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
-                    {formatTime(conv.lastMessageAt)}
+                <div className="flex flex-col items-end">
+                  <span className="text-xs text-gray-400">
+                    {formatTime(c.lastMessageAt)}
                   </span>
-                  {conv.unread > 0 && (
+                  {c.unread > 0 && (
                     <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
-                      {conv.unread}
+                      {c.unread}
                     </span>
                   )}
                 </div>
@@ -446,44 +299,38 @@ const RecruiterMessenger = () => {
           </div>
         </div>
 
-        {/* KHUNG CHAT */}
+        {/* CHAT */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-purple-100/80 to-indigo-200/70 backdrop-blur-md">
           {selectedChat ? (
             <>
               <div className="flex items-center gap-3 p-4 border-b border-white/40 bg-white/70 shadow">
                 <img
                   src={selectedChat.avatar}
-                  className="w-10 h-10 rounded-full border border-white shadow-md object-cover"
-                  alt={selectedChat.otherName}
+                  className="w-10 h-10 rounded-full border shadow-md"
                 />
                 <div>
-                  <p className="font-semibold text-gray-800">
-                    {selectedChat.otherName}
-                  </p>
-                  <p className="text-xs text-green-500 font-medium">
-                    Đang hoạt động
-                  </p>
+                  <p className="font-semibold">{selectedChat.otherName}</p>
+                  <p className="text-xs text-green-500">Đang hoạt động</p>
                 </div>
               </div>
 
-              {/* MESSAGES */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-purple-400/50 scrollbar-track-transparent"
+                className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-purple-300"
               >
-                {messages.map((m, i) => (
+                {messages.map((m) => (
                   <div
-                    key={m.id || i}
+                    key={m.id}
                     className={`flex ${
                       m.fromSelf ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
-                      className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm shadow ${
+                      className={`max-w-[70%] px-4 py-2 text-sm rounded-2xl shadow ${
                         m.fromSelf
-                          ? "bg-purple-600 text-white"
-                          : "bg-white text-gray-800"
-                      } ${m.fromSelf ? "rounded-br-sm" : "rounded-tl-sm"}`}
+                          ? "bg-purple-600 text-white rounded-br-sm"
+                          : "bg-white text-gray-800 rounded-tl-sm"
+                      }`}
                     >
                       {m.content}
                       <div className="text-[10px] mt-1 text-right opacity-70">
@@ -496,31 +343,28 @@ const RecruiterMessenger = () => {
 
               <form
                 onSubmit={handleSend}
-                className="p-4 border-t border-white/40 bg-white/70 flex items-center gap-3"
+                className="p-4 flex gap-3 bg-white/70 border-t"
               >
                 <input
                   type="text"
                   placeholder="Nhập tin nhắn..."
-                  className="flex-1 px-4 py-2 rounded-full bg-white/60 border border-gray-300 outline-none focus:ring-2 focus:ring-purple-500 transition"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  disabled={!stompClientRef.current?.connected} // Disable nếu WS chưa kết nối
+                  className="flex-1 px-4 py-2 rounded-full bg-white/60 border outline-none"
                 />
                 <button
                   type="submit"
-                  className="p-2 bg-purple-600 text-white rounded-full shadow-md hover:bg-purple-700 transition disabled:bg-gray-400"
-                  disabled={
-                    !message.trim() || !stompClientRef.current?.connected
-                  }
+                  disabled={!message.trim()}
+                  className="p-2 bg-purple-600 text-white rounded-full shadow hover:bg-purple-700"
                 >
                   <Send size={18} />
                 </button>
               </form>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500 text-lg">
+            <div className="flex-1 flex items-center justify-center text-gray-500">
               <span className="flex items-center gap-2">
-                <Send size={24} className="opacity-50" />
+                <Send size={24} />
                 Chọn một ứng viên để bắt đầu
               </span>
             </div>
