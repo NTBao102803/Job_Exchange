@@ -17,10 +17,11 @@ const CandidateMessenger = () => {
   const [loading, setLoading] = useState(true);
 
   const messagesContainerRef = useRef(null);
+  const pollCountRef = useRef(0);
+  const pollIntervalRef = useRef(null);
   const location = useLocation();
   const navigatedConversationId = location.state?.conversationId;
 
-  // Cuộn mượt trong khung chat
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -44,7 +45,7 @@ const CandidateMessenger = () => {
         setConversations(mapped);
       }
     } catch (error) {
-      console.error("Lỗi tải danh sách chat:", error);
+      console.error("Lỗi load conversations:", error);
     } finally {
       setLoading(false);
     }
@@ -62,7 +63,7 @@ const CandidateMessenger = () => {
       }));
       setMessages(mapped);
     } catch (error) {
-      console.error("Lỗi tải tin nhắn:", error);
+      console.error("Lỗi load messages:", error);
     }
   };
 
@@ -72,8 +73,23 @@ const CandidateMessenger = () => {
     await loadMessages(conv.id);
   };
 
+  const startPolling = () => {
+    pollCountRef.current = 0;
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+
+    pollIntervalRef.current = setInterval(() => {
+      loadConversations();
+      pollCountRef.current += 1;
+      if (pollCountRef.current >= 5) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    }, 3000);
+  };
+
   useEffect(() => {
     loadConversations();
+    startPolling();
   }, []);
 
   useEffect(() => {
@@ -98,6 +114,7 @@ const CandidateMessenger = () => {
       await sendMessageWS(selectedChat.id, content);
       await loadConversations();
       await loadMessages(selectedChat.id);
+      startPolling(); // BẬT LẠI POLLING 15s
     } catch (err) {
       alert("Gửi tin nhắn thất bại!");
       setMessage(content);
