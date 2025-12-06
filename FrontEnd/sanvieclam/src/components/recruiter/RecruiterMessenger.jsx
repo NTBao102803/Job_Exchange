@@ -298,7 +298,7 @@ const RecruiterMessenger = () => {
         if (String(msg.conversationId) === String(conversationId)) {
           setMessages((prev) => {
             const next = [...prev, payload];
-            console.log("[UI] setMessages -> length", next.length);
+            console.log("[UI] setMessages -> length", next);
             return next;
           });
 
