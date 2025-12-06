@@ -35,26 +35,18 @@ const CandidateMessenger = () => {
 
   // === Lifecycle mount/unmount ===
   useEffect(() => {
-    console.log("[LIFECYCLE] CandidateMessenger mounted");
     return () => {
-      console.log("[LIFECYCLE] CandidateMessenger unmounting");
       isMountedRef.current = false;
       if (subscriptionRef.current) {
         try {
           subscriptionRef.current.unsubscribe();
-          console.log("[CLEANUP] unsubscribed on unmount");
-        } catch (e) {
-          console.warn("[CLEANUP] unsubscribe error:", e);
-        }
+        } catch {}
         subscriptionRef.current = null;
         subscribedConvRef.current = null;
       }
       try {
         disconnectWebSocket();
-        console.log("[CLEANUP] disconnectWebSocket called");
-      } catch (e) {
-        console.warn("[CLEANUP] disconnectWebSocket error:", e);
-      }
+      } catch {}
     };
   }, []);
 
@@ -62,12 +54,8 @@ const CandidateMessenger = () => {
   useEffect(() => {
     const loadCandidate = async () => {
       try {
-        console.log("[LOAD] getCandidateProfile start");
-        const res = await getCandidateProfile();
-        console.log("[LOAD] getCandidateProfile success", res);
-      } catch (err) {
-        console.error("[LOAD] getCandidateProfile failed:", err);
-      }
+        await getCandidateProfile();
+      } catch {}
     };
     loadCandidate();
   }, []);
@@ -77,13 +65,11 @@ const CandidateMessenger = () => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
-      console.log("[UI] scrolled messages container to bottom");
     }
   }, [messages, selectedChat]);
 
   // === WebSocket connect once ===
   useEffect(() => {
-    console.log("[WS] connect effect running. token?", !!token);
     if (!token) return;
 
     connectWebSocket(
@@ -91,28 +77,18 @@ const CandidateMessenger = () => {
       () => {
         try {
           stompClientRef.current = getStompClient();
-          console.log("[WS] connected -> stompClient set");
-        } catch (e) {
-          console.error("[WS] error getting stomp client:", e);
-        }
-
-        loadConversations({ force: true })
-          .then(() => console.log("[WS] conversations refreshed"))
-          .catch((e) => console.warn("[WS] refresh conv failed:", e));
+        } catch {}
+        loadConversations({ force: true }).catch(() => {});
       },
-      (err) => console.error("[WS] connection error:", err)
+      () => {}
     );
 
     return () => {
-      console.log("[WS] cleanup");
       if (subscriptionRef.current) {
         try {
           subscriptionRef.current.unsubscribe();
-          console.log("[WS] unsubscribed cleanup");
-        } catch (e) {
-          console.warn("[WS] unsubscribe cleanup error:", e);
-        }
-        subscriptionRef.current = null;
+        } catch {}
+        subscriptionRefRef.current = null;
         subscribedConvRef.current = null;
       }
       disconnectWebSocket();
@@ -122,7 +98,6 @@ const CandidateMessenger = () => {
 
   // === Load conversations ===
   const loadConversations = async ({ force = false } = {}) => {
-    console.log("[LOAD] loadConversations", { force });
     try {
       if (!force && conversations.length === 0) setLoading(true);
       const data = await getConversations({ force });
@@ -139,8 +114,7 @@ const CandidateMessenger = () => {
       }));
 
       if (isMountedRef.current) setConversations(mapped);
-    } catch (err) {
-      console.error("[LOAD] loadConversations error:", err);
+    } catch {
       if (isMountedRef.current) setError("Không thể tải danh sách chat.");
     } finally {
       if (isMountedRef.current) setLoading(false);
@@ -148,14 +122,11 @@ const CandidateMessenger = () => {
   };
 
   useEffect(() => {
-    loadConversations().catch((e) =>
-      console.error("[INIT] loadConversations failed:", e)
-    );
+    loadConversations().catch(() => {});
   }, []);
 
   // === Load messages ===
   const loadMessages = async (conversationId) => {
-    console.log("[LOAD] loadMessages for", conversationId);
     try {
       const data = await getMessagesByConversation(conversationId);
       const mapped = (Array.isArray(data) ? data : []).map((m) => ({
@@ -171,8 +142,7 @@ const CandidateMessenger = () => {
       messageIdsRef.current.set(conversationId, ids);
 
       if (isMountedRef.current) setMessages(mapped);
-    } catch (err) {
-      console.error("[LOAD] loadMessages error:", err);
+    } catch {
       if (isMountedRef.current) setMessages([]);
     }
   };
@@ -185,7 +155,7 @@ const CandidateMessenger = () => {
     if (subscriptionRef.current) {
       try {
         subscriptionRef.current.unsubscribe();
-      } catch (e) {}
+      } catch {}
       subscriptionRef.current = null;
       subscribedConvRef.current = null;
     }
@@ -258,9 +228,7 @@ const CandidateMessenger = () => {
 
       subscriptionRef.current = sub;
       subscribedConvRef.current = conversationId;
-    } catch (err) {
-      console.error("[SUB] subscribeConversation failed:", err);
-    }
+    } catch {}
   };
 
   // === Select chat ===
@@ -276,14 +244,14 @@ const CandidateMessenger = () => {
           body: JSON.stringify({ conversationId: conv.id }),
         });
       }
-    } catch (e) {}
+    } catch {}
 
     await loadMessages(conv.id);
 
     try {
       const client = stompClientRef.current;
       if (client?.connected) setupSubscription(conv.id);
-    } catch (e) {}
+    } catch {}
 
     setConversations((prev) =>
       prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c))
@@ -315,9 +283,7 @@ const CandidateMessenger = () => {
 
     try {
       sendMessageWS(convId, content);
-    } catch (err) {
-      console.error("[SEND] sendMessageWS threw error:", err);
-    }
+    } catch {}
   };
 
   // === Filtered conversations ===
@@ -478,9 +444,9 @@ const CandidateMessenger = () => {
                     <div
                       className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm shadow ${
                         m.fromSelf
-                          ? "bg-purple-600 text-white"
-                          : "bg-white text-gray-800"
-                      } ${m.fromSelf ? "rounded-br-sm" : "rounded-tl-sm"}`}
+                          ? "bg-purple-600 text-white rounded-br-sm"
+                          : "bg-white text-gray-800 rounded-tl-sm"
+                      }`}
                     >
                       {m.content}
                       <div className="text-[10px] mt-1 text-right opacity-70">
