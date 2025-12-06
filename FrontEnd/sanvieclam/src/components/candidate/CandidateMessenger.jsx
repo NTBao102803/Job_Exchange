@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Send, Search, MoreHorizontal } from "lucide-react";
-import { sendMessageWS } from "../../services/socket";
+import {
+  connectWebSocket,
+  subscribeConversation,
+  sendMessageWS,
+} from "../../services/socket";
 import {
   getConversations,
   getMessagesByConversation,
@@ -16,18 +20,32 @@ const CandidateMessenger = () => {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  const messagesContainerRef = useRef(null);
-  const pollCountRef = useRef(0);
-  const pollIntervalRef = useRef(null);
+  const messagesContainerRef = useRef(null); // ← Thanh trượt chỉ trong khung chat
+  const pollCountRef = useRef(0); // ← Đếm số lần polling
+  const pollIntervalRef = useRef(null); // ← Lưu interval
+
+  const token = localStorage.getItem("token");
   const location = useLocation();
   const navigatedConversationId = location.state?.conversationId;
 
+  // THANH TRƯỢT CHỈ TRONG KHUNG CHAT – MƯỢT NHƯ ZALO
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Kết nối WebSocket (giữ nguyên)
+  useEffect(() => {
+    if (token) {
+      connectWebSocket(
+        token,
+        () => {},
+        (err) => console.error("WebSocket error:", err)
+      );
+    }
+  }, [token]);
 
   const loadConversations = async () => {
     try {
@@ -73,6 +91,7 @@ const CandidateMessenger = () => {
     await loadMessages(conv.id);
   };
 
+  // BẮT ĐẦU POLLING 3s x 4 lần (12 giây)
   const startPolling = () => {
     pollCountRef.current = 0;
     if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
@@ -80,21 +99,23 @@ const CandidateMessenger = () => {
     pollIntervalRef.current = setInterval(() => {
       loadConversations();
       pollCountRef.current += 1;
-      if (pollCountRef.current >= 5) {
+      if (pollCountRef.current >= 4) {
         clearInterval(pollIntervalRef.current);
         pollIntervalRef.current = null;
       }
     }, 3000);
   };
 
+  // TẢI LẦN ĐẦU + BẮT ĐẦU POLLING 12s
   useEffect(() => {
     loadConversations();
     startPolling();
   }, []);
 
+  // TỰ ĐỘNG CHỌN CHAT
   useEffect(() => {
     if (conversations.length > 0 && !selectedChat && !loading) {
-      const target =
+      let target =
         conversations.find((c) => c.id === navigatedConversationId) ||
         [...conversations].sort(
           (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
@@ -103,6 +124,7 @@ const CandidateMessenger = () => {
     }
   }, [conversations, selectedChat, loading, navigatedConversationId]);
 
+  // GỬI TIN NHẮN → RELOAD + BẬT LẠI POLLING 12s
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
@@ -114,7 +136,7 @@ const CandidateMessenger = () => {
       await sendMessageWS(selectedChat.id, content);
       await loadConversations();
       await loadMessages(selectedChat.id);
-      startPolling(); // BẬT LẠI POLLING 15s
+      startPolling(); // Bật lại polling 12s sau khi gửi
     } catch (err) {
       alert("Gửi tin nhắn thất bại!");
       setMessage(content);
@@ -129,9 +151,9 @@ const CandidateMessenger = () => {
     return matchSearch && matchFilter;
   });
 
-  const formatTime = (iso) =>
-    iso
-      ? new Date(iso).toLocaleTimeString("vi-VN", {
+  const formatTime = (isoString) =>
+    isoString
+      ? new Date(isoString).toLocaleTimeString("vi-VN", {
           hour: "2-digit",
           minute: "2-digit",
         })
@@ -221,7 +243,7 @@ const CandidateMessenger = () => {
           </div>
         </div>
 
-        {/* KHUNG CHAT – THANH TRƯỢT CHỈ TRONG ĐÂY */}
+        {/* KHUNG CHAT – THANH TRƯỢT CHỈ Ở ĐÂY */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-blue-100/80 to-indigo-200/70 backdrop-blur-md relative">
           {selectedChat ? (
             <>
@@ -240,6 +262,7 @@ const CandidateMessenger = () => {
                 </div>
               </div>
 
+              {/* KHUNG TIN NHẮN – CÓ THANH TRƯỢT RIÊNG */}
               <div
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"

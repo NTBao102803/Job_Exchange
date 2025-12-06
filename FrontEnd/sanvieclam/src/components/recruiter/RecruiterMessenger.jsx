@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Send, Search, MoreHorizontal } from "lucide-react";
-import { sendMessageWS } from "../../services/socket.js";
+import {
+  connectWebSocket,
+  subscribeConversation,
+  sendMessageWS,
+} from "../../services/socket.js";
 import {
   getConversations,
   getMessagesByConversation,
@@ -8,6 +12,7 @@ import {
 import { getEmployerProfile } from "../../api/RecruiterApi";
 
 const RecruiterMessenger = () => {
+  const [recruiterId, setRecruiterId] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -16,19 +21,43 @@ const RecruiterMessenger = () => {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  const messagesContainerRef = useRef(null);
+  const messagesContainerRef = useRef(null); // Thanh trượt chỉ trong khung chat
   const pollCountRef = useRef(0); // Đếm số lần polling
-  const pollIntervalRef = useRef(null);
+  const pollIntervalRef = useRef(null); // Lưu interval
 
   const token = localStorage.getItem("token");
 
-  // Cuộn mượt trong khung chat
+  // THANH TRƯỢT CHỈ TRONG KHUNG CHAT – MƯỢT NHƯ ZALO
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const loadRecruiterId = async () => {
+    try {
+      const data = await getEmployerProfile();
+      if (data?.id) setRecruiterId(data.id);
+    } catch (error) {
+      console.error("Lỗi lấy employer profile:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadRecruiterId();
+  }, []);
+
+  // Kết nối WebSocket
+  useEffect(() => {
+    if (token) {
+      connectWebSocket(
+        token,
+        () => {},
+        (err) => console.error("WebSocket error:", err)
+      );
+    }
+  }, [token]);
 
   const loadConversations = async () => {
     try {
@@ -74,7 +103,7 @@ const RecruiterMessenger = () => {
     await loadMessages(conv.id);
   };
 
-  // BẮT ĐẦU POLLING 3s x 4 lần
+  // BẮT ĐẦU POLLING 3s x 4 lần (12 giây)
   const startPolling = () => {
     pollCountRef.current = 0;
     if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
@@ -82,7 +111,6 @@ const RecruiterMessenger = () => {
     pollIntervalRef.current = setInterval(() => {
       loadConversations();
       pollCountRef.current += 1;
-
       if (pollCountRef.current >= 4) {
         clearInterval(pollIntervalRef.current);
         pollIntervalRef.current = null;
@@ -90,7 +118,7 @@ const RecruiterMessenger = () => {
     }, 3000);
   };
 
-  // TẢI LẦN ĐẦU + BẮT ĐẦU POLLING
+  // TẢI LẦN ĐẦU + BẮT ĐẦU POLLING 12s
   useEffect(() => {
     loadConversations();
     startPolling();
@@ -106,7 +134,7 @@ const RecruiterMessenger = () => {
     }
   }, [conversations, selectedChat, loading]);
 
-  // GỬI TIN NHẮN → RELOAD + BẬT LẠI POLLING 15s
+  // GỬI TIN NHẮN → RELOAD + BẬT LẠI POLLING 12s
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
@@ -118,9 +146,7 @@ const RecruiterMessenger = () => {
       await sendMessageWS(selectedChat.id, content);
       await loadConversations();
       await loadMessages(selectedChat.id);
-
-      // BẬT LẠI POLLING 15 GIÂY SAU KHI GỬI TIN
-      startPolling();
+      startPolling(); // Bật lại polling 12s sau khi gửi
     } catch (err) {
       alert("Gửi tin nhắn thất bại!");
       setMessage(content);
@@ -135,9 +161,9 @@ const RecruiterMessenger = () => {
     return matchSearch && matchFilter;
   });
 
-  const formatTime = (iso) =>
-    iso
-      ? new Date(iso).toLocaleTimeString("vi-VN", {
+  const formatTime = (isoString) =>
+    isoString
+      ? new Date(isoString).toLocaleTimeString("vi-VN", {
           hour: "2-digit",
           minute: "2-digit",
         })
@@ -146,9 +172,49 @@ const RecruiterMessenger = () => {
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-indigo-200/60 via-white/70 to-purple-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-        {/* DANH SÁCH */}
+        {/* DANH SÁCH – GIỮ NGUYÊN 100% */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-purple-300/70 via-purple-200/60 to-white/70 backdrop-blur-md">
-          {/* ... UI danh sách giữ nguyên 100% ... */}
+          <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
+            <MoreHorizontal className="text-gray-500 cursor-pointer" />
+          </div>
+
+          <div className="flex justify-around border-b border-white/40 text-sm font-medium text-gray-600 bg-white/40">
+            <button
+              className={`w-1/2 py-2 ${
+                filter === "all"
+                  ? "border-b-2 border-purple-600 text-purple-600"
+                  : ""
+              }`}
+              onClick={() => setFilter("all")}
+            >
+              Tất cả
+            </button>
+            <button
+              className={`w-1/2 py-2 ${
+                filter === "unread"
+                  ? "border-b-2 border-purple-600 text-purple-600"
+                  : ""
+              }`}
+              onClick={() => setFilter("unread")}
+            >
+              Chưa đọc
+            </button>
+          </div>
+
+          <div className="p-3">
+            <div className="flex items-center bg-white/70 rounded-full px-3 py-2 shadow-inner">
+              <Search size={18} className="text-gray-500" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm ứng viên..."
+                className="bg-transparent flex-1 ml-2 outline-none"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
           <div className="overflow-y-auto flex-1 p-2">
             {filtered.map((conv) => (
               <div
@@ -185,7 +251,7 @@ const RecruiterMessenger = () => {
           </div>
         </div>
 
-        {/* KHUNG CHAT */}
+        {/* KHUNG CHAT – THANH TRƯỢT CHỈ Ở ĐÂY */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-purple-100/80 to-indigo-200/70">
           {selectedChat ? (
             <>
@@ -200,9 +266,10 @@ const RecruiterMessenger = () => {
                 </div>
               </div>
 
+              {/* KHUNG TIN NHẮN – CÓ THANH TRƯỢT RIÊNG */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-6 space-y-4"
+                className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-transparent"
               >
                 {messages.map((m, i) => (
                   <div
