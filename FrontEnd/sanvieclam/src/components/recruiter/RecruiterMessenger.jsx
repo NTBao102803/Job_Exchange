@@ -2,13 +2,16 @@ import React, { useEffect, useState, useRef } from "react";
 import { Send, Search, MoreHorizontal } from "lucide-react";
 import {
   connectWebSocket,
+  getStompClient,
   subscribeConversation,
   sendMessageWS,
-} from "../../services/socket.js";
+  disconnectWebSocket,
+} from "../../services/socket";
 import {
   getConversations,
   getMessagesByConversation,
-} from "../../api/messageApi.jsx";
+  clearConversationCache,
+} from "../../api/messageApi";
 import { getEmployerProfile } from "../../api/RecruiterApi";
 
 const RecruiterMessenger = () => {
@@ -23,29 +26,31 @@ const RecruiterMessenger = () => {
 
   const subscriptionRef = useRef(null);
   const stompClientRef = useRef(null);
-  const messagesContainerRef = useRef(null); // Ref cho khu vực tin nhắn
+  const messagesContainerRef = useRef(null);
 
   const token = localStorage.getItem("token");
-  // const [recruiterId, setRecruiterId] = useState(null); // Không sử dụng trong logic chat
-
-  // Tải Recruiter ID (Nếu cần dùng ID để xác định người gửi ở FE)
-  const loadRecruiterId = async () => {
-    try {
-      const data = await getEmployerProfile();
-      if (data?.id) {
-        // setRecruiterId(data.id); // Giữ lại nếu cần
-        // console.log("Recruiter ID loaded:", data.id); // Đã xóa log không cần thiết
-      }
-    } catch (error) {
-      console.error("Lỗi lấy employer profile:", error);
-    }
-  };
+  const autoSelectedRef = useRef(false); // ensure auto select only once
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // load recruiter id if needed
+  useEffect(() => {
+    const loadRecruiterId = async () => {
+      try {
+        await getEmployerProfile();
+      } catch (err) {
+        console.error("Lỗi lấy employer profile:", err);
+      }
+    };
     loadRecruiterId();
   }, []);
 
-  // Cuộn xuống dưới cùng khi có tin mới hoặc khi tải chat lần đầu
+  // scroll to bottom when messages change
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -53,45 +58,48 @@ const RecruiterMessenger = () => {
     }
   }, [messages, selectedChat]);
 
-  // Kết nối WebSocket chỉ 1 lần khi component mount
+  // Connect WebSocket once
   useEffect(() => {
-    if (token) {
-      // console.log("Kết nối WebSocket với token:", token.substring(0, 20) + "..."); // Đã xóa log
-      connectWebSocket(
-        token,
-        () => {
-          // console.log("WebSocket connected"); // Đã xóa log
-          stompClientRef.current = window.stompClient; // Lấy từ global
-        },
-        (err) => console.error("WebSocket connection error:", err)
-      );
-    } else {
-      console.warn("Không có token → Không kết nối WebSocket");
+    if (!token) {
+      console.warn("No token, WS will not connect");
+      return;
     }
 
-    // Cleanup WebSocket khi component unmount
-    return () => {
-      if (stompClientRef.current?.connected) {
-        stompClientRef.current.deactivate();
-        stompClientRef.current = null;
+    connectWebSocket(
+      token,
+      () => {
+        // onConnected
+        stompClientRef.current = getStompClient();
+        console.log("WS connected");
+      },
+      (err) => {
+        console.error("WS error", err);
       }
+    );
+
+    return () => {
+      // Cleanup on unmount
+      if (subscriptionRef.current) {
+        try {
+          subscriptionRef.current.unsubscribe();
+        } catch (e) {}
+        subscriptionRef.current = null;
+      }
+      disconnectWebSocket();
+      stompClientRef.current = null;
     };
+    // only on mount/unmount
   }, [token]);
 
-  /** LOAD danh sách hội thoại */
-  const loadConversations = async () => {
+  // Load conversations (initial + periodic fallback)
+  const loadConversations = async ({ force = false } = {}) => {
     try {
-      // Chỉ set loading/error cho lần tải ban đầu
-      if (conversations.length === 0) {
+      if (!force && conversations.length === 0) {
         setLoading(true);
         setError(null);
       }
-
-      const data = await getConversations();
-
-      if (!Array.isArray(data)) {
-        throw new Error("Dữ liệu hội thoại không hợp lệ");
-      }
+      const data = await getConversations({ force });
+      if (!Array.isArray(data)) throw new Error("Invalid conversations");
 
       const mapped = data.map((c) => ({
         id: c.id,
@@ -102,23 +110,19 @@ const RecruiterMessenger = () => {
         unread: c.unreadCount || 0,
       }));
 
-      setConversations(mapped);
-    } catch (error) {
-      console.error("RecruiterMessenger - Error loading conversations:", error);
-      setError(
-        "Không thể tải danh sách chat. Vui lòng kiểm tra kết nối hoặc đăng nhập lại."
-      );
+      if (isMountedRef.current) setConversations(mapped);
+    } catch (err) {
+      console.error("RecruiterMessenger - Error loading conversations:", err);
+      if (isMountedRef.current) setError("Không thể tải danh sách chat.");
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   };
 
-  /** LOAD tin nhắn */
-  const loadMessages = async (id) => {
+  // load messages for conversation (uses messageApi cache)
+  const loadMessages = async (conversationId) => {
     try {
-      // console.log(`Tải tin nhắn cho conversation ID: ${id}`); // Đã xóa log
-      const data = await getMessagesByConversation(id);
-
+      const data = await getMessagesByConversation(conversationId);
       const mapped = data.map((m) => ({
         id: m.id,
         content: m.content,
@@ -127,139 +131,192 @@ const RecruiterMessenger = () => {
         time: m.createdAt,
         avatar: m.senderAvatar || "https://i.pravatar.cc/150?img=5",
       }));
-
-      setMessages(mapped);
-    } catch (error) {
-      console.error("Lỗi tải tin nhắn:", error);
-      setMessages([]);
+      if (isMountedRef.current) setMessages(mapped);
+    } catch (err) {
+      console.error("Error loading messages", err);
+      if (isMountedRef.current) setMessages([]);
     }
   };
 
-  /** Khi chọn chat */
-  const handleSelectChat = async (conv) => {
-    // console.log("Chọn conversation:", conv); // Đã xóa log
-    setSelectedChat(conv);
-    setMessages([]); // Xóa tin nhắn cũ ngay lập tức
-
-    // 1. GỌI /app/chat.open → đánh dấu đã đọc
-    if (stompClientRef.current?.connected) {
-      stompClientRef.current.publish({
-        destination: "/app/chat.open",
-        body: JSON.stringify({ conversationId: conv.id }),
-      });
-      // console.log("Gửi /app/chat.open cho conv:", conv.id); // Đã xóa log
-    } else {
-      console.warn("WebSocket chưa kết nối → Không gửi chat.open");
-    }
-
-    // 2. Load tin nhắn qua REST
-    await loadMessages(conv.id);
-
-    // 3. Hủy subscribe cũ
+  // subscribe to conversation (and handle inbound messages)
+  const setupSubscription = (conversationId) => {
+    // unsubscribe old
     if (subscriptionRef.current) {
-      // console.log("Hủy subscribe cũ"); // Đã xóa log
-      subscriptionRef.current.unsubscribe();
+      try {
+        subscriptionRef.current.unsubscribe();
+      } catch (e) {}
       subscriptionRef.current = null;
     }
 
-    // 4. Subscribe real-time
-    // console.log("Đăng ký WebSocket cho conversation:", conv.id); // Đã xóa log
-    subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
-      // console.log("Tin nhắn mới từ WebSocket:", msg); // Đã xóa log
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: msg.id,
-          content: msg.content,
-          fromSelf: msg.fromSelf,
-          time: msg.createdAt,
-          avatar: msg.senderAvatar,
-        },
-      ]);
-      // Cập nhật lại danh sách conversations khi có tin nhắn mới đến
-      loadConversations();
+    const sub = subscribeConversation(conversationId, (msg) => {
+      // msg must include conversationId, content, createdAt, fromSelf, senderAvatar, id
+      const payload = {
+        id: msg.id,
+        content: msg.content,
+        fromSelf: msg.fromSelf,
+        time: msg.createdAt,
+        avatar: msg.senderAvatar,
+      };
+
+      // If the message belongs to current selected conversation, append to messages
+      if (selectedChat && msg.conversationId === selectedChat.id) {
+        setMessages((prev) => [...prev, payload]);
+
+        // mark conversation unread=0 locally
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === selectedChat.id
+              ? {
+                  ...c,
+                  lastMessage: msg.content,
+                  unread: 0,
+                  lastMessageAt: msg.createdAt,
+                }
+              : c
+          )
+        );
+      } else {
+        // Message belongs to other conversation: update the conversations list locally
+        setConversations((prev) => {
+          const found = prev.find((c) => c.id === msg.conversationId);
+          if (found) {
+            return prev.map((c) =>
+              c.id === msg.conversationId
+                ? {
+                    ...c,
+                    lastMessage: msg.content,
+                    unread: (c.unread || 0) + 1,
+                    lastMessageAt: msg.createdAt,
+                  }
+                : c
+            );
+          } else {
+            // If not present, prepend a new conversation entry (lightweight)
+            return [
+              {
+                id: msg.conversationId,
+                otherName: msg.senderName || "Ẩn danh",
+                avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=3",
+                lastMessage: msg.content,
+                lastMessageAt: msg.createdAt,
+                unread: 1,
+              },
+              ...prev,
+            ];
+          }
+        });
+      }
     });
 
-    // 5. Reload danh sách để cập nhật unread = 0 sau khi load messages
-    await loadConversations();
+    subscriptionRef.current = sub;
   };
 
-  // ✅ 1. TẢI DANH SÁCH BAN ĐẦU VÀ CẬP NHẬT MỖI 3 GIÂY
+  // handle select chat
+  const handleSelectChat = async (conv) => {
+    // immediate UI updates
+    setSelectedChat(conv);
+    setMessages([]);
+
+    // send chat.open to mark read on server (if connected)
+    const client = stompClientRef.current;
+    if (client?.connected) {
+      try {
+        client.publish({
+          destination: "/app/chat.open",
+          body: JSON.stringify({ conversationId: conv.id }),
+        });
+      } catch (e) {
+        console.warn("chat.open publish failed", e);
+      }
+    }
+
+    // load messages (cache-enabled)
+    await loadMessages(conv.id);
+
+    // subscription for real-time updates
+    if (client?.connected) {
+      setupSubscription(conv.id);
+    }
+
+    // locally set unread to 0 for this conversation to avoid extra fetch
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c))
+    );
+  };
+
+  // initial load + periodic polling fallback
   useEffect(() => {
-    loadConversations(); // Initial load
+    loadConversations();
 
-    // Cài đặt interval 3s
     const intervalId = setInterval(() => {
+      // fallback poll; you can increase interval or disable if server sends unread updates
       loadConversations();
-    }, 3000);
+    }, 20_000); // 20 seconds
 
-    // Cleanup khi component unmount
     return () => {
       clearInterval(intervalId);
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe();
-      }
     };
+    // empty deps -> run once
   }, []);
 
-  // ✅ 2. TỰ ĐỘNG CHỌN CUỘC HỘI THOẠI GẦN NHẤT KHI VÀO UI
+  // auto-select one conversation only once
   useEffect(() => {
-    // Chỉ chạy khi danh sách đã tải xong, có dữ liệu và chưa có chat nào được chọn
-    if (conversations.length > 0 && !selectedChat && !loading) {
-      // console.log("RecruiterMessenger - Tự động chọn cuộc hội thoại gần nhất."); // Đã xóa log
-
-      // Sắp xếp theo thời gian tin nhắn cuối cùng (mới nhất đầu tiên)
+    if (
+      !autoSelectedRef.current &&
+      !loading &&
+      conversations.length > 0 &&
+      !selectedChat
+    ) {
+      autoSelectedRef.current = true;
       const sorted = [...conversations].sort(
         (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
       );
-
-      // Tự động chọn
       handleSelectChat(sorted[0]);
     }
-  }, [conversations, selectedChat, loading]);
+  }, [conversations, loading, selectedChat]);
 
-  /** Gửi tin nhắn */
+  // send message
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
-    // Kiểm tra kết nối WS trước khi gửi
-    if (!stompClientRef.current?.connected) {
-      console.error("WebSocket is not connected. Message not sent.");
-      // Có thể thêm thông báo lỗi cho người dùng ở đây
-      return;
-    }
-
     const content = message.trim();
     const convId = selectedChat.id;
 
-    // console.log("Gửi tin nhắn:", { convId, content }); // Đã xóa log
-    sendMessageWS(convId, content);
+    // optimistic UI append
+    const optimistic = {
+      id: Date.now(),
+      content,
+      fromSelf: true,
+      time: new Date().toISOString(),
+      avatar: selectedChat.avatar,
+    };
+    setMessages((prev) => [...prev, optimistic]);
 
-    // Optimistic UI
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(), // ID tạm thời
-        content,
-        fromSelf: true,
-        time: new Date().toISOString(),
-        avatar: selectedChat.avatar, // Dùng tạm avatar của người kia, hoặc lấy avatar của nhà tuyển dụng nếu có
-      },
-    ]);
+    // update conversations local lastMessage
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === convId
+          ? {
+              ...c,
+              lastMessage: content,
+              lastMessageAt: new Date().toISOString(),
+            }
+          : c
+      )
+    );
 
     setMessage("");
 
-    // Chờ 1 chút rồi reload danh sách conversations để cập nhật lastMessage
-    setTimeout(() => {
-      loadConversations();
-    }, 500);
-
-    // Không cần gọi loadMessages(convId) ở đây vì tin nhắn gửi đi sẽ được WebSocket push về (Optimistic UI)
-    // hoặc được cập nhật qua WS, tránh race condition.
+    // send via ws (if fails, consider fallback to REST)
+    const ok = sendMessageWS(convId, content);
+    if (!ok) {
+      console.error("WS send failed — consider retry or REST fallback");
+      // Optionally fallback to a REST endpoint to persist message
+    }
   };
 
-  // Lọc danh sách
+  // filter list
   const filtered = conversations.filter((c) => {
     const matchSearch = c.otherName
       .toLowerCase()
@@ -268,7 +325,6 @@ const RecruiterMessenger = () => {
     return matchSearch && matchFilter;
   });
 
-  // Format thời gian
   const formatTime = (isoString) => {
     if (!isoString) return "";
     return new Date(isoString).toLocaleTimeString("vi-VN", {
