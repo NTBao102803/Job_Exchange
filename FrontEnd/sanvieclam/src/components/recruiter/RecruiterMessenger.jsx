@@ -1,10 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Send, Search, MoreHorizontal } from "lucide-react";
-import {
-  connectWebSocket,
-  subscribeConversation,
-  sendMessageWS,
-} from "../../services/socket.js";
+import { sendMessageWS } from "../../services/socket.js";
 import {
   getConversations,
   getMessagesByConversation,
@@ -12,7 +8,6 @@ import {
 import { getEmployerProfile } from "../../api/RecruiterApi";
 
 const RecruiterMessenger = () => {
-  const [recruiterId, setRecruiterId] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -21,13 +16,11 @@ const RecruiterMessenger = () => {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  const subscriptionRef = useRef(null);
-  const stompClientRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
   const token = localStorage.getItem("token");
 
-  // Auto scroll MƯỢT – chỉ trong khung chat
+  // Cuộn mượt trong khung chat
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -38,9 +31,9 @@ const RecruiterMessenger = () => {
   const loadRecruiterId = async () => {
     try {
       const data = await getEmployerProfile();
-      if (data?.id) setRecruiterId(data.id);
+      if (data?.id) return data.id;
     } catch (error) {
-      console.error("Lỗi lấy employer profile:", error);
+      console.error("Lỗi lấy profile:", error);
     }
   };
 
@@ -48,36 +41,23 @@ const RecruiterMessenger = () => {
     loadRecruiterId();
   }, []);
 
-  useEffect(() => {
-    if (token) {
-      connectWebSocket(
-        token,
-        () => {
-          stompClientRef.current = window.stompClient;
-        },
-        (err) => console.error("WebSocket error:", err)
-      );
-    }
-  }, [token]);
-
   const loadConversations = async () => {
     try {
       setLoading(true);
       const data = await getConversations();
-      if (!Array.isArray(data)) return;
-
-      const mapped = data.map((c) => ({
-        id: c.id,
-        otherName: c.otherUserName || "Ẩn danh",
-        avatar: c.otherUserAvatar || "https://i.pravatar.cc/150?img=3",
-        lastMessage: c.lastMessage || "Chưa có tin nhắn",
-        lastMessageAt: c.lastMessageAt,
-        unread: c.unreadCount || 0,
-      }));
-
-      setConversations(mapped);
+      if (Array.isArray(data)) {
+        const mapped = data.map((c) => ({
+          id: c.id,
+          otherName: c.otherUserName || "Ẩn danh",
+          avatar: c.otherUserAvatar || "https://i.pravatar.cc/150?img=3",
+          lastMessage: c.lastMessage || "Chưa có tin nhắn",
+          lastMessageAt: c.lastMessageAt,
+          unread: c.unreadCount || 0,
+        }));
+        setConversations(mapped);
+      }
     } catch (error) {
-      console.error("Lỗi khi tải danh sách hội thoại:", error);
+      console.error("Lỗi tải danh sách chat:", error);
     } finally {
       setLoading(false);
     }
@@ -101,57 +81,16 @@ const RecruiterMessenger = () => {
 
   const handleSelectChat = async (conv) => {
     if (selectedChat?.id === conv.id) return;
-
     setSelectedChat(conv);
-    setMessages([]);
-
-    if (stompClientRef.current?.connected) {
-      stompClientRef.current.publish({
-        destination: "/app/chat.open",
-        body: JSON.stringify({ conversationId: conv.id }),
-      });
-    }
-
     await loadMessages(conv.id);
-
-    if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
-
-    subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === msg.id)) return prev;
-        return [
-          ...prev,
-          {
-            id: msg.id,
-            content: msg.content,
-            fromSelf: msg.fromSelf,
-            time: msg.createdAt,
-            avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=5",
-          },
-        ];
-      });
-
-      setConversations((prev) =>
-        prev
-          .map((c) =>
-            c.id === conv.id
-              ? {
-                  ...c,
-                  lastMessage: msg.content,
-                  lastMessageAt: msg.createdAt || new Date().toISOString(),
-                  unread: msg.fromSelf ? c.unread : c.unread + 1,
-                }
-              : c
-          )
-          .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
-      );
-    });
   };
 
+  // TẢI LẦN ĐẦU
   useEffect(() => {
     loadConversations();
   }, []);
 
+  // TỰ ĐỘNG CHỌN CHAT MỚI NHẤT
   useEffect(() => {
     if (conversations.length > 0 && !selectedChat && !loading) {
       const sorted = [...conversations].sort(
@@ -161,15 +100,22 @@ const RecruiterMessenger = () => {
     }
   }, [conversations, selectedChat, loading]);
 
-  const handleSend = (e) => {
+  // GỬI TIN → RELOAD HỘI THOẠI + KHUNG CHAT → ĐÚNG 100%
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
     const content = message.trim();
     setMessage("");
 
-    sendMessageWS(selectedChat.id, content);
-    // Server sẽ đẩy lại tin nhắn thật → tự động thêm vào messages + cập nhật danh sách
+    try {
+      await sendMessageWS(selectedChat.id, content);
+      await loadConversations();
+      await loadMessages(selectedChat.id);
+    } catch (err) {
+      alert("Gửi tin nhắn thất bại!");
+      setMessage(content);
+    }
   };
 
   const filtered = conversations.filter((c) => {
@@ -180,18 +126,18 @@ const RecruiterMessenger = () => {
     return matchSearch && matchFilter;
   });
 
-  const formatTime = (isoString) => {
-    if (!isoString) return "";
-    return new Date(isoString).toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (iso) =>
+    iso
+      ? new Date(iso).toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
 
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-indigo-200/60 via-white/70 to-purple-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-        {/* DANH SÁCH */}
+        {/* DANH SÁCH – GIỮ NGUYÊN 100% */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-purple-300/70 via-purple-200/60 to-white/70 backdrop-blur-md">
           <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
@@ -270,7 +216,7 @@ const RecruiterMessenger = () => {
           </div>
         </div>
 
-        {/* KHUNG CHAT */}
+        {/* KHUNG CHAT – THANH TRƯỢT CHỈ TRONG ĐÂY */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-purple-100/80 to-indigo-200/70">
           {selectedChat ? (
             <>
@@ -291,7 +237,7 @@ const RecruiterMessenger = () => {
               >
                 {messages.map((m, i) => (
                   <div
-                    key={m.id || i}
+                    key={i}
                     className={`flex ${
                       m.fromSelf ? "justify-end" : "justify-start"
                     }`}
