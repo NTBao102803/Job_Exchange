@@ -30,8 +30,7 @@ const CandidateMessenger = () => {
 
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop =
-        messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -106,18 +105,8 @@ const CandidateMessenger = () => {
     subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
-
-        const filtered = prev.filter(
-          (m) =>
-            !(
-              m.id?.toString().startsWith("temp-") &&
-              m.content === msg.content &&
-              m.fromSelf
-            )
-        );
-
         return [
-          ...filtered,
+          ...prev,
           {
             id: msg.id,
             content: msg.content,
@@ -135,7 +124,7 @@ const CandidateMessenger = () => {
               ? {
                   ...c,
                   lastMessage: msg.content,
-                  lastMessageAt: msg.createdAt,
+                  lastMessageAt: msg.createdAt || new Date().toISOString(),
                   unread: msg.fromSelf ? c.unread : c.unread + 1,
                 }
               : c
@@ -151,16 +140,9 @@ const CandidateMessenger = () => {
 
   useEffect(() => {
     if (conversations.length > 0 && !selectedChat && !loading) {
-      let target = null;
-      if (navigatedConversationId) {
-        target = conversations.find((c) => c.id === navigatedConversationId);
-      }
-      if (!target) {
-        const sorted = [...conversations].sort(
-          (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
-        );
-        target = sorted[0];
-      }
+      let target =
+        conversations.find((c) => c.id === navigatedConversationId) ||
+        [...conversations].sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))[0];
       if (target) handleSelectChat(target);
     }
   }, [conversations, selectedChat, loading, navigatedConversationId]);
@@ -170,39 +152,13 @@ const CandidateMessenger = () => {
     if (!message.trim() || !selectedChat) return;
 
     const content = message.trim();
-    sendMessageWS(selectedChat.id, content);
-
-    const tempId = `temp-${Date.now()}`;
-    const now = new Date().toISOString();
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: tempId,
-        content,
-        fromSelf: true,
-        time: now,
-        avatar: "https://i.pravatar.cc/150?img=1",
-      },
-    ]);
-
-    setConversations((prev) =>
-      prev
-        .map((c) =>
-          c.id === selectedChat.id
-            ? { ...c, lastMessage: content, lastMessageAt: now, unread: 0 }
-            : c
-        )
-        .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
-    );
-
     setMessage("");
+
+    sendMessageWS(selectedChat.id, content);
   };
 
   const filteredConversations = conversations.filter((c) => {
-    const matchSearch = c.otherName
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchSearch = c.otherName.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === "unread" ? c.unread > 0 : true;
     return matchSearch && matchFilter;
   });
@@ -272,17 +228,10 @@ const CandidateMessenger = () => {
                     : "hover:bg-white/40"
                 }`}
               >
-                <img
-                  src={conv.avatar}
-                  className="w-12 h-12 rounded-full border border-white shadow-md"
-                />
+                <img src={conv.avatar} className="w-12 h-12 rounded-full border border-white shadow-md" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate text-gray-800">
-                    {conv.otherName}
-                  </p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {conv.lastMessage}
-                  </p>
+                  <p className="font-semibold truncate text-gray-800">{conv.otherName}</p>
+                  <p className="text-sm text-gray-500 truncate">{conv.lastMessage}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-xs text-gray-400 whitespace-nowrap">
@@ -304,36 +253,19 @@ const CandidateMessenger = () => {
           {selectedChat ? (
             <>
               <div className="flex items-center gap-3 p-4 border-b border-white/40 bg-white/70 shadow">
-                <img
-                  src={selectedChat.avatar}
-                  className="w-10 h-10 rounded-full border border-white shadow-md"
-                />
+                <img src={selectedChat.avatar} className="w-10 h-10 rounded-full border border-white shadow-md" />
                 <div>
-                  <p className="font-semibold text-gray-800">
-                    {selectedChat.otherName}
-                  </p>
-                  <p className="text-xs text-green-500 font-medium">
-                    Đang hoạt động
-                  </p>
+                  <p className="font-semibold text-gray-800">{selectedChat.otherName}</p>
+                  <p className="text-xs text-green-500 font-medium">Đang hoạt động</p>
                 </div>
               </div>
 
-              <div
-                ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-              >
+              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                 {messages.map((m, i) => (
-                  <div
-                    key={m.id || i}
-                    className={`flex ${
-                      m.fromSelf ? "justify-end" : "justify-start"
-                    }`}
-                  >
+                  <div key={m.id || i} className={`flex ${m.fromSelf ? "justify-end" : "justify-start"}`}>
                     <div
                       className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm shadow ${
-                        m.fromSelf
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-gray-800"
+                        m.fromSelf ? "bg-blue-600 text-white" : "bg-white text-gray-800"
                       }`}
                     >
                       {m.content}
@@ -345,10 +277,7 @@ const CandidateMessenger = () => {
                 ))}
               </div>
 
-              <form
-                onSubmit={handleSend}
-                className="p-4 border-t border-white/40 bg-white/70 flex items-center gap-3"
-              >
+              <form onSubmit={handleSend} className="p-4 border-t border-white/40 bg-white/70 flex items-center gap-3">
                 <input
                   type="text"
                   placeholder="Nhập tin nhắn..."
@@ -356,10 +285,7 @@ const CandidateMessenger = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
-                <button
-                  type="submit"
-                  className="p-2 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 transition"
-                >
+                <button type="submit" className="p-2 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 transition">
                   <Send size={18} />
                 </button>
               </form>
