@@ -146,7 +146,7 @@ const RecruiterMessenger = () => {
       });
 
       // TỰ ĐỘNG CẬP NHẬT DANH SÁCH HỘI THOẠI KHI CÓ TIN MỚI
-      loadConversations();
+      // loadConversations();
     });
   };
 

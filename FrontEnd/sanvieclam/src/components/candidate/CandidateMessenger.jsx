@@ -189,7 +189,7 @@ const CandidateMessenger = () => {
     setMessage("");
 
     // Cập nhật danh sách hội thoại ngay khi gửi
-    loadConversations();
+    // loadConversations();
   };
 
   // Lọc danh sách
