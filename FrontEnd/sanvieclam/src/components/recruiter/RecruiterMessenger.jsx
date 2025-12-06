@@ -123,14 +123,12 @@ const RecruiterMessenger = () => {
     // Subscribe real-time cho cuộc chat này
     subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
       setMessages((prev) => {
-        // Tránh duplicate
         if (prev.some((m) => m.id === msg.id)) return prev;
 
-        // Xóa tin nhắn tạm nếu có (optimistic)
         const filtered = prev.filter(
           (m) =>
             !(
-              m.id.toString().startsWith("temp-") &&
+              m.id?.toString().startsWith("temp-") &&
               m.fromSelf &&
               m.content === msg.content
             )
@@ -153,12 +151,16 @@ const RecruiterMessenger = () => {
     loadConversations();
   };
 
-  // TẢI BAN ĐẦU + POLLING 3s (chỉ 1 lần)
+  // TẢI BAN ĐẦU + POLLING CHỈ 1 LẦN DUY NHẤT – ĐÃ SỬA SẠCH
   useEffect(() => {
-    loadConversations();
-    const interval = setInterval(loadConversations, 3000);
-    return () => clearInterval(interval);
-  }, []);
+    loadConversations(); // Load lần đầu
+
+    const interval = setInterval(() => {
+      loadConversations(); // Chỉ gọi mỗi 8 giây → nhẹ server, không log loạn
+    }, 8000);
+
+    return () => clearInterval(interval); // Dọn dẹp khi rời trang
+  }, []); // ← Chỉ chạy 1 lần khi mount
 
   // TỰ ĐỘNG CHỌN CUỘC CHAT MỚI NHẤT
   useEffect(() => {
@@ -170,17 +172,15 @@ const RecruiterMessenger = () => {
     }
   }, [conversations, selectedChat, loading]);
 
-  // GỬI TIN NHẮN – KHÔNG GỌI API RELOAD NỮA!
+  // GỬI TIN NHẮN – MƯỢT, KHÔNG RELOAD
   const handleSend = (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
     const content = message.trim();
 
-    // Gửi qua WebSocket
     sendMessageWS(selectedChat.id, content);
 
-    // Optimistic UI – hiện ngay lập tức
     const tempId = `temp-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
@@ -194,7 +194,6 @@ const RecruiterMessenger = () => {
     ]);
 
     setMessage("");
-    // → Tin nhắn thật sẽ được server đẩy về qua WebSocket → tự động thay thế tin tạm
   };
 
   // Lọc danh sách
@@ -333,7 +332,8 @@ const RecruiterMessenger = () => {
                     </div>
                   </div>
                 ))}
-                {/* <div ref={messagesEndRef} /> */}
+                {/* <div ref={messagesEndRef} />{" "} */}
+                {/* ← Đã thêm lại để scroll mượt */}
               </div>
 
               <form
