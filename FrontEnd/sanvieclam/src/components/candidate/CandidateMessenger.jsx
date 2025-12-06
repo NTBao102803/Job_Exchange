@@ -22,18 +22,19 @@ const CandidateMessenger = () => {
 
   const subscriptionRef = useRef(null);
   const stompClientRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const token = localStorage.getItem("token");
   const location = useLocation();
   const navigatedConversationId = location.state?.conversationId;
 
-  // Auto scroll xuống dưới
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  // Kết nối WebSocket
   useEffect(() => {
     if (token) {
       connectWebSocket(
@@ -46,7 +47,6 @@ const CandidateMessenger = () => {
     }
   }, [token]);
 
-  // Load danh sách hội thoại (chỉ gọi 1 lần khi mở trang)
   const loadConversations = async () => {
     try {
       setLoading(true);
@@ -70,7 +70,6 @@ const CandidateMessenger = () => {
     }
   };
 
-  // Load tin nhắn khi chọn chat
   const loadMessages = async (id) => {
     try {
       const data = await getMessagesByConversation(id);
@@ -87,13 +86,12 @@ const CandidateMessenger = () => {
     }
   };
 
-  // Khi chọn một cuộc chat
   const handleSelectChat = async (conv) => {
     if (selectedChat?.id === conv.id) return;
 
     setSelectedChat(conv);
+    setMessages([]);
 
-    // Đánh dấu đã đọc
     if (stompClientRef.current?.connected) {
       stompClientRef.current.publish({
         destination: "/app/chat.open",
@@ -103,12 +101,8 @@ const CandidateMessenger = () => {
 
     await loadMessages(conv.id);
 
-    // Hủy subscribe cũ
-    if (subscriptionRef.current) {
-      subscriptionRef.current.unsubscribe();
-    }
+    if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
 
-    // Subscribe tin nhắn mới → cập nhật cả khung chat + danh sách hội thoại
     subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
@@ -117,8 +111,8 @@ const CandidateMessenger = () => {
           (m) =>
             !(
               m.id?.toString().startsWith("temp-") &&
-              m.fromSelf &&
-              m.content === msg.content
+              m.content === msg.content &&
+              m.fromSelf
             )
         );
 
@@ -134,39 +128,43 @@ const CandidateMessenger = () => {
         ];
       });
 
-      // CẬP NHẬT DANH SÁCH HỘI THOẠI NGAY KHI CÓ TIN MỚI
-      loadConversations();
+      setConversations((prev) =>
+        prev
+          .map((c) =>
+            c.id === conv.id
+              ? {
+                  ...c,
+                  lastMessage: msg.content,
+                  lastMessageAt: msg.createdAt,
+                  unread: msg.fromSelf ? c.unread : c.unread + 1,
+                }
+              : c
+          )
+          .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+      );
     });
   };
 
-  // CHỈ GỌI 1 LẦN KHI MỞ TRANG – KHÔNG CÒN POLLING
   useEffect(() => {
     loadConversations();
   }, []);
 
-  // TỰ ĐỘNG CHỌN CUỘC CHAT: ưu tiên từ navigation → fallback mới nhất
   useEffect(() => {
     if (conversations.length > 0 && !selectedChat && !loading) {
       let target = null;
-
       if (navigatedConversationId) {
         target = conversations.find((c) => c.id === navigatedConversationId);
       }
-
       if (!target) {
         const sorted = [...conversations].sort(
           (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
         );
         target = sorted[0];
       }
-
-      if (target) {
-        handleSelectChat(target);
-      }
+      if (target) handleSelectChat(target);
     }
   }, [conversations, selectedChat, loading, navigatedConversationId]);
 
-  // GỬI TIN NHẮN → cập nhật danh sách ngay lập tức
   const handleSend = (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
@@ -175,24 +173,32 @@ const CandidateMessenger = () => {
     sendMessageWS(selectedChat.id, content);
 
     const tempId = `temp-${Date.now()}`;
+    const now = new Date().toISOString();
+
     setMessages((prev) => [
       ...prev,
       {
         id: tempId,
         content,
         fromSelf: true,
-        time: new Date().toISOString(),
+        time: now,
         avatar: "https://i.pravatar.cc/150?img=1",
       },
     ]);
 
-    setMessage("");
+    setConversations((prev) =>
+      prev
+        .map((c) =>
+          c.id === selectedChat.id
+            ? { ...c, lastMessage: content, lastMessageAt: now, unread: 0 }
+            : c
+        )
+        .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+    );
 
-    // Cập nhật danh sách hội thoại ngay khi gửi
-    // loadConversations();
+    setMessage("");
   };
 
-  // Lọc danh sách
   const filteredConversations = conversations.filter((c) => {
     const matchSearch = c.otherName
       .toLowerCase()
@@ -212,7 +218,7 @@ const CandidateMessenger = () => {
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-blue-200/60 via-white/70 to-indigo-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-        {/* LIST – GIỮ NGUYÊN 100% */}
+        {/* LIST */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-blue-300/70 via-blue-200/60 to-white/70 backdrop-blur-md relative">
           <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
@@ -293,7 +299,7 @@ const CandidateMessenger = () => {
           </div>
         </div>
 
-        {/* CHAT PANEL – GIỮ NGUYÊN 100% */}
+        {/* CHAT PANEL */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-blue-100/80 to-indigo-200/70 backdrop-blur-md relative">
           {selectedChat ? (
             <>
@@ -312,7 +318,10 @@ const CandidateMessenger = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+              <div
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+              >
                 {messages.map((m, i) => (
                   <div
                     key={m.id || i}
@@ -334,7 +343,6 @@ const CandidateMessenger = () => {
                     </div>
                   </div>
                 ))}
-                <div ref={messagesEndRef} />
               </div>
 
               <form

@@ -23,13 +23,16 @@ const RecruiterMessenger = () => {
 
   const subscriptionRef = useRef(null);
   const stompClientRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const token = localStorage.getItem("token");
 
-  // Auto scroll
+  // Auto scroll mượt trong khung chat
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const loadRecruiterId = async () => {
@@ -58,7 +61,7 @@ const RecruiterMessenger = () => {
     }
   }, [token]);
 
-  // Load danh sách hội thoại (chỉ gọi 1 lần khi mở trang)
+  // Load danh sách hội thoại – chỉ 1 lần
   const loadConversations = async () => {
     try {
       setLoading(true);
@@ -82,7 +85,7 @@ const RecruiterMessenger = () => {
     }
   };
 
-  // Load tin nhắn khi chọn chat
+  // Load tin nhắn khi mở chat lần đầu
   const loadMessages = async (id) => {
     try {
       const data = await getMessagesByConversation(id);
@@ -99,11 +102,12 @@ const RecruiterMessenger = () => {
     }
   };
 
-  // Khi chọn chat
+  // Chọn chat
   const handleSelectChat = async (conv) => {
     if (selectedChat?.id === conv.id) return;
 
     setSelectedChat(conv);
+    setMessages([]); // Xóa tin cũ
 
     if (stompClientRef.current?.connected) {
       stompClientRef.current.publish({
@@ -114,13 +118,9 @@ const RecruiterMessenger = () => {
 
     await loadMessages(conv.id);
 
-    if (subscriptionRef.current) {
-      subscriptionRef.current.unsubscribe();
-    }
+    if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
 
-    // Subscribe tin nhắn mới trong cuộc chat này
     subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
-      // Cập nhật tin nhắn trong khung chat
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
 
@@ -128,8 +128,8 @@ const RecruiterMessenger = () => {
           (m) =>
             !(
               m.id?.toString().startsWith("temp-") &&
-              m.fromSelf &&
-              m.content === msg.content
+              m.content === msg.content &&
+              m.fromSelf
             )
         );
 
@@ -145,17 +145,30 @@ const RecruiterMessenger = () => {
         ];
       });
 
-      // TỰ ĐỘNG CẬP NHẬT DANH SÁCH HỘI THOẠI KHI CÓ TIN MỚI
-      // loadConversations();
+      // CẬP NHẬT DANH SÁCH HỘI THOẠI NGAY LẬP TỨC – KHÔNG GỌI API
+      setConversations((prev) =>
+        prev
+          .map((c) =>
+            c.id === conv.id
+              ? {
+                  ...c,
+                  lastMessage: msg.content,
+                  lastMessageAt: msg.createdAt,
+                  unread: msg.fromSelf ? c.unread : c.unread + 1,
+                }
+              : c
+          )
+          .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+      );
     });
   };
 
-  // CHỈ GỌI 1 LẦN KHI MỞ TRANG – KHÔNG CÒN POLLING 8S
+  // Chỉ load 1 lần khi mở trang
   useEffect(() => {
     loadConversations();
   }, []);
 
-  // TỰ ĐỘNG CHỌN CUỘC CHAT MỚI NHẤT
+  // Tự động chọn chat mới nhất
   useEffect(() => {
     if (conversations.length > 0 && !selectedChat && !loading) {
       const sorted = [...conversations].sort(
@@ -165,7 +178,7 @@ const RecruiterMessenger = () => {
     }
   }, [conversations, selectedChat, loading]);
 
-  // GỬI TIN NHẮN
+  // Gửi tin nhắn
   const handleSend = (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
@@ -174,21 +187,31 @@ const RecruiterMessenger = () => {
     sendMessageWS(selectedChat.id, content);
 
     const tempId = `temp-${Date.now()}`;
+    const now = new Date().toISOString();
+
     setMessages((prev) => [
       ...prev,
       {
         id: tempId,
         content,
         fromSelf: true,
-        time: new Date().toISOString(),
+        time: now,
         avatar: "https://i.pravatar.cc/150?img=1",
       },
     ]);
 
-    setMessage("");
+    // CẬP NHẬT DANH SÁCH HỘI THOẠI NGAY LẬP TỨC
+    setConversations((prev) =>
+      prev
+        .map((c) =>
+          c.id === selectedChat.id
+            ? { ...c, lastMessage: content, lastMessageAt: now, unread: 0 }
+            : c
+        )
+        .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+    );
 
-    // Khi gửi tin → tự động cập nhật danh sách hội thoại
-    loadConversations();
+    setMessage("");
   };
 
   const filtered = conversations.filter((c) => {
@@ -304,7 +327,10 @@ const RecruiterMessenger = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto p-6 space-y-4"
+              >
                 {messages.map((m, i) => (
                   <div
                     key={m.id || i}
@@ -326,7 +352,6 @@ const RecruiterMessenger = () => {
                     </div>
                   </div>
                 ))}
-                <div ref={messagesEndRef} />
               </div>
 
               <form
