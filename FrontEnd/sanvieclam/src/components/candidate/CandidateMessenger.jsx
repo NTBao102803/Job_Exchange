@@ -28,9 +28,6 @@ const CandidateMessenger = () => {
   const messagesContainerRef = useRef(null);
 
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
-  const myAvatar = user?.avatarUrl || "https://i.pravatar.cc/150?img=3";
-
   const location = useLocation();
   const navigatedConversationId = location.state?.conversationId;
   const autoSelectedRef = useRef(false);
@@ -42,7 +39,7 @@ const CandidateMessenger = () => {
     };
   }, []);
 
-  // auto scroll
+  // scroll behavior
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -53,6 +50,7 @@ const CandidateMessenger = () => {
   // connect websocket
   useEffect(() => {
     if (!token) return;
+
     connectWebSocket(
       token,
       () => {
@@ -65,7 +63,7 @@ const CandidateMessenger = () => {
       if (subscriptionRef.current) {
         try {
           subscriptionRef.current.unsubscribe();
-        } catch {}
+        } catch (e) {}
         subscriptionRef.current = null;
       }
       disconnectWebSocket();
@@ -80,17 +78,18 @@ const CandidateMessenger = () => {
         setError(null);
       }
       const data = await getConversations({ force });
-      if (!Array.isArray(data)) throw new Error("Invalid response");
+      if (!Array.isArray(data)) throw new Error("Invalid conversations");
       const mapped = data.map((c) => ({
         id: c.id,
         otherName: c.otherUserName || "Ẩn danh",
-        avatar: c.otherUserAvatar || "https://i.pravatar.cc/150?img=3",
+        avatar: c.otherUserAvatar || "https://i.pravatar.cc/150?img=1",
         lastMessage: c.lastMessage || "Chưa có tin nhắn",
         lastMessageAt: c.lastMessageAt,
         unread: c.unreadCount || 0,
       }));
       if (isMountedRef.current) setConversations(mapped);
     } catch (err) {
+      console.error("CandidateMessenger - Error loading conversations:", err);
       if (isMountedRef.current) setError("Không tải được tin nhắn.");
     } finally {
       if (isMountedRef.current) setLoading(false);
@@ -106,10 +105,11 @@ const CandidateMessenger = () => {
         senderId: m.senderId,
         fromSelf: m.fromSelf,
         time: m.createdAt,
-        avatar: m.senderAvatar || "https://i.pravatar.cc/150?img=3",
+        avatar: m.senderAvatar || "https://i.pravatar.cc/150?img=5",
       }));
       if (isMountedRef.current) setMessages(mapped);
-    } catch {
+    } catch (err) {
+      console.error("CandidateMessenger - Error loading messages:", err);
       if (isMountedRef.current) setMessages([]);
     }
   };
@@ -118,35 +118,62 @@ const CandidateMessenger = () => {
     if (subscriptionRef.current) {
       try {
         subscriptionRef.current.unsubscribe();
-      } catch {}
+      } catch (e) {}
       subscriptionRef.current = null;
     }
 
     const sub = subscribeConversation(conversationId, (msg) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: msg.id,
-          content: msg.content,
-          time: msg.createdAt,
-          avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=3",
-          fromSelf: msg.senderId === user?.id,
-        },
-      ]);
+      const payload = {
+        id: msg.id,
+        content: msg.content,
+        fromSelf: msg.fromSelf,
+        time: msg.createdAt,
+        avatar: msg.senderAvatar,
+      };
 
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === msg.conversationId
-            ? {
-                ...c,
+      if (selectedChat && msg.conversationId === selectedChat.id) {
+        setMessages((prev) => [...prev, payload]);
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === selectedChat.id
+              ? {
+                  ...c,
+                  lastMessage: msg.content,
+                  unread: 0,
+                  lastMessageAt: msg.createdAt,
+                }
+              : c
+          )
+        );
+      } else {
+        setConversations((prev) => {
+          const found = prev.find((c) => c.id === msg.conversationId);
+          if (found) {
+            return prev.map((c) =>
+              c.id === msg.conversationId
+                ? {
+                    ...c,
+                    lastMessage: msg.content,
+                    unread: (c.unread || 0) + 1,
+                    lastMessageAt: msg.createdAt,
+                  }
+                : c
+            );
+          } else {
+            return [
+              {
+                id: msg.conversationId,
+                otherName: msg.senderName || "Ẩn danh",
+                avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=1",
                 lastMessage: msg.content,
                 lastMessageAt: msg.createdAt,
-                unread:
-                  selectedChat?.id === msg.conversationId ? 0 : c.unread + 1,
-              }
-            : c
-        )
-      );
+                unread: 1,
+              },
+              ...prev,
+            ];
+          }
+        });
+      }
     });
 
     subscriptionRef.current = sub;
@@ -163,12 +190,14 @@ const CandidateMessenger = () => {
           destination: "/app/chat.open",
           body: JSON.stringify({ conversationId: conv.id }),
         });
-      } catch {}
+      } catch (e) {}
     }
 
     await loadMessages(conv.id);
 
-    if (client?.connected) setupSubscription(conv.id);
+    if (client?.connected) {
+      setupSubscription(conv.id);
+    }
 
     setConversations((prev) =>
       prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c))
@@ -177,7 +206,11 @@ const CandidateMessenger = () => {
 
   useEffect(() => {
     loadConversations();
-    const interval = setInterval(() => loadConversations(), 20000);
+
+    const interval = setInterval(() => {
+      loadConversations();
+    }, 20_000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -197,15 +230,16 @@ const CandidateMessenger = () => {
         );
       }
       if (!convToSelect) {
-        convToSelect = [...conversations].sort(
+        const sorted = [...conversations].sort(
           (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
-        )[0];
+        );
+        convToSelect = sorted[0];
       }
       if (convToSelect) handleSelectChat(convToSelect);
     }
   }, [conversations, loading, selectedChat, navigatedConversationId]);
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
@@ -217,9 +251,8 @@ const CandidateMessenger = () => {
       content,
       fromSelf: true,
       time: new Date().toISOString(),
-      avatar: myAvatar,
+      avatar: selectedChat.avatar,
     };
-
     setMessages((prev) => [...prev, optimistic]);
     setConversations((prev) =>
       prev.map((c) =>
@@ -235,7 +268,10 @@ const CandidateMessenger = () => {
 
     setMessage("");
 
-    sendMessageWS(convId, content);
+    const ok = sendMessageWS(convId, content);
+    if (!ok) {
+      console.error("WS send failed");
+    }
   };
 
   const filteredConversations = conversations.filter((c) => {
@@ -246,18 +282,18 @@ const CandidateMessenger = () => {
     return matchSearch && matchFilter;
   });
 
-  const formatTime = (iso) =>
-    iso
-      ? new Date(iso).toLocaleTimeString("vi-VN", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "";
+  const formatTime = (isoString) => {
+    if (!isoString) return "";
+    return new Date(isoString).toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-blue-200/60 via-white/70 to-indigo-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-        {/* ------- LEFT PANEL ------- */}
+        {/* LIST */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-blue-300/70 via-blue-200/60 to-white/70 backdrop-blur-md relative">
           <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
@@ -302,7 +338,7 @@ const CandidateMessenger = () => {
             </div>
           </div>
 
-          {/* List Conversations */}
+          {/* LIST */}
           <div className="overflow-y-auto flex-1 p-2 scrollbar-thin scrollbar-thumb-blue-400/50 scrollbar-track-transparent">
             {loading && (
               <div className="text-center p-4 text-gray-500">Đang tải...</div>
@@ -315,7 +351,6 @@ const CandidateMessenger = () => {
                 Không tìm thấy hội thoại.
               </div>
             )}
-
             {filteredConversations.map((conv) => (
               <div
                 key={conv.id}
@@ -366,11 +401,11 @@ const CandidateMessenger = () => {
           </div>
         </div>
 
-        {/* ------- RIGHT CHAT PANEL ------- */}
+        {/* CHAT PANEL */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-blue-100/80 to-indigo-200/70 backdrop-blur-md relative">
           {selectedChat ? (
             <>
-              {/* Header */}
+              {/* HEADER */}
               <div className="flex items-center gap-3 p-4 border-b border-white/40 bg-white/70 shadow">
                 <img
                   src={selectedChat.avatar}
@@ -387,51 +422,35 @@ const CandidateMessenger = () => {
                 </div>
               </div>
 
-              {/* Messages */}
+              {/* MESSAGES */}
               <div
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-blue-400/50 scrollbar-track-transparent"
               >
                 {messages.map((m, i) => (
                   <div
-                    key={m.id || i}
+                    key={m.id || i} // Sử dụng m.id nếu có, nếu không fallback về index
                     className={`flex ${
                       m.fromSelf ? "justify-end" : "justify-start"
-                    } items-end gap-2`}
+                    }`}
                   >
-                    {!m.fromSelf && (
-                      <img
-                        src={m.avatar}
-                        className="w-8 h-8 rounded-full border object-cover shadow-sm"
-                        alt="user"
-                      />
-                    )}
-
                     <div
                       className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm shadow ${
                         m.fromSelf
-                          ? "bg-blue-600 text-white rounded-br-sm"
-                          : "bg-white text-gray-800 rounded-tl-sm"
-                      }`}
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-gray-800"
+                      } ${m.fromSelf ? "rounded-br-sm" : "rounded-tl-sm"}`}
                     >
                       {m.content}
                       <div className="text-[10px] mt-1 text-right opacity-70">
                         {formatTime(m.time)}
                       </div>
                     </div>
-
-                    {m.fromSelf && (
-                      <img
-                        src={myAvatar}
-                        className="w-8 h-8 rounded-full border object-cover shadow-sm"
-                        alt="me"
-                      />
-                    )}
                   </div>
                 ))}
               </div>
 
-              {/* Input box */}
+              {/* INPUT */}
               <form
                 onSubmit={handleSend}
                 className="p-4 border-t border-white/40 bg-white/70 flex items-center gap-3"
@@ -442,7 +461,7 @@ const CandidateMessenger = () => {
                   className="flex-1 px-4 py-2 rounded-full bg-white/60 border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500 transition"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  disabled={!stompClientRef.current?.connected}
+                  disabled={!stompClientRef.current?.connected} // Disable nếu WS chưa kết nối
                 />
 
                 <button
