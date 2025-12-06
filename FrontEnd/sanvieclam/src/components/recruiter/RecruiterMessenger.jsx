@@ -294,7 +294,7 @@ const RecruiterMessenger = () => {
 
         // if belongs to currently selected conversation, append
         console.log(String(msg.conversationId), String(selectedChat), String(msg.conversationId))
-        if (String(msg.conversationId) === string(conversationId)) {
+        if (String(msg.conversationId) === String(conversationId)) {
           setMessages((prev) => {
             const next = [...prev, payload];
             console.log("[UI] setMessages -> length", next.length);
