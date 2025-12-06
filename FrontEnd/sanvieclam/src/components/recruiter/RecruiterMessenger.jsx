@@ -251,94 +251,62 @@ const RecruiterMessenger = () => {
     // create new subscription via helper
     try {
       const sub = subscribeConversation(conversationId, (msg) => {
-        console.log("[WS RECEIVED] raw message for conv", conversationId, "→", msg);
+  if (!msg) return; // <--- thêm dòng này
 
-        // safety: ensure msg has conversationId (log if missing)
-        if (!msg || (typeof msg !== "object")) {
-          console.warn("[WS RECEIVED] malformed msg:", msg);
-          return;
-        }
+  const convId = msg.conversationId || conversationId;
 
-        // check conversation id
-        if (!msg.conversationId) {
-          console.warn("[WS RECEIVED] msg missing conversationId:", msg);
-        } else if (String(msg.conversationId) !== String(conversationId)) {
-          console.log("[WS RECEIVED] msg.conversationId differs from subscribed conversationId", msg.conversationId, conversationId);
-        }
+  // dedupe
+  const idsSet = messageIdsRef.current.get(convId) || new Set();
+  const msgId = msg.id || `no-id-${Date.now()}`;
+  if (idsSet.has(msgId)) return;
+  idsSet.add(msgId);
+  messageIdsRef.current.set(convId, idsSet);
 
-        // dedupe: check id in set
-        const idsSet = messageIdsRef.current.get(conversationId) || new Set();
-        if (msg.id) {
-          if (idsSet.has(msg.id)) {
-            console.warn("[DEDUPE] message id already seen -> skipping:", msg.id, msg);
-            return;
-          }
-          idsSet.add(msg.id);
-          messageIdsRef.current.set(conversationId, idsSet);
-          console.log("[DEDUPE] stored message id:", msg.id, "for conv", conversationId);
-        } else {
-          // no id provided — we still allow, but log it
-          console.warn("[DEDUPE] incoming message has no id. This may cause duplicates. msg:", msg);
-        }
+  const payload = {
+    id: msgId,
+    content: msg.content || "",
+    fromSelf: !!msg.fromSelf,
+    time: msg.createdAt || new Date().toISOString(),
+    avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=5",
+    senderId: msg.senderId,
+    conversationId: convId,
+  };
 
-        // build payload
-        const payload = {
-          id: msg.id || `no-id-${Date.now()}`, // fallback id for logging/UI
-          content: msg.content,
-          fromSelf: !!msg.fromSelf,
-          time: msg.createdAt || new Date().toISOString(),
-          avatar: msg.senderAvatar,
-          senderId: msg.senderId,
-          conversationId: msg.conversationId,
-        };
+  if (selectedChatRef.current && String(convId) === String(selectedChatRef.current.id)) {
+    setMessages((prev) => [...prev, payload]);
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === selectedChatRef.current.id
+          ? { ...c, lastMessage: payload.content, unread: 0, lastMessageAt: payload.time }
+          : c
+      )
+    );
+  } else {
+    setConversations((prev) => {
+      const found = prev.find((c) => String(c.id) === String(convId));
+      if (found) {
+        return prev.map((c) =>
+          String(c.id) === String(convId)
+            ? { ...c, lastMessage: payload.content, unread: (c.unread || 0) + 1, lastMessageAt: payload.time }
+            : c
+        );
+      } else {
+        return [
+          {
+            id: convId,
+            otherName: msg.senderName || "Ẩn danh",
+            avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=3",
+            lastMessage: payload.content,
+            lastMessageAt: payload.time,
+            unread: 1,
+          },
+          ...prev,
+        ];
+      }
+    });
+  }
+});
 
-        // if belongs to currently selected conversation, append
-        console.log(String(msg.conversationId), String(selectedChat.id),selectedChat && String(msg.conversationId) === String(selectedChat.id))
-        if (selectedChat && String(msg.conversationId) === String(selectedChat.id)) {
-          console.log("[WS] appending message to current UI for conv", selectedChat.id, payload);
-          setMessages((prev) => {
-            const next = [...prev, payload];
-            console.log("[UI] setMessages -> length", next.length);
-            return next;
-          });
-
-          // update conversation entry lastMessage/unread locally
-          setConversations((prev) =>
-            prev.map((c) =>
-              c.id === selectedChat.id
-                ? { ...c, lastMessage: msg.content, unread: 0, lastMessageAt: msg.createdAt }
-                : c
-            )
-          );
-        } else {
-          // message for another conversation -> update conversations list (unread++)
-          console.log("[WS] message is for another conversation:", msg.conversationId, "updating conversations list");
-          setConversations((prev) => {
-            const found = prev.find((c) => String(c.id) === String(msg.conversationId));
-            if (found) {
-              console.log("[CONV] found existing conv -> increment unread and update lastMessage");
-              return prev.map((c) =>
-                String(c.id) === String(msg.conversationId)
-                  ? { ...c, lastMessage: msg.content, unread: (c.unread || 0) + 1, lastMessageAt: msg.createdAt }
-                  : c
-              );
-            } else {
-              console.log("[CONV] conv not found -> prepending new lightweight conv entry");
-              return [
-                {
-                  id: msg.conversationId,
-                  otherName: msg.senderName || "Ẩn danh",
-                  avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=3",
-                  lastMessage: msg.content,
-                  lastMessageAt: msg.createdAt,
-                  unread: 1,
-                },
-                ...prev,
-              ];
-            }
-          });
-        }
-      });
 
       subscriptionRef.current = sub;
       subscribedConvRef.current = conversationId;
