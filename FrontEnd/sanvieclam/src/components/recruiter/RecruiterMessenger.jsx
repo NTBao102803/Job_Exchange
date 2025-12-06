@@ -285,7 +285,7 @@ const RecruiterMessenger = () => {
         const payload = {
           id: msg.id || `no-id-${Date.now()}`, // fallback id for logging/UI
           content: msg.content,
-          fromSelf: !!msg.fromSelf,
+          fromSelf: msg.fromSelf,
           time: msg.createdAt || new Date().toISOString(),
           avatar: msg.senderAvatar,
           senderId: msg.senderId,
