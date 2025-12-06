@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Send, Search, MoreHorizontal } from "lucide-react";
-import { sendMessageWS } from "../../services/socket";
+import {
+  connectWebSocket,
+  subscribeConversation,
+  sendMessageWS,
+} from "../../services/socket";
 import {
   getConversations,
   getMessagesByConversation,
@@ -16,17 +20,32 @@ const CandidateMessenger = () => {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  const messagesContainerRef = useRef(null); // Thanh trượt chỉ trong khung chat
+  const messagesContainerRef = useRef(null);
+  const subscriptionRef = useRef(null);
+  const stompClientRef = useRef(null);
+  const reloadTimeoutRef = useRef(null);
+
+  const token = localStorage.getItem("token");
   const location = useLocation();
   const navigatedConversationId = location.state?.conversationId;
 
-  // Cuộn xuống dưới cùng khi có tin mới
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop =
-        messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (token) {
+      connectWebSocket(
+        token,
+        () => {
+          stompClientRef.current = window.stompClient;
+        },
+        (err) => console.error("WebSocket error:", err)
+      );
+    }
+  }, [token]);
 
   const loadConversations = async () => {
     try {
@@ -44,7 +63,7 @@ const CandidateMessenger = () => {
         setConversations(mapped);
       }
     } catch (error) {
-      console.error("Lỗi tải danh sách chat:", error);
+      console.error("Lỗi load conversations:", error);
     } finally {
       setLoading(false);
     }
@@ -62,53 +81,90 @@ const CandidateMessenger = () => {
       }));
       setMessages(mapped);
     } catch (error) {
-      console.error("Lỗi tải tin nhắn:", error);
+      console.error("Lỗi load messages:", error);
     }
   };
 
   const handleSelectChat = async (conv) => {
     if (selectedChat?.id === conv.id) return;
+
     setSelectedChat(conv);
+
+    if (stompClientRef.current?.connected) {
+      stompClientRef.current.publish({
+        destination: "/app/chat.open",
+        body: JSON.stringify({ conversationId: conv.id }),
+      });
+    }
+
     await loadMessages(conv.id);
+
+    if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
+
+    subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [
+          ...prev,
+          {
+            id: msg.id,
+            content: msg.content,
+            fromSelf: msg.fromSelf,
+            time: msg.createdAt,
+            avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=5",
+          },
+        ];
+      });
+    });
   };
 
-  // TẢI LẦN ĐẦU KHI MỞ TRANG
   useEffect(() => {
     loadConversations();
   }, []);
 
-  // TỰ ĐỘNG CHỌN CUỘC TRÒ CHUYỆN (ưu tiên từ navigation hoặc mới nhất)
   useEffect(() => {
     if (conversations.length > 0 && !selectedChat && !loading) {
       const target =
         conversations.find((c) => c.id === navigatedConversationId) ||
-        [...conversations].sort(
-          (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
-        )[0];
+        [...conversations].sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))[0];
       if (target) handleSelectChat(target);
     }
   }, [conversations, selectedChat, loading, navigatedConversationId]);
 
-  // GỬI TIN NHẮN → ĐỢI 5 GIÂY → TỰ ĐỘNG RELOAD LẠI
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
     const content = message.trim();
-    setMessage(""); // Xóa ô nhập ngay
+    const convId = selectedChat.id;
+
+    const tempId = `temp-${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        content,
+        fromSelf: true,
+        time: new Date().toISOString(),
+        avatar: "https://i.pravatar.cc/150?img=1",
+      },
+    ]);
+    setMessage("");
 
     try {
-      await sendMessageWS(selectedChat.id, content);
-
-      // ĐỢI 5 GIÂY ĐỂ SERVER LƯU XONG → SAU ĐÓ TỰ RELOAD
-      setTimeout(async () => {
-        await loadConversations();
-        await loadMessages(selectedChat.id);
-      }, 5000);
+      await sendMessageWS(convId, content);
     } catch (err) {
-      alert("Gửi tin nhắn thất bại!");
-      setMessage(content); // Trả lại tin nhắn nếu lỗi
+      alert("Gửi thất bại!");
+      setMessage(content);
+      return;
     }
+
+    if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
+
+    reloadTimeoutRef.current = setTimeout(async () => {
+      await loadConversations();
+      await loadMessages(convId);
+    }, 7000);
   };
 
   const filteredConversations = conversations.filter((c) => {
@@ -130,7 +186,7 @@ const CandidateMessenger = () => {
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-blue-200/60 via-white/70 to-indigo-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-        {/* DANH SÁCH CHAT */}
+        {/* DANH SÁCH */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-blue-300/70 via-blue-200/60 to-white/70 backdrop-blur-md relative">
           <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
@@ -215,7 +271,6 @@ const CandidateMessenger = () => {
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-blue-100/80 to-indigo-200/70 backdrop-blur-md relative">
           {selectedChat ? (
             <>
-              {/* HEADER */}
               <div className="flex items-center gap-3 p-4 border-b border-white/40 bg-white/70 shadow">
                 <img
                   src={selectedChat.avatar}
@@ -259,7 +314,6 @@ const CandidateMessenger = () => {
                 ))}
               </div>
 
-              {/* FORM GỬI TIN */}
               <form
                 onSubmit={handleSend}
                 className="p-4 border-t border-white/40 bg-white/70 flex items-center gap-3"

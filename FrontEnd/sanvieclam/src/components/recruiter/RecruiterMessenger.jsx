@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Send, Search, MoreHorizontal } from "lucide-react";
-import { sendMessageWS } from "../../services/socket.js";
+import {
+  connectWebSocket,
+  subscribeConversation,
+  sendMessageWS,
+} from "../../services/socket.js";
 import {
   getConversations,
   getMessagesByConversation,
@@ -17,11 +21,13 @@ const RecruiterMessenger = () => {
   const [loading, setLoading] = useState(true);
 
   const messagesContainerRef = useRef(null);
-  const reloadTimeoutRef = useRef(null); // Lưu timeout reload
+  const subscriptionRef = useRef(null);
+  const stompClientRef = useRef(null);
+  const reloadTimeoutRef = useRef(null);
 
   const token = localStorage.getItem("token");
 
-  // Thanh trượt CHỈ TRONG KHUNG CHAT – mượt như Zalo
+  // THANH TRƯỢT CHỈ TRONG KHUNG CHAT
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -29,18 +35,18 @@ const RecruiterMessenger = () => {
     }
   }, [messages]);
 
-  const loadRecruiterId = async () => {
-    try {
-      const data = await getEmployerProfile();
-      if (data?.id) return;
-    } catch (error) {
-      console.error("Lỗi lấy profile:", error);
-    }
-  };
-
+  // KẾT NỐI WEBSOCKET – GIỮ NGUYÊN
   useEffect(() => {
-    loadRecruiterId();
-  }, []);
+    if (token) {
+      connectWebSocket(
+        token,
+        () => {
+          stompClientRef.current = window.stompClient;
+        },
+        (err) => console.error("WebSocket error:", err)
+      );
+    }
+  }, [token]);
 
   const loadConversations = async () => {
     try {
@@ -82,16 +88,44 @@ const RecruiterMessenger = () => {
 
   const handleSelectChat = async (conv) => {
     if (selectedChat?.id === conv.id) return;
+
     setSelectedChat(conv);
+
+    // Đánh dấu đã đọc
+    if (stompClientRef.current?.connected) {
+      stompClientRef.current.publish({
+        destination: "/app/chat.open",
+        body: JSON.stringify({ conversationId: conv.id }),
+      });
+    }
+
     await loadMessages(conv.id);
+
+    // Hủy subscribe cũ
+    if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
+
+    // ĐĂNG KÝ WEBSOCKET ĐỂ NHẬN TIN MỚI TỪ ỨNG VIÊN (realtime)
+    subscriptionRef.current = subscribeConversation(conv.id, (msg) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [
+          ...prev,
+          {
+            id: msg.id,
+            content: msg.content,
+            fromSelf: msg.fromSelf,
+            time: msg.createdAt,
+            avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=5",
+          },
+        ];
+      });
+    });
   };
 
-  // TẢI LẦN ĐẦU
   useEffect(() => {
     loadConversations();
   }, []);
 
-  // TỰ ĐỘNG CHỌN CHAT MỚI NHẤT
   useEffect(() => {
     if (conversations.length > 0 && !selectedChat && !loading) {
       const sorted = [...conversations].sort(
@@ -101,7 +135,7 @@ const RecruiterMessenger = () => {
     }
   }, [conversations, selectedChat, loading]);
 
-  // GỬI TIN NHẮN → hiện ngay + chờ 7 giây → reload lại cho chắc chắn
+  // GỬI TIN → HIỆN NGAY + ĐỢI 7s → RELOAD ĐỂ CHẮC CHẮN
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
@@ -123,7 +157,6 @@ const RecruiterMessenger = () => {
     ]);
     setMessage("");
 
-    // Gửi tin
     try {
       await sendMessageWS(convId, content);
     } catch (err) {
@@ -132,14 +165,14 @@ const RecruiterMessenger = () => {
       return;
     }
 
-    // HỦY timeout cũ nếu có
+    // HỦY timeout cũ
     if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
 
-    // CHỜ 7 GIÂY → TỰ ĐỘNG RELOAD LẠI ĐOẠN HỘI THOẠI + KHUNG CHAT
+    // ĐỢI 7 GIÂY → TỰ RELOAD LẠI ĐOẠN HỘI THOẠI + KHUNG CHAT
     reloadTimeoutRef.current = setTimeout(async () => {
       await loadConversations();
       await loadMessages(convId);
-    }, 7000); // ← đổi thành 5000 (5s) hoặc 10000 (10s) nếu muốn
+    }, 7000);
   };
 
   const filtered = conversations.filter((c) => {
@@ -161,7 +194,7 @@ const RecruiterMessenger = () => {
   return (
     <div className="h-[calc(112vh-100px)] flex items-center justify-center p-4 pt-28 bg-gradient-to-br from-indigo-200/60 via-white/70 to-purple-200/60 backdrop-blur-sm">
       <div className="flex w-full max-w-6xl h-full rounded-3xl shadow-2xl overflow-hidden border border-white/30 bg-white/30 backdrop-blur-lg">
-        {/* DANH SÁCH – GIỮ NGUYÊN */}
+        {/* DANH SÁCH */}
         <div className="w-1/3 flex flex-col border-r border-white/40 bg-gradient-to-b from-purple-300/70 via-purple-200/60 to-white/70 backdrop-blur-md">
           <div className="p-4 border-b border-white/40 flex items-center justify-between bg-white/70 backdrop-blur-md shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800">Đoạn chat</h2>
@@ -240,7 +273,7 @@ const RecruiterMessenger = () => {
           </div>
         </div>
 
-        {/* KHUNG CHAT – THANH TRƯỢT CHỈ TRONG ĐÂY */}
+        {/* KHUNG CHAT */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-white/80 via-purple-100/80 to-indigo-200/70">
           {selectedChat ? (
             <>
