@@ -36,20 +36,6 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     private String buildFileUrl(String objectName, String category) {
         try {
-            // Nếu là ảnh đại diện → tạo URL public tạm thời (presigned)
-//            if ("AVATAR".equalsIgnoreCase(category)) {
-//                String internalUrl = minioClient.getPresignedObjectUrl(
-//                        GetPresignedObjectUrlArgs.builder()
-//                                .bucket(bucketName)
-//                                .object(objectName)
-//                                .method(Method.GET)
-//                                .expiry(7 * 24 * 60 * 60) // 7 ngày
-//                                .build()
-//                );
-//                return internalUrl.replace("http://minio:9000", minioPublicUrl);
-//            }
-
-            // Ngược lại (CV, PDF, DOCX...) → dùng link trực tiếp
             return String.format("%s/%s/%s", minioPublicUrl, bucketName, objectName);
 
         } catch (Exception e) {
