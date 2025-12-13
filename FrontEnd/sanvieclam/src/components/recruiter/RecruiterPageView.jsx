@@ -22,7 +22,7 @@ import {
   connectCommentSocket,
   subscribeComments,
   disconnectCommentSocket,
-} from "../../services/socket/commentSocket";
+} from "../../services/sockets/commentSocket";
 
 const RecruiterPageView = () => {
   const location = useLocation();

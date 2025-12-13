@@ -14,7 +14,7 @@ import {
   connectNotificationSocket,
   subscribeNotifications,
   disconnectNotificationSocket,
-} from "../../services/socket/notificationSocket";
+} from "../../services/sockets/notificationSocket";
 
 const HeaderCandidate = ({
   onHomeClick,
