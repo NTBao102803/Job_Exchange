@@ -1,4 +1,3 @@
-// src/pages/CandidateMessenger.jsx
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Send, Search, MoreHorizontal } from "lucide-react";
 import {
@@ -7,7 +6,7 @@ import {
   subscribeConversation,
   sendMessageWS,
   disconnectWebSocket,
-} from "../../services/socket";
+} from "../../services/sockets/messageSocket";
 import {
   getConversations,
   getMessagesByConversation,
@@ -29,14 +28,15 @@ const CandidateMessenger = () => {
   const stompClientRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const messageIdsRef = useRef(new Map());
-  const token = useMemo(() => localStorage.getItem("token"), []);
   const autoSelectedRef = useRef(false);
   const isMountedRef = useRef(true);
 
-  // === Lifecycle mount/unmount ===
+  const token = useMemo(() => localStorage.getItem("token"), []);
+
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
+
       if (subscriptionRef.current) {
         try {
           subscriptionRef.current.unsubscribe();
@@ -44,23 +44,16 @@ const CandidateMessenger = () => {
         subscriptionRef.current = null;
         subscribedConvRef.current = null;
       }
-      try {
-        disconnectWebSocket();
-      } catch {}
+
+      disconnectWebSocket();
+      stompClientRef.current = null;
     };
   }, []);
 
-  // === load candidate profile ===
   useEffect(() => {
-    const loadCandidate = async () => {
-      try {
-        await getCandidateProfile();
-      } catch {}
-    };
-    loadCandidate();
+    getCandidateProfile().catch(() => {});
   }, []);
 
-  // === scroll to bottom when messages change ===
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -68,43 +61,26 @@ const CandidateMessenger = () => {
     }
   }, [messages, selectedChat]);
 
-  // === WebSocket connect once ===
   useEffect(() => {
     if (!token) return;
 
     connectWebSocket(
       token,
       () => {
-        try {
-          stompClientRef.current = getStompClient();
-        } catch {}
-        loadConversations({ force: true }).catch(() => {});
+        stompClientRef.current = getStompClient();
+        loadConversations({ force: true });
       },
       () => {}
     );
-
-    return () => {
-      if (subscriptionRef.current) {
-        try {
-          subscriptionRef.current.unsubscribe();
-        } catch {}
-        subscriptionRefRef.current = null;
-        subscribedConvRef.current = null;
-      }
-      disconnectWebSocket();
-      stompClientRef.current = null;
-    };
   }, [token]);
 
-  // === Load conversations ===
+  // ===================== LOAD CONVERSATIONS =====================
   const loadConversations = async ({ force = false } = {}) => {
     try {
       if (!force && conversations.length === 0) setLoading(true);
-      const data = await getConversations({ force });
-      if (!Array.isArray(data))
-        throw new Error("Invalid conversations payload");
 
-      const mapped = data.map((c) => ({
+      const data = await getConversations({ force });
+      const mapped = (Array.isArray(data) ? data : []).map((c) => ({
         id: c.id,
         otherName: c.otherUserName || "Ẩn danh",
         avatar: c.otherUserAvatar || "https://i.pravatar.cc/150?img=3",
@@ -125,7 +101,7 @@ const CandidateMessenger = () => {
     loadConversations().catch(() => {});
   }, []);
 
-  // === Load messages ===
+  // ===================== LOAD MESSAGES =====================
   const loadMessages = async (conversationId) => {
     try {
       const data = await getMessagesByConversation(conversationId);
@@ -147,7 +123,7 @@ const CandidateMessenger = () => {
     }
   };
 
-  // === Subscribe conversation safely ===
+  // ===================== SUBSCRIBE SAFE =====================
   const setupSubscription = (conversationId) => {
     if (subscribedConvRef.current === conversationId && subscriptionRef.current)
       return;
@@ -165,6 +141,7 @@ const CandidateMessenger = () => {
         if (!msg || typeof msg !== "object") return;
 
         const idsSet = messageIdsRef.current.get(conversationId) || new Set();
+
         if (msg.id && idsSet.has(msg.id)) return;
         if (msg.id) idsSet.add(msg.id);
         messageIdsRef.current.set(conversationId, idsSet);
@@ -181,6 +158,7 @@ const CandidateMessenger = () => {
 
         if (String(msg.conversationId) === String(conversationId)) {
           setMessages((prev) => [...prev, payload]);
+
           setConversations((prev) =>
             prev.map((c) =>
               c.id === conversationId
@@ -194,35 +172,18 @@ const CandidateMessenger = () => {
             )
           );
         } else {
-          setConversations((prev) => {
-            const found = prev.find(
-              (c) => String(c.id) === String(msg.conversationId)
-            );
-            if (found) {
-              return prev.map((c) =>
-                String(c.id) === String(msg.conversationId)
-                  ? {
-                      ...c,
-                      lastMessage: msg.content,
-                      unread: (c.unread || 0) + 1,
-                      lastMessageAt: msg.createdAt,
-                    }
-                  : c
-              );
-            } else {
-              return [
-                {
-                  id: msg.conversationId,
-                  otherName: msg.senderName || "Ẩn danh",
-                  avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=3",
-                  lastMessage: msg.content,
-                  lastMessageAt: msg.createdAt,
-                  unread: 1,
-                },
-                ...prev,
-              ];
-            }
-          });
+          setConversations((prev) =>
+            prev.map((c) =>
+              String(c.id) === String(msg.conversationId)
+                ? {
+                    ...c,
+                    lastMessage: msg.content,
+                    unread: (c.unread || 0) + 1,
+                    lastMessageAt: msg.createdAt,
+                  }
+                : c
+            )
+          );
         }
       });
 
@@ -231,7 +192,7 @@ const CandidateMessenger = () => {
     } catch {}
   };
 
-  // === Select chat ===
+  // ===================== SELECT CHAT =====================
   const handleSelectChat = async (conv) => {
     setSelectedChat(conv);
     setMessages([]);
@@ -248,45 +209,43 @@ const CandidateMessenger = () => {
 
     await loadMessages(conv.id);
 
-    try {
-      const client = stompClientRef.current;
-      if (client?.connected) setupSubscription(conv.id);
-    } catch {}
+    if (stompClientRef.current?.connected) {
+      setupSubscription(conv.id);
+    }
 
     setConversations((prev) =>
       prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c))
     );
   };
 
-  // === Auto-select first conversation ===
+  // ===================== AUTO SELECT FIRST =====================
   useEffect(() => {
     if (autoSelectedRef.current) return;
     if (loading) return;
-    if (!conversations || conversations.length === 0) return;
+    if (!conversations.length) return;
     if (selectedChat) return;
 
     autoSelectedRef.current = true;
     const sorted = [...conversations].sort(
-      (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+      (a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0)
     );
     handleSelectChat(sorted[0]);
   }, [conversations, loading, selectedChat]);
 
-  // === Send message ===
+  // ===================== SEND =====================
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || !selectedChat) return;
 
     const content = message.trim();
-    const convId = selectedChat.id;
     setMessage("");
 
     try {
-      sendMessageWS(convId, content);
+      sendMessageWS(selectedChat.id, content);
     } catch {}
   };
 
-  // === Filtered conversations ===
+  // ===================== FILTER =====================
   const filtered = conversations.filter((c) => {
     const matchSearch = c.otherName
       .toLowerCase()

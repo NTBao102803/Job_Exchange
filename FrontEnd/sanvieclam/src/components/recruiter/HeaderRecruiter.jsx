@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/AuthApi";
 import { getEmployerProfile } from "../../api/RecruiterApi";
 import { Bell, MessageCircle } from "lucide-react";
-import SockJS from "sockjs-client";
-import { over } from "stompjs";
 import {
   getNotifications,
   markAsRead,
@@ -12,6 +10,11 @@ import {
 } from "../../api/NotificationApi";
 import { useUser } from "../../context/UserContext";
 import { getUnreadMessageCount } from "../../api/messageApi";
+import {
+  connectNotificationSocket,
+  subscribeNotifications,
+  disconnectNotificationSocket,
+} from "../../services/socket/notificationSocket";
 
 const HeaderRecruiter = ({
   onHomeClick,
@@ -34,6 +37,7 @@ const HeaderRecruiter = ({
   const [isReady, setIsReady] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const subscriptionRef = useRef(null);
 
   const { avatarUrl } = useUser();
 
@@ -91,71 +95,34 @@ const HeaderRecruiter = ({
 
   // ✅ 3️⃣ Kết nối WebSocket sau khi đã có employerId
   useEffect(() => {
-    if (!isReady || !employerId) return;
+  if (!employerId) return;
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.warn("⚠️ Thiếu token, không thể kết nối WebSocket");
-      return;
-    }
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
-    console.log("✅ Đã có employerId:", employerId);
+  connectNotificationSocket(token, () => {
+    if (subscriptionRef.current) return;
 
-    // 🔗 Kết nối qua API Gateway
-    const socketUrl = `${import.meta.env.VITE_API_URL}/ws-notifications?token=${encodeURIComponent(
-      token.replace("Bearer ", "")
-    )}`;
-    console.log("🌐 Socket URL:", socketUrl);
-
-    // 🧩 Tạo SockJS client
-    const socket = new SockJS(socketUrl);
-    const client = over(socket);
-
-    // ✅ Tắt log spam STOMP
-    client.debug = (msg) => {
-      if (msg.includes("ERROR") || msg.includes("CONNECTED"))
-        console.log("🐛 [STOMP]:", msg);
-    };
-
-    // ❌ KHÔNG cần header Authorization (đã có token trong query)
-    client.connect(
-      {},
-      (frame) => {
-        console.log("✅ STOMP connected:", frame);
-        const topic = `/topic/notifications/${employerId}`;
-        console.log("📡 Subscribing to:", topic);
-
-        client.subscribe(topic, (message) => {
-          try {
-            const notif = JSON.parse(message.body);
-            console.log("📩 Nhận thông báo mới:", notif);
-            setNotifications((prev) => [notif, ...prev]);
-          } catch (err) {
-            console.error("⚠️ Lỗi parse message:", err);
-          }
-        });
-      },
-      (error) => console.error("🚨 Lỗi STOMP connect:", error)
+    subscriptionRef.current = subscribeNotifications(
+      employerId,
+      (notif) => {
+        setNotifications((prev) => [notif, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+      }
     );
+  });
 
-    setStompClient(client);
+  return () => {
+    if (subscriptionRef.current) {
+      try {
+        subscriptionRef.current.unsubscribe();
+      } catch {}
+      subscriptionRef.current = null;
+    }
+    disconnectNotificationSocket();
+  };
+}, [employerId]);
 
-    // 🔄 Reconnect mỗi 10s nếu mất kết nối
-    const reconnect = setInterval(() => {
-      if (!client.connected) {
-        console.warn("🔄 Mất kết nối WebSocket, đang thử lại...");
-        client.connect({}, () => console.log("♻️ Reconnected WebSocket"));
-      }
-    }, 10000);
-
-    return () => {
-      clearInterval(reconnect);
-      if (client && client.connected) {
-        console.log("🔌 Đóng kết nối WebSocket khi unmount");
-        client.disconnect();
-      }
-    };
-  }, [isReady, employerId]);
 
   // ✅ Ẩn header khi scroll
   const controlHeader = () => {

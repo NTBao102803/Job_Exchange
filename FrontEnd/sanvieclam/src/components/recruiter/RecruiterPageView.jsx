@@ -16,10 +16,13 @@ import {
   getCommentsByEmployer,
   submitCandidateComment,
 } from "../../api/CommentApi";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 
 import { createConversation } from "../../api/messageApi";
+import {
+  connectCommentSocket,
+  subscribeComments,
+  disconnectCommentSocket,
+} from "../../services/socket/commentSocket";
 
 const RecruiterPageView = () => {
   const location = useLocation();
@@ -38,6 +41,7 @@ const RecruiterPageView = () => {
 
   const commentRefs = useRef({});
   const clientRef = useRef(null);
+  const subscriptionRef = useRef(null);
 
   // ==================== HELPER ====================
   const addCommentToTree = (tree, comment) => {
@@ -71,7 +75,8 @@ const RecruiterPageView = () => {
         const data = await getEmployerById(recruiterId);
         setRecruiter(data);
         let link =
-          data.avatarUrl || (data.authUserId ? await getAvatarUrl(data.authUserId) : null);
+          data.avatarUrl ||
+          (data.authUserId ? await getAvatarUrl(data.authUserId) : null);
         setAvatar(link);
         fetchComments(data.authUserId);
       } catch (err) {
@@ -95,51 +100,30 @@ const RecruiterPageView = () => {
 
   // ==================== WEBSOCKET ====================
   useEffect(() => {
-    // 🔹 Chỉ khi đã có recruiter.authUserId
-    if (!recruiter?.authUserId) {
-      console.log(" chưa kết nối WS");
-      return;
-    }
+    if (!recruiter?.authUserId) return;
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.warn("❌ Không tìm thấy token, không thể kết nối WS");
-      return;
-    }
+    connectCommentSocket(() => {
+      if (subscriptionRef.current) return;
 
-    const cleanToken = token.replace("Bearer ", "");
-    const url = `${import.meta.env.VITE_API_URL}/ws-comments?token=${encodeURIComponent(
-      cleanToken
-    )}`;
-    console.log("🔗 Kết nối WS tới:", url);
-
-    const client = new Client({
-      webSocketFactory: () => new SockJS(url),
-      reconnectDelay: 5000,
+      subscriptionRef.current = subscribeComments(
+        recruiter.authUserId,
+        (newComment) => {
+          setComments((prev) => {
+            if (prev.some((c) => c.id === newComment.id)) return prev;
+            return addCommentToTree(prev, newComment);
+          });
+        }
+      );
     });
 
-    client.onConnect = () => {
-      console.log(
-        "✅ WebSocket connected! Subscribing to:",
-        `/topic/comments/${recruiter.authUserId}`
-      );
-
-      client.subscribe(`/topic/comments/${recruiter.authUserId}`, (msg) => {
-        const newComment = JSON.parse(msg.body);
-
-        setComments((prev) => {
-          if (prev.some((c) => c.id === newComment.id)) return prev;
-          return addCommentToTree(prev, newComment);
-        });
-      });
-    };
-
-    client.activate();
-    clientRef.current = client;
-
     return () => {
-      console.log("🧹 Đóng kết nối WS");
-      client.deactivate();
+      if (subscriptionRef.current) {
+        try {
+          subscriptionRef.current.unsubscribe();
+        } catch {}
+        subscriptionRef.current = null;
+      }
+      disconnectCommentSocket();
     };
   }, [recruiter?.authUserId]);
 

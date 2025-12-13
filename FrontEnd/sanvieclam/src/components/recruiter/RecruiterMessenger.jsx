@@ -7,7 +7,7 @@ import {
   subscribeConversation,
   sendMessageWS,
   disconnectWebSocket,
-} from "../../services/socket";
+} from "../../services/sockets/messageSocket";
 import {
   getConversations,
   getMessagesByConversation,
@@ -38,18 +38,18 @@ const RecruiterMessenger = () => {
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
-      if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
-      disconnectWebSocket();
+
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe(); // ✅ FIX
+        subscriptionRef.current = null;
+      }
+
+      disconnectWebSocket(); // ✅ FIX
     };
   }, []);
 
   useEffect(() => {
-    const loadRecruiterId = async () => {
-      try {
-        await getEmployerProfile();
-      } catch {}
-    };
-    loadRecruiterId();
+    getEmployerProfile().catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -71,12 +71,6 @@ const RecruiterMessenger = () => {
       },
       () => {}
     );
-
-    return () => {
-      if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
-      disconnectWebSocket();
-      stompClientRef.current = null;
-    };
   }, [token]);
 
   // Load conversations
@@ -125,15 +119,26 @@ const RecruiterMessenger = () => {
   };
 
   const setupSubscription = (conversationId) => {
-    if (subscribedConvRef.current === conversationId && subscriptionRef.current)
+    if (
+      subscribedConvRef.current === conversationId &&
+      subscriptionRef.current
+    ) {
       return;
-
-    if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
+    }
+    if (subscriptionRef.current) {
+      try {
+        subscriptionRef.current.unsubscribe();
+      } catch {}
+      subscriptionRef.current = null;
+      subscribedConvRef.current = null;
+    }
 
     try {
       const sub = subscribeConversation(conversationId, (msg) => {
         if (!msg || typeof msg !== "object") return;
+
         const idsSet = messageIdsRef.current.get(conversationId) || new Set();
+
         if (msg.id && idsSet.has(msg.id)) return;
         if (msg.id) idsSet.add(msg.id);
         messageIdsRef.current.set(conversationId, idsSet);
@@ -150,6 +155,7 @@ const RecruiterMessenger = () => {
 
         if (String(msg.conversationId) === String(conversationId)) {
           setMessages((prev) => [...prev, payload]);
+
           setConversations((prev) =>
             prev.map((c) =>
               c.id === conversationId
@@ -167,6 +173,7 @@ const RecruiterMessenger = () => {
             const found = prev.find(
               (c) => String(c.id) === String(msg.conversationId)
             );
+
             if (found) {
               return prev.map((c) =>
                 String(c.id) === String(msg.conversationId)
@@ -178,32 +185,35 @@ const RecruiterMessenger = () => {
                     }
                   : c
               );
-            } else {
-              return [
-                {
-                  id: msg.conversationId,
-                  otherName: msg.senderName || "Ẩn danh",
-                  avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=3",
-                  lastMessage: msg.content,
-                  lastMessageAt: msg.createdAt,
-                  unread: 1,
-                },
-                ...prev,
-              ];
             }
+
+            return [
+              {
+                id: msg.conversationId,
+                otherName: msg.senderName || "Ẩn danh",
+                avatar: msg.senderAvatar || "https://i.pravatar.cc/150?img=3",
+                lastMessage: msg.content,
+                lastMessageAt: msg.createdAt,
+                unread: 1,
+              },
+              ...prev,
+            ];
           });
         }
       });
 
       subscriptionRef.current = sub;
       subscribedConvRef.current = conversationId;
-    } catch {}
+    } catch (e) {
+      console.error("subscribeConversation error", e);
+    }
   };
 
   const handleSelectChat = async (conv) => {
     setSelectedChat(conv);
     setMessages([]);
 
+    // mở conversation (optional)
     try {
       const client = stompClientRef.current;
       if (client?.connected) {
@@ -216,10 +226,9 @@ const RecruiterMessenger = () => {
 
     await loadMessages(conv.id);
 
-    try {
-      const client = stompClientRef.current;
-      if (client?.connected) setupSubscription(conv.id);
-    } catch {}
+    if (stompClientRef.current?.connected) {
+      setupSubscription(conv.id);
+    }
 
     setConversations((prev) =>
       prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c))

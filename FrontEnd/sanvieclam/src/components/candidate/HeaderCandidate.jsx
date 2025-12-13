@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/AuthApi";
 import { Bell ,MessageCircle} from "lucide-react";
-import SockJS from "sockjs-client";
-import { over } from "stompjs";
 import {
   getNotifications,
   markAsRead,
@@ -12,6 +10,11 @@ import {
 import { useUser } from "../../context/UserContext";
 import { getCandidateProfile } from "../../api/CandidateApi";
 import { getUnreadMessageCount } from "../../api/messageApi";
+import {
+  connectNotificationSocket,
+  subscribeNotifications,
+  disconnectNotificationSocket,
+} from "../../services/socket/notificationSocket";
 
 const HeaderCandidate = ({
   onHomeClick,
@@ -32,6 +35,7 @@ const HeaderCandidate = ({
   const [candidateId, setCandidateId] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const subscriptionRef = useRef(null);
 
   const headerRef = useRef(null);
   const menuRef = useRef(null);
@@ -93,61 +97,34 @@ const HeaderCandidate = ({
 
   // ✅ 3️⃣ Kết nối WebSocket sau khi có candidateId
   useEffect(() => {
-    if (!isReady || !candidateId) return;
+  if (!candidateId) return;
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.warn("⚠️ Thiếu token, không thể kết nối WebSocket");
-      return;
-    }
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
-    const socketUrl = `${import.meta.env.VITE_API_URL}/ws-notifications?token=${encodeURIComponent(
-      token.replace("Bearer ", "")
-    )}`;
+  connectNotificationSocket(token, () => {
+    if (subscriptionRef.current) return;
 
-    const socket = new SockJS(socketUrl);
-    const client = over(socket);
-
-    client.debug = (msg) => {
-      if (msg.includes("ERROR") || msg.includes("CONNECTED"))
-        console.log("🐛 [STOMP]:", msg);
-    };
-
-    client.connect(
-      {},
-      (frame) => {
-        console.log("✅ Kết nối STOMP thành công:", frame);
-        const topic = `/topic/notifications/${candidateId}`;
-        console.log("📡 Subscribing:", topic);
-
-        client.subscribe(topic, (message) => {
-          try {
-            const notif = JSON.parse(message.body);
-            console.log("📩 Nhận thông báo mới:", notif);
-            setNotifications((prev) => [notif, ...prev]);
-            setUnreadCount((prev) => prev + 1);
-          } catch (err) {
-            console.error("⚠️ Lỗi parse message:", err);
-          }
-        });
-      },
-      (error) => console.error("🚨 Lỗi kết nối STOMP:", error)
-    );
-
-    setStompClient(client);
-
-    const reconnect = setInterval(() => {
-      if (!client.connected) {
-        console.warn("🔄 Mất kết nối WebSocket, đang thử lại...");
-        client.connect({}, () => console.log("♻️ Reconnected WebSocket"));
+    subscriptionRef.current = subscribeNotifications(
+      candidateId,
+      (notif) => {
+        setNotifications((prev) => [notif, ...prev]);
+        setUnreadCount((prev) => prev + 1);
       }
-    }, 10000);
+    );
+  });
 
-    return () => {
-      clearInterval(reconnect);
-      if (client && client.connected) client.disconnect();
-    };
-  }, [isReady, candidateId]);
+  return () => {
+    if (subscriptionRef.current) {
+      try {
+        subscriptionRef.current.unsubscribe();
+      } catch {}
+      subscriptionRef.current = null;
+    }
+    disconnectNotificationSocket();
+  };
+}, [candidateId]);
+
 
   // ✅ Ẩn header khi scroll
   const controlHeader = () => {
