@@ -85,7 +85,7 @@ const HeaderRecruiter = ({
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 3000); // Refresh mỗi 30s
+    const interval = setInterval(fetchData, 30000); // Refresh mỗi 30s
     return () => clearInterval(interval);
   }, [employerId]);
 

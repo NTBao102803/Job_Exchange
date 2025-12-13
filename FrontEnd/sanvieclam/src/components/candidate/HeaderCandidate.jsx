@@ -87,7 +87,7 @@ const HeaderCandidate = ({
     };
 
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 3000); // cập nhật mỗi 30s
+    const interval = setInterval(fetchNotifications, 30000); // cập nhật mỗi 30s
     return () => clearInterval(interval);
   }, [candidateId]);
 
