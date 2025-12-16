@@ -100,14 +100,14 @@ const RecruiterPage = () => {
   const token = localStorage.getItem("token"); // Lấy token
 
   useEffect(() => {
-    if (!recruiter?.authUserId || !token) return;
+    if (!recruiterId || !token) return;
 
     connectCommentSocket(token, () => {
       // ← Truyền token vào
       if (subscriptionRef.current) return;
 
       subscriptionRef.current = subscribeComments(
-        recruiter.authUserId,
+        recruiterId,
         (newComment) => {
           setComments((prev) => {
             if (prev.some((c) => c.id === newComment.id)) return prev;

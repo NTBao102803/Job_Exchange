@@ -13,6 +13,10 @@ export const connectNotificationSocket = (token, onConnect) => {
           token.replace("Bearer ", "")
         )}`
       ),
+      
+    connectHeaders: {
+      Authorization: token ? `Bearer ${token}` : "",
+    },
 
     reconnectDelay: 5000,
     heartbeatIncoming: 20000,
