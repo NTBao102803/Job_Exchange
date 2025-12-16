@@ -97,25 +97,32 @@ const RecruiterPage = () => {
   }, []);
 
   // ==================== WEBSOCKET ====================
-  useEffect(() => {
-    if (!recruiterId) return;
+  const token = localStorage.getItem("token"); // Lấy token
 
-    connectCommentSocket(() => {
+  useEffect(() => {
+    if (!recruiter?.authUserId || !token) return;
+
+    connectCommentSocket(token, () => {
+      // ← Truyền token vào
       if (subscriptionRef.current) return;
 
-      subscriptionRef.current = subscribeComments(recruiterId, (newComment) => {
-        setComments((prev) => {
-          if (prev.some((c) => c.id === newComment.id)) return prev;
-          return addCommentToTree(prev, newComment);
-        });
+      subscriptionRef.current = subscribeComments(
+        recruiter.authUserId,
+        (newComment) => {
+          setComments((prev) => {
+            if (prev.some((c) => c.id === newComment.id)) return prev;
+            return addCommentToTree(prev, newComment);
+          });
 
-        setTimeout(() => {
-          const el =
-            commentRefs.current[newComment.id] ||
-            commentRefs.current[newComment.parentId];
-          el?.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 100);
-      });
+          // Scroll vào comment mới
+          setTimeout(() => {
+            const el =
+              commentRefs.current[newComment.id] ||
+              commentRefs.current[newComment.parentId];
+            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 100);
+        }
+      );
     });
 
     return () => {
@@ -127,7 +134,7 @@ const RecruiterPage = () => {
       }
       disconnectCommentSocket();
     };
-  }, [recruiterId]);
+  }, [recruiterId, token]);
 
   // ==================== GỬI BÌNH LUẬN ====================
   const handleSubmitComment = async () => {

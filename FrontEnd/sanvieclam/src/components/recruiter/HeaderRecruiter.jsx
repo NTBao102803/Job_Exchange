@@ -28,7 +28,6 @@ const HeaderRecruiter = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [stompClient, setStompClient] = useState(null);
   const [employerId, setEmployerId] = useState(null);
   const headerRef = useRef(null);
   const menuRef = useRef(null);
@@ -60,14 +59,83 @@ const HeaderRecruiter = ({
   }, []);
 
   // 2. Lấy danh sách + số lượng chưa đọc
+  // useEffect(() => {
+  //   if (!employerId) return;
+
+  //   const fetchData = async () => {
+  //     try {
+  //       const [notifs, count, messageCount] = await Promise.all([
+  //         getNotifications(employerId),
+  //         getUnreadCount(employerId),
+  //         getUnreadMessageCount(),
+  //       ]);
+
+  //       const formatted = notifs
+  //         .map((n) => ({
+  //           id: n.id,
+  //           message: n.message,
+  //           read: n.readFlag || false,
+  //           createdAt: n.createdAt,
+  //         }))
+  //         .reverse();
+
+  //       setNotifications(formatted);
+  //       setUnreadCount(count);
+  //       setUnreadMessageCount(messageCount);
+  //     } catch (err) {
+  //       console.error("Lỗi tải thông báo/tin nhắn:", err.message);
+  //     }
+  //   };
+
+  //   fetchData();
+  //   const interval = setInterval(fetchData, 30000); // Refresh mỗi 30s
+  //   return () => clearInterval(interval);
+  // }, [employerId]);
+
+  // ✅ 3️⃣ Kết nối WebSocket sau khi đã có employerId
   useEffect(() => {
     if (!employerId) return;
 
-    const fetchData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    connectNotificationSocket(token, () => {
+      console.log("WebSocket notification connected");
+
+      if (subscriptionRef.current) return;
+
+      subscriptionRef.current = subscribeNotifications(employerId, (notif) => {
+        // Thêm thông báo mới vào đầu danh sách
+        setNotifications((prev) => {
+          // Tránh duplicate nếu backend đẩy trùng
+          if (prev.some((n) => n.id === notif.id)) return prev;
+          return [notif, ...prev];
+        });
+
+        // Nếu thông báo chưa đọc → tăng count
+        if (!notif.readFlag) {
+          setUnreadCount((prev) => prev + 1);
+        }
+      });
+    });
+
+    return () => {
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
+      disconnectNotificationSocket();
+    };
+  }, [employerId]);
+
+  // Load lần đầu (khi mount)
+  useEffect(() => {
+    if (!employerId) return;
+
+    const loadInitial = async () => {
       try {
-        const [notifs, count, messageCount] = await Promise.all([
+        const [notifs, messageCount] = await Promise.all([
           getNotifications(employerId),
-          getUnreadCount(employerId),
           getUnreadMessageCount(),
         ]);
 
@@ -77,52 +145,23 @@ const HeaderRecruiter = ({
             message: n.message,
             read: n.readFlag || false,
             createdAt: n.createdAt,
+            readFlag: n.readFlag, // giữ nguyên để check
           }))
           .reverse();
 
         setNotifications(formatted);
-        setUnreadCount(count);
+
+        // Tính unreadCount từ danh sách (chính xác hơn API riêng)
+        const unread = formatted.filter((n) => !n.readFlag).length;
+        setUnreadCount(unread);
         setUnreadMessageCount(messageCount);
       } catch (err) {
-        console.error("Lỗi tải thông báo/tin nhắn:", err.message);
+        console.error("Lỗi load initial notifications:", err);
       }
     };
 
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Refresh mỗi 30s
-    return () => clearInterval(interval);
+    loadInitial();
   }, [employerId]);
-
-  // ✅ 3️⃣ Kết nối WebSocket sau khi đã có employerId
-  useEffect(() => {
-  if (!employerId) return;
-
-  const token = localStorage.getItem("token");
-  if (!token) return;
-
-  connectNotificationSocket(token, () => {
-    if (subscriptionRef.current) return;
-
-    subscriptionRef.current = subscribeNotifications(
-      employerId,
-      (notif) => {
-        setNotifications((prev) => [notif, ...prev]);
-        setUnreadCount((prev) => prev + 1);
-      }
-    );
-  });
-
-  return () => {
-    if (subscriptionRef.current) {
-      try {
-        subscriptionRef.current.unsubscribe();
-      } catch {}
-      subscriptionRef.current = null;
-    }
-    disconnectNotificationSocket();
-  };
-}, [employerId]);
-
 
   // ✅ Ẩn header khi scroll
   const controlHeader = () => {
@@ -151,13 +190,18 @@ const HeaderRecruiter = ({
   const handleMarkAsRead = async (id) => {
     try {
       const updated = await markAsRead(id);
+
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: updated.readFlag } : n))
+        prev.map((n) =>
+          n.id === id
+            ? { ...n, read: true, readFlag: true } // ← Cập nhật cả 2 field
+            : n
+        )
       );
+
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.error("Lỗi đánh dấu đã đọc:", err.message);
-      alert(err.message);
     }
   };
 

@@ -4,15 +4,20 @@ import { Client } from "@stomp/stompjs";
 
 let commentClient = null;
 
-export const connectCommentSocket = (onConnect) => {
+export const connectCommentSocket = (token, onConnect) => {
   if (commentClient?.connected) return;
 
   commentClient = new Client({
     webSocketFactory: () =>
-      new SockJS(`${import.meta.env.VITE_API_URL}/ws-comments?token=${encodeURIComponent(
-          token.replace("Bearer ", "")
+      new SockJS(
+        `${import.meta.env.VITE_API_URL}/ws-comments?token=${encodeURIComponent(
+          token?.replace("Bearer ", "") || ""   // ← Dùng token từ tham số
         )}`
       ),
+
+    connectHeaders: {
+      Authorization: token ? `Bearer ${token}` : "", // Vẫn giữ header (tốt hơn)
+    },
 
     reconnectDelay: 5000,
     heartbeatIncoming: 20000,

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/AuthApi";
-import { Bell ,MessageCircle} from "lucide-react";
+import { Bell, MessageCircle } from "lucide-react";
 import {
   getNotifications,
   markAsRead,
@@ -31,7 +31,6 @@ const HeaderCandidate = ({
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [stompClient, setStompClient] = useState(null);
   const [candidateId, setCandidateId] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
@@ -62,14 +61,83 @@ const HeaderCandidate = ({
   }, []);
 
   // ✅ 2️⃣ Lấy danh sách thông báo và số lượng chưa đọc
+  // useEffect(() => {
+  //   if (!candidateId) return;
+
+  //   const fetchNotifications = async () => {
+  //     try {
+  //       const [notifs, count, messageCount] = await Promise.all([
+  //         getNotifications(candidateId),
+  //         getUnreadCount(candidateId),
+  //         getUnreadMessageCount(),
+  //       ]);
+
+  //       const formatted = notifs
+  //         .map((n) => ({
+  //           id: n.id,
+  //           message: n.message,
+  //           read: n.readFlag || false,
+  //           createdAt: n.createdAt,
+  //         }))
+  //         .reverse();
+
+  //       setNotifications(formatted);
+  //       setUnreadCount(count);
+  //       setUnreadMessageCount(messageCount);
+  //     } catch (err) {
+  //       console.error("Lỗi tải thông báo/tin nhắn:", err.message);
+  //     }
+  //   };
+
+  //   fetchNotifications();
+  //   const interval = setInterval(fetchNotifications, 30000); // cập nhật mỗi 30s
+  //   return () => clearInterval(interval);
+  // }, [candidateId]);
+
+  // ✅ 3️⃣ Kết nối WebSocket sau khi có candidateId
   useEffect(() => {
     if (!candidateId) return;
 
-    const fetchNotifications = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    connectNotificationSocket(token, () => {
+      console.log("WebSocket notification connected");
+
+      if (subscriptionRef.current) return;
+
+      subscriptionRef.current = subscribeNotifications(candidateId, (notif) => {
+        // Thêm thông báo mới vào đầu danh sách
+        setNotifications((prev) => {
+          // Tránh duplicate nếu backend đẩy trùng
+          if (prev.some((n) => n.id === notif.id)) return prev;
+          return [notif, ...prev];
+        });
+
+        // Nếu thông báo chưa đọc → tăng count
+        if (!notif.readFlag) {
+          setUnreadCount((prev) => prev + 1);
+        }
+      });
+    });
+
+    return () => {
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
+      disconnectNotificationSocket();
+    };
+  }, [candidateId]);
+
+  // Load lần đầu (khi mount)
+  useEffect(() => {
+    if (!candidateId) return;
+
+    const loadInitial = async () => {
       try {
-        const [notifs, count, messageCount] = await Promise.all([
+        const [notifs, messageCount] = await Promise.all([
           getNotifications(candidateId),
-          getUnreadCount(candidateId),
           getUnreadMessageCount(),
         ]);
 
@@ -79,52 +147,23 @@ const HeaderCandidate = ({
             message: n.message,
             read: n.readFlag || false,
             createdAt: n.createdAt,
+            readFlag: n.readFlag, // giữ nguyên để check
           }))
           .reverse();
 
         setNotifications(formatted);
-        setUnreadCount(count);
+
+        // Tính unreadCount từ danh sách (chính xác hơn API riêng)
+        const unread = formatted.filter((n) => !n.readFlag).length;
+        setUnreadCount(unread);
         setUnreadMessageCount(messageCount);
       } catch (err) {
-        console.error("Lỗi tải thông báo/tin nhắn:", err.message);
+        console.error("Lỗi load initial notifications:", err);
       }
     };
 
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // cập nhật mỗi 30s
-    return () => clearInterval(interval);
+    loadInitial();
   }, [candidateId]);
-
-  // ✅ 3️⃣ Kết nối WebSocket sau khi có candidateId
-  useEffect(() => {
-  if (!candidateId) return;
-
-  const token = localStorage.getItem("token");
-  if (!token) return;
-
-  connectNotificationSocket(token, () => {
-    if (subscriptionRef.current) return;
-
-    subscriptionRef.current = subscribeNotifications(
-      candidateId,
-      (notif) => {
-        setNotifications((prev) => [notif, ...prev]);
-        setUnreadCount((prev) => prev + 1);
-      }
-    );
-  });
-
-  return () => {
-    if (subscriptionRef.current) {
-      try {
-        subscriptionRef.current.unsubscribe();
-      } catch {}
-      subscriptionRef.current = null;
-    }
-    disconnectNotificationSocket();
-  };
-}, [candidateId]);
-
 
   // ✅ Ẩn header khi scroll
   const controlHeader = () => {
@@ -155,9 +194,13 @@ const HeaderCandidate = ({
   const handleMarkAsRead = async (id) => {
     try {
       const updated = await markAsRead(id);
+
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: updated.readFlag } : n))
+        prev.map((n) =>
+          n.id === id ? { ...n, read: true, readFlag: true } : n
+        )
       );
+
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.error("Lỗi đánh dấu đã đọc:", err.message);
@@ -238,10 +281,10 @@ const HeaderCandidate = ({
             className="relative p-2 rounded-full hover:bg-white/10 transition"
           >
             <MessageCircle className="w-6 h-6" />
-            {unreadMessageCount > 0 && ( 
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
-              {unreadMessageCount}
-            </span>
+            {unreadMessageCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
+                {unreadMessageCount}
+              </span>
             )}
           </button>
 

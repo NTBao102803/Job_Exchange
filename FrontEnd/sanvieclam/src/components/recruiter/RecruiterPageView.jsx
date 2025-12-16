@@ -99,10 +99,13 @@ const RecruiterPageView = () => {
   }, []);
 
   // ==================== WEBSOCKET ====================
-  useEffect(() => {
-    if (!recruiter?.authUserId) return;
+  const token = localStorage.getItem("token"); // Lấy token
 
-    connectCommentSocket(() => {
+  useEffect(() => {
+    if (!recruiter?.authUserId || !token) return;
+
+    connectCommentSocket(token, () => {
+      // ← Truyền token vào
       if (subscriptionRef.current) return;
 
       subscriptionRef.current = subscribeComments(
@@ -112,6 +115,14 @@ const RecruiterPageView = () => {
             if (prev.some((c) => c.id === newComment.id)) return prev;
             return addCommentToTree(prev, newComment);
           });
+
+          // Scroll vào comment mới
+          setTimeout(() => {
+            const el =
+              commentRefs.current[newComment.id] ||
+              commentRefs.current[newComment.parentId];
+            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 100);
         }
       );
     });
@@ -125,7 +136,7 @@ const RecruiterPageView = () => {
       }
       disconnectCommentSocket();
     };
-  }, [recruiter?.authUserId]);
+  }, [recruiter?.authUserId, token]);
 
   // ==================== GỬI BÌNH LUẬN ====================
   const handleSubmitComment = async () => {
