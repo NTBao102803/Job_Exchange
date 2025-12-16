@@ -106,23 +106,20 @@ const RecruiterPage = () => {
       // ← Truyền token vào
       if (subscriptionRef.current) return;
 
-      subscriptionRef.current = subscribeComments(
-        recruiterId,
-        (newComment) => {
-          setComments((prev) => {
-            if (prev.some((c) => c.id === newComment.id)) return prev;
-            return addCommentToTree(prev, newComment);
-          });
+      subscriptionRef.current = subscribeComments(recruiterId, (newComment) => {
+        setComments((prev) => {
+          if (prev.some((c) => c.id === newComment.id)) return prev;
+          return addCommentToTree(prev, newComment);
+        });
 
-          // Scroll vào comment mới
-          setTimeout(() => {
-            const el =
-              commentRefs.current[newComment.id] ||
-              commentRefs.current[newComment.parentId];
-            el?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }, 100);
-        }
-      );
+        // Scroll vào comment mới
+        setTimeout(() => {
+          const el =
+            commentRefs.current[newComment.id] ||
+            commentRefs.current[newComment.parentId];
+          el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+      });
     });
 
     return () => {
@@ -174,6 +171,18 @@ const RecruiterPage = () => {
 
     return Math.round(avg);
   })();
+
+  // tính thời gian
+  const displayTime = new Date(comment.createdAt).toLocaleString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false, // Tùy chọn, dùng định dạng 24h
+  });
   // ==================== COMPONENT COMMENT ====================
   const CommentItem = memo(({ comment }) => {
     const [showReplyForm, setShowReplyForm] = useState(false);
@@ -221,9 +230,7 @@ const RecruiterPage = () => {
             >
               {comment.content}
             </p>
-            <p className="text-xs text-gray-500 mt-2">
-              {new Date(comment.createdAt).toLocaleString("vi-VN")}
-            </p>
+            <p className="text-xs text-gray-500 mt-2">{displayTime}</p>
 
             <div className="flex gap-6 mt-3 text-sm">
               <button
