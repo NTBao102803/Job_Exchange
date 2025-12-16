@@ -26,7 +26,7 @@ export const connectWebSocket = (token, onConnect, onError) => {
   messageClient.activate();
 };
 
-export const getStompClient = () => client;
+export const getStompClient = () => messageClient;
 
 export const disconnectWebSocket = () => {
   if (messageClient) {

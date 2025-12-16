@@ -66,10 +66,13 @@ const RecruiterMessenger = () => {
     connectWebSocket(
       token,
       () => {
+        console.log("✅ WebSocket connected thành công!");
         stompClientRef.current = getStompClient();
         loadConversations({ force: true });
       },
-      () => {}
+      (error) => {
+        console.error("❌ WebSocket lỗi:", error);
+      }
     );
   }, [token]);
 
