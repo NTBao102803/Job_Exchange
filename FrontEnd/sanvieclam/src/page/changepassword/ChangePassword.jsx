@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { changePassword } from "../../api/AuthApi"; // 👉 gọi API đổi mật khẩu
 

@@ -21,6 +21,16 @@ const CandidatesHaveApplied = () => {
 
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
   const [candidateToApprove, setCandidateToApprove] = useState(null);
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+
+const [interviewForm, setInterviewForm] = useState({
+  fullName: "",
+  phone: "",
+  date: "",
+  time: "",
+  location: "",
+});
+
 
   const [filterStatus, setFilterStatus] = useState("ALL"); // 🆕 filter dropdown
 
@@ -255,10 +265,10 @@ const CandidatesHaveApplied = () => {
                     </button>
                   ) : candidate.approvalStatus === "APPROVED" ? (
                     <button
-                      disabled
+                      onClick={() => setIsInterviewModalOpen(true)}
                       className="bg-green-700 text-white font-bold px-4 py-2 rounded-lg shadow-md cursor-default text-base"
                     >
-                      Hồ sơ phù hợp ✅
+                      Lịch phỏng vấn ✅
                     </button>
                   ) : (
                     <button
@@ -334,7 +344,7 @@ const CandidatesHaveApplied = () => {
             </h3>
             <div className="flex justify-center gap-4 mt-6">
               <button
-                onClick={() => handleApprovalDecision(true)}
+                onClick={() => {setIsApprovalModalOpen(false),setIsInterviewModalOpen(true);}}
                 className="bg-green-500 hover:bg-green-400 text-white px-5 py-2 rounded-lg font-bold"
               >
                 Có
@@ -355,6 +365,86 @@ const CandidatesHaveApplied = () => {
           </div>
         </div>
       )}
+
+      {/* Modal lịch phỏng vấn (UI only) */}
+{isInterviewModalOpen && (
+  <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+    <div className="bg-white rounded-xl shadow-lg p-6 w-[420px]">
+      <h3 className="text-2xl font-bold text-indigo-600 mb-5 text-center">
+        Lịch phỏng vấn
+      </h3>
+
+      <div className="space-y-3">
+        <input
+          type="text"
+          placeholder="Họ và tên"
+          className="w-full border rounded-lg px-3 py-2"
+          value={interviewForm.fullName}
+          onChange={(e) =>
+            setInterviewForm({ ...interviewForm, fullName: e.target.value })
+          }
+        />
+
+        <input
+          type="tel"
+          placeholder="Số điện thoại"
+          className="w-full border rounded-lg px-3 py-2"
+          value={interviewForm.phone}
+          onChange={(e) =>
+            setInterviewForm({ ...interviewForm, phone: e.target.value })
+          }
+        />
+
+        <div className="flex gap-2">
+          <input
+            type="date"
+            className="w-1/2 border rounded-lg px-3 py-2"
+            value={interviewForm.date}
+            onChange={(e) =>
+              setInterviewForm({ ...interviewForm, date: e.target.value })
+            }
+          />
+          <input
+            type="time"
+            className="w-1/2 border rounded-lg px-3 py-2"
+            value={interviewForm.time}
+            onChange={(e) =>
+              setInterviewForm({ ...interviewForm, time: e.target.value })
+            }
+          />
+        </div>
+
+        <input
+          type="text"
+          placeholder="Địa điểm phỏng vấn"
+          className="w-full border rounded-lg px-3 py-2"
+          value={interviewForm.location}
+          onChange={(e) =>
+            setInterviewForm({ ...interviewForm, location: e.target.value })
+          }
+        />
+      </div>
+
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setIsInterviewModalOpen(false)}
+          className="bg-gray-300 px-4 py-2 rounded-lg font-bold"
+        >
+          Huỷ
+        </button>
+        <button
+          onClick={() => {
+            console.log("Interview UI:", interviewForm);
+            setIsInterviewModalOpen(false);
+          }}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold"
+        >
+          Xác nhận
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

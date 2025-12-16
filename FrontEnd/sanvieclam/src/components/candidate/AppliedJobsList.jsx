@@ -10,6 +10,14 @@ const AppliedJobsList = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [appliedJobs, setAppliedJobs] = useState([]);
   const jobsPerPage = 3;
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+  const [interviewForm] = useState({
+  fullName: "Nguyễn Văn A",
+  phone: "0909 123 456",
+  date: "20/01/2025",
+  time: "14:00",
+  location: "Văn phòng công ty",
+});
 
   // Map trạng thái từ backend ra UI
   const statusMap = {
@@ -147,6 +155,19 @@ console.log(appliedJobs);
                     }`}
                   >
                     {statusMap[job.status]?.text || job.status}
+                    {job.status === "APPROVED" && (
+                      <>
+                        <span className="text-gray-400"> | </span>
+                        <span
+                          className="text-green-700 underline cursor-pointer hover:text-green-800"
+                          onClick={() => {
+                            setIsInterviewModalOpen(true);
+                          }}
+                        >
+                          Lịch phỏng vấn
+                        </span>
+                      </>
+                    )}
                   </span>
                   <div className="flex gap-2">
                     <button
@@ -217,6 +238,64 @@ console.log(appliedJobs);
           </div>
         </div>
       )}
+      {isInterviewModalOpen && (
+  <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+    <div className="bg-white rounded-xl shadow-lg p-6 w-[420px]">
+      <h3 className="text-2xl font-bold text-indigo-600 mb-5 text-center">
+        📅 Lịch phỏng vấn
+      </h3>
+
+      <div className="space-y-4 text-gray-700">
+        <div>
+          <p className="text-sm text-gray-500">Họ và tên</p>
+          <p className="font-semibold">
+            {interviewForm.fullName || "Chưa cập nhật"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">Số điện thoại</p>
+          <p className="font-semibold">
+            {interviewForm.phone || "Chưa cập nhật"}
+          </p>
+        </div>
+
+        <div className="flex gap-4">
+          <div className="w-1/2">
+            <p className="text-sm text-gray-500">Ngày phỏng vấn</p>
+            <p className="font-semibold">
+              {interviewForm.date || "Chưa cập nhật"}
+            </p>
+          </div>
+
+          <div className="w-1/2">
+            <p className="text-sm text-gray-500">Thời gian</p>
+            <p className="font-semibold">
+              {interviewForm.time || "Chưa cập nhật"}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">Địa điểm</p>
+          <p className="font-semibold">
+            {interviewForm.location || "Chưa cập nhật"}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex justify-end mt-6">
+        <button
+          onClick={() => setIsInterviewModalOpen(false)}
+          className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold"
+        >
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
