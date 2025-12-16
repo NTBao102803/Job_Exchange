@@ -9,11 +9,8 @@ export const connectNotificationSocket = (token, onConnect) => {
   notificationClient = new Client({
     webSocketFactory: () =>
       new SockJS(
-        `${import.meta.env.VITE_API_URL}/ws-notifications?token=${encodeURIComponent(
-          token.replace("Bearer ", "")
-        )}`
-      ),
-      
+        `${import.meta.env.VITE_API_URL}/ws-notifications`),
+
     connectHeaders: {
       Authorization: token ? `Bearer ${token}` : "",
     },

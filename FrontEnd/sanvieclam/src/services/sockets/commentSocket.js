@@ -9,11 +9,7 @@ export const connectCommentSocket = (token, onConnect) => {
 
   commentClient = new Client({
     webSocketFactory: () =>
-      new SockJS(
-        `${import.meta.env.VITE_API_URL}/ws-comments?token=${encodeURIComponent(
-          token?.replace("Bearer ", "") || ""   // ← Dùng token từ tham số
-        )}`
-      ),
+      new SockJS(`${import.meta.env.VITE_API_URL}/ws-comments`),
 
     connectHeaders: {
       Authorization: token ? `Bearer ${token}` : "", // Vẫn giữ header (tốt hơn)
