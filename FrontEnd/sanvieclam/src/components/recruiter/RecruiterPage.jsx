@@ -189,7 +189,7 @@ const RecruiterPage = () => {
           second: "2-digit",
           hour12: false,
         })
-      : "";
+      : "Vừa xong";
     const sendReply = () => {
       handleSubmitReply(comment.id, replyText);
       setReplyText("");
