@@ -2,9 +2,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as SecureStore from "expo-secure-store";
 import { Search } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
 import { getEmployerById } from "../../api/JobApi";
-import { getSmartJobRecommendations } from "../../api/RecommendationApi";
+import { getSmartJobRecommendations, syncAllJobs } from "../../api/RecommendationApi";
 import HeaderSmartJobs from "../../components/header/HeaderSmartJobs";
 import JobDetail from "../../components/jobdetail";
 import { useMenu } from "../../context/MenuContext";
@@ -17,67 +25,84 @@ export default function SmartJobs() {
   const [search, setSearch] = useState("");
   const [selectedJob, setSelectedJob] = useState<any>(null);
 
-  // ✅ Lấy userId từ SecureStore (hoặc AsyncStorage nếu cần)
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const userId = await SecureStore.getItemAsync("userId");
-
-        if (!userId) {
-          console.warn("⚠️ Không tìm thấy userId");
-          return;
-        }
-
-        setLoading(true);
-
-        const res = await getSmartJobRecommendations(userId, 10);
-
-        const formatMatchScore = (rawScore: number) => {
+  /**
+   * Chuẩn hóa score AI (cosine similarity: 0 -> 1)
+   */
+  const formatMatchScore = (rawScore) => {
           if (!rawScore || rawScore < 1.0) return "N/A";
           const percentage = (rawScore - 1.0) * 100;
           return `${Math.min(percentage, 100).toFixed(1)}%`;
         };
 
+  /**
+   * Load job recommendation cho user
+   */
+  useEffect(() => {
+    const fetchRecommendedJobs = async () => {
+      try {
+        setLoading(true);
+        await syncAllJobs();
+        const userId = await SecureStore.getItemAsync("userId");
+        if (!userId) {
+          console.warn("⚠️ Không tìm thấy userId trong SecureStore");
+          return;
+        }
+
+        // ✅ GỌI ĐÚNG API BACKEND
+        const recommendations = await getSmartJobRecommendations(userId, 10);
+
+        // ✅ MAP DỮ LIỆU AN TOÀN
         const mappedJobs = await Promise.all(
-          res.map(async (item: any) => {
-            const job = item.job || {};
-            const requirements = job.requirements || {};
+          recommendations.map(async (item: any) => {
+            const job = item?.job ?? {};
+            const requirements = job?.requirements ?? {};
             let companyName = "Không rõ công ty";
 
             if (job.employerId) {
               try {
                 const employer = await getEmployerById(job.employerId);
-                companyName = employer?.companyName || `Công ty ID ${job.employerId}`;
-              } catch (error) {
-                console.warn(`⚠️ Lỗi lấy employer ${job.employerId}:`, error);
+                companyName = employer?.companyName ?? companyName;
+              } catch (e) {
+                console.warn(`⚠️ Không lấy được employer ${job.employerId}`);
               }
             }
 
             return {
               id: job.id,
-              title: job.title || "Chưa có tiêu đề",
+              title: job.title ?? "Chưa có tiêu đề",
               companyName,
-              location: job.location || "Không rõ",
-              salary: job.salary || "Thỏa thuận",
-              type: job.jobType || "Fulltime",
+              location: job.location ?? "Không rõ",
+              salary: job.salary ?? "Thỏa thuận",
+              type: job.jobType ?? "Fulltime",
               match: formatMatchScore(item.score),
-              skills: Array.isArray(requirements.skills) ? requirements.skills.join(", ") : "Không có kỹ năng yêu cầu",
-              jobDetail: { ...job, companyName },
+              skills: Array.isArray(requirements.skills)
+                ? requirements.skills.join(", ")
+                : "Không có kỹ năng yêu cầu",
+
+              // Dữ liệu đầy đủ cho JobDetail
+              jobDetail: {
+                ...job,
+                companyName,
+                matchScore: item.score,
+              },
             };
           })
         );
 
         setJobs(mappedJobs);
-      } catch (err) {
-        console.error("❌ Lỗi load job recommendations:", err);
+      } catch (error) {
+        console.error("❌ Lỗi khi load Smart Jobs:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJobs();
+    fetchRecommendedJobs();
   }, []);
 
+  /**
+   * Filter theo search
+   */
   const filteredJobs = jobs.filter((job) =>
     job.title.toLowerCase().includes(search.toLowerCase())
   );
@@ -128,14 +153,29 @@ export default function SmartJobs() {
                 value={search}
                 onChangeText={setSearch}
               />
-              <Search size={22} color="#ffeb3b" style={{ position: "absolute", left: 12, top: 10 }} />
+              <Search
+                size={22}
+                color="#ffeb3b"
+                style={{ position: "absolute", left: 12, top: 10 }}
+              />
             </View>
 
             {/* Job List */}
             {loading ? (
-              <ActivityIndicator size="large" color="#ffeb3b" style={{ marginTop: 50 }} />
+              <ActivityIndicator
+                size="large"
+                color="#ffeb3b"
+                style={{ marginTop: 50 }}
+              />
             ) : filteredJobs.length === 0 ? (
-              <Text style={{ color: "white", opacity: 0.9, marginTop: 30, textAlign: "center" }}>
+              <Text
+                style={{
+                  color: "white",
+                  opacity: 0.9,
+                  marginTop: 30,
+                  textAlign: "center",
+                }}
+              >
                 Không tìm thấy công việc phù hợp.
               </Text>
             ) : (
@@ -152,11 +192,24 @@ export default function SmartJobs() {
                       marginBottom: 18,
                     }}
                   >
-                    <Text style={{ fontSize: 20, color: "#ffeb3b", fontWeight: "700" }}>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        color: "#ffeb3b",
+                        fontWeight: "700",
+                      }}
+                    >
                       {job.title}
                     </Text>
 
-                    <Text style={{ color: "white", opacity: 0.9, marginTop: 4, fontSize: 14 }}>
+                    <Text
+                      style={{
+                        color: "white",
+                        opacity: 0.9,
+                        marginTop: 4,
+                        fontSize: 14,
+                      }}
+                    >
                       {job.companyName}
                     </Text>
 
@@ -164,17 +217,31 @@ export default function SmartJobs() {
                       📍 {job.location} | ⏰ {job.type}
                     </Text>
 
-                    <Text style={{ color: "#00ff88", marginTop: 4, fontWeight: "600" }}>
+                    <Text
+                      style={{
+                        color: "#00ff88",
+                        marginTop: 4,
+                        fontWeight: "600",
+                      }}
+                    >
                       💰 {job.salary}
                     </Text>
 
                     <Text style={{ color: "white", marginTop: 6 }}>
-                      <Text style={{ fontWeight: "600" }}>Kỹ năng:</Text> {job.skills}
+                      <Text style={{ fontWeight: "600" }}>Kỹ năng:</Text>{" "}
+                      {job.skills}
                     </Text>
 
                     <Text style={{ color: "white", marginTop: 4 }}>
                       <Text style={{ fontWeight: "700" }}>Phù hợp:</Text>{" "}
-                      <Text style={{ color: "#00ff88", fontWeight: "700" }}>{job.match}</Text>
+                      <Text
+                        style={{
+                          color: "#00ff88",
+                          fontWeight: "700",
+                        }}
+                      >
+                        {job.match}
+                      </Text>
                     </Text>
 
                     <TouchableOpacity
@@ -184,9 +251,15 @@ export default function SmartJobs() {
                         borderRadius: 10,
                         marginTop: 12,
                       }}
-                      onPress={() => setSelectedJob(job)}
+                      onPress={() => setSelectedJob(job.jobDetail)}
                     >
-                      <Text style={{ textAlign: "center", fontWeight: "700", color: "#222" }}>
+                      <Text
+                        style={{
+                          textAlign: "center",
+                          fontWeight: "700",
+                          color: "#222",
+                        }}
+                      >
                         Xem chi tiết
                       </Text>
                     </TouchableOpacity>
