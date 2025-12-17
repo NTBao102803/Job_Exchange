@@ -21,8 +21,18 @@ const CandidatesHaveApplied = () => {
 
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
   const [candidateToApprove, setCandidateToApprove] = useState(null);
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
 
-  const [filterStatus, setFilterStatus] = useState("ALL"); // 🆕 filter dropdown
+const [interviewForm, setInterviewForm] = useState({
+  fullName: "",
+  phone: "",
+  date: "",
+  time: "",
+  location: "",
+});
+
+
+  const [filterStatus, setFilterStatus] = useState("ALL");
 
   const candidatesPerPage = 4;
 
@@ -49,8 +59,8 @@ const CandidatesHaveApplied = () => {
               cvUrl: app.cvUrl,
               approvalStatus: app.status?.toUpperCase() || "PENDING",
               applicationId: app.id,
+              interviewSchedule: app.interviewSchedule,
             };
-            console.log("📥 Loaded candidate:", obj);
             return obj;
           })
         );
@@ -97,41 +107,134 @@ const CandidatesHaveApplied = () => {
 
   const handleApproveClick = (candidate) => {
     setCandidateToApprove(candidate);
+    
+    // Đặt giá trị mặc định cho form phỏng vấn dựa trên ứng viên
+    setInterviewForm(prev => ({
+        ...prev,
+        // Có thể điền trước tên ứng viên hoặc tên người duyệt nếu bạn muốn
+        fullName: prev.fullName || "", 
+        phone: candidate.phone || prev.phone || "",
+    }));
+
     setIsApprovalModalOpen(true);
   };
-
-  const handleApprovalDecision = async (decision) => {
+    
+  const handleRejectDecision = async () => {
     if (!candidateToApprove?.applicationId) return;
 
     const applicationId = candidateToApprove.applicationId;
 
     try {
-      if (decision) {
-        await approveApplication(applicationId);
-      } else {
-        await rejectApplication(applicationId);
-      }
+        // GỌI API REJECT
+        await rejectApplication(applicationId); 
 
-      // ✅ Cập nhật và sắp xếp lại danh sách
-      setAppliedCandidates((prev) => {
-        const updated = prev.map((c) =>
-          c.applicationId === applicationId
-            ? { ...c, approvalStatus: decision ? "APPROVED" : "REJECTED" }
-            : c
-        );
+        // Cập nhật và sắp xếp lại danh sách
+        setAppliedCandidates((prev) => {
+          const updated = prev.map((c) =>
+            c.applicationId === applicationId
+              ? { ...c, approvalStatus: "REJECTED" }
+              : c
+          );
+          const order = { PENDING: 1, APPROVED: 2, REJECTED: 3 };
+          return updated.sort(
+            (a, b) => order[a.approvalStatus] - order[b.approvalStatus]
+          );
+        });
+        alert("Đã từ chối hồ sơ thành công.");
 
-        const order = { PENDING: 1, APPROVED: 2, REJECTED: 3 };
-        return updated.sort(
-          (a, b) => order[a.approvalStatus] - order[b.approvalStatus]
-        );
-      });
     } catch (error) {
-      alert("Không thể duyệt hồ sơ. Vui lòng thử lại!");
+        console.error("❌ Lỗi khi từ chối hồ sơ:", error);
+        alert("Không thể từ chối hồ sơ. Vui lòng thử lại!");
     } finally {
-      setIsApprovalModalOpen(false);
-      setCandidateToApprove(null);
+        setIsApprovalModalOpen(false);
+        setCandidateToApprove(null);
     }
   };
+
+  const handleInterviewSubmit = async () => {
+    if (!candidateToApprove?.applicationId) return;
+
+    // ✅ VALIDATION ĐƠN GIẢN
+    if (!interviewForm.fullName || !interviewForm.date || !interviewForm.time || !interviewForm.location) {
+        alert("Vui lòng điền đầy đủ thông tin Lịch phỏng vấn.");
+        return;
+    }
+
+    const applicationId = candidateToApprove.applicationId;
+    
+    try {
+        // Chuẩn bị dữ liệu theo format InterviewScheduleRequest (BE)
+        const interviewData = {
+            fullName: interviewForm.fullName,
+            phone: interviewForm.phone,
+            date: interviewForm.date, // yyyy-MM-dd
+            time: interviewForm.time, // HH:mm
+            location: interviewForm.location,
+        };
+
+        // GỌI API DUYỆT CÙNG VỚI LỊCH PHỎNG VẤN
+        const updatedApplication = await approveApplication(applicationId, interviewData);
+        
+        // Cập nhật lại danh sách (sử dụng dữ liệu trả về)
+        setAppliedCandidates((prev) => {
+            const updated = prev.map((c) =>
+                c.applicationId === applicationId
+                    // Lấy interviewSchedule từ updatedApplication.interviewSchedule (ApplicationDto)
+                    ? { ...c, approvalStatus: "APPROVED", interviewSchedule: updatedApplication.interviewSchedule }
+                    : c
+            );
+
+            const order = { PENDING: 1, APPROVED: 2, REJECTED: 3 };
+            return updated.sort(
+                (a, b) => order[a.approvalStatus] - order[b.approvalStatus]
+            );
+        });
+
+        alert("Hồ sơ đã được duyệt và lịch phỏng vấn đã được gửi!");
+
+    } catch (error) {
+        console.error("❌ Lỗi khi duyệt hồ sơ và đặt lịch phỏng vấn:", error);
+        alert("Không thể duyệt hồ sơ. Vui lòng thử lại!");
+    } finally {
+        closeInterviewModal();
+    }
+  };
+const handleViewInterview = (candidate) => {
+  if (candidate.interviewSchedule) {
+    const schedule = candidate.interviewSchedule;
+    
+    // Tách chuỗi "09:00 20/12/2025"
+    const [timePart, datePart] = schedule.interviewDateTime.split(" ");
+    
+    // Chuyển "20/12/2025" thành "2025-12-20" để hợp lệ với <input type="date">
+    const [day, month, year] = datePart.split("/");
+    const formattedDate = `${year}-${month}-${day}`;
+
+    setInterviewForm({
+      fullName: schedule.interviewerFullName,
+      phone: schedule.interviewerPhone,
+      date: formattedDate,
+      time: timePart,
+      location: schedule.location,
+    });
+    
+    // Đặt ứng viên hiện tại để Modal biết đang xem hồ sơ nào (nếu cần dùng applicationId)
+    setCandidateToApprove(candidate); 
+    setIsInterviewModalOpen(true);
+  }
+};
+const closeInterviewModal = () => {
+    setIsInterviewModalOpen(false); // Đóng Modal phỏng vấn
+    setCandidateToApprove(null);     // Xóa thông tin ứng viên đang chọn
+    setInterviewForm({              // Reset các ô nhập liệu về trống
+      fullName: "",
+      phone: "",
+      date: "",
+      time: "",
+      location: job?.location || "",
+    });
+  };
+
 
   return (
     <div className="p-28 pt-28 space-y-4 text-lg">
@@ -255,10 +358,10 @@ const CandidatesHaveApplied = () => {
                     </button>
                   ) : candidate.approvalStatus === "APPROVED" ? (
                     <button
-                      disabled
+                      onClick={() => handleViewInterview(candidate)}
                       className="bg-green-700 text-white font-bold px-4 py-2 rounded-lg shadow-md cursor-default text-base"
                     >
-                      Hồ sơ phù hợp ✅
+                      Lịch phỏng vấn ✅
                     </button>
                   ) : (
                     <button
@@ -334,13 +437,16 @@ const CandidatesHaveApplied = () => {
             </h3>
             <div className="flex justify-center gap-4 mt-6">
               <button
-                onClick={() => handleApprovalDecision(true)}
+                onClick={() => {
+                  setIsApprovalModalOpen(false),
+                  setIsInterviewModalOpen(true);
+                }}
                 className="bg-green-500 hover:bg-green-400 text-white px-5 py-2 rounded-lg font-bold"
               >
                 Có
               </button>
               <button
-                onClick={() => handleApprovalDecision(false)}
+                onClick={handleRejectDecision}
                 className="bg-red-500 hover:bg-red-400 text-white px-5 py-2 rounded-lg font-bold"
               >
                 Không
@@ -355,6 +461,87 @@ const CandidatesHaveApplied = () => {
           </div>
         </div>
       )}
+
+      {/* Modal lịch phỏng vấn (UI only) */}
+{isInterviewModalOpen && (
+  <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+    <div className="bg-white rounded-xl shadow-lg p-6 w-[420px]">
+      <h3 className="text-2xl font-bold text-indigo-600 mb-5 text-center">
+        Lịch phỏng vấn
+      </h3>
+
+      <div className="space-y-3">
+        <input
+          type="text"
+          placeholder="Họ và tên"
+          className="w-full border rounded-lg px-3 py-2"
+          value={interviewForm.fullName}
+          readOnly={candidateToApprove?.approvalStatus === "APPROVED"}
+          onChange={(e) =>
+            setInterviewForm({ ...interviewForm, fullName: e.target.value })
+          }
+        />
+
+        <input
+          type="tel"
+          placeholder="Số điện thoại"
+          className="w-full border rounded-lg px-3 py-2"
+          value={interviewForm.phone}
+          readOnly={candidateToApprove?.approvalStatus === "APPROVED"}
+          onChange={(e) =>
+            setInterviewForm({ ...interviewForm, phone: e.target.value })
+          }
+        />
+
+        <div className="flex gap-2">
+          <input
+            type="date"
+            className="w-1/2 border rounded-lg px-3 py-2"
+            value={interviewForm.date}
+            readOnly={candidateToApprove?.approvalStatus === "APPROVED"}
+            onChange={(e) =>
+              setInterviewForm({ ...interviewForm, date: e.target.value })
+            }
+          />
+          <input
+            type="time"
+            className="w-1/2 border rounded-lg px-3 py-2"
+            value={interviewForm.time}
+            onChange={(e) =>
+              setInterviewForm({ ...interviewForm, time: e.target.value })
+            }
+          />
+        </div>
+
+        <input
+          type="text"
+          placeholder="Địa điểm phỏng vấn"
+          className="w-full border rounded-lg px-3 py-2"
+          value={interviewForm.location}
+          readOnly={candidateToApprove?.approvalStatus === "APPROVED"}
+          onChange={(e) =>
+            setInterviewForm({ ...interviewForm, location: e.target.value })
+          }
+        />
+      </div>
+
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={closeInterviewModal}
+          className="bg-gray-300 px-4 py-2 rounded-lg font-bold"
+        >
+          Huỷ
+        </button>
+        <button
+          onClick={handleInterviewSubmit}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold"
+        >
+          Xác nhận
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

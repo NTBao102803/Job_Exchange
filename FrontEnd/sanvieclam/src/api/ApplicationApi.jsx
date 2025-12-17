@@ -77,9 +77,9 @@ export const updateApplicationStatus = async (id, status, rejectReason = null) =
 };
 
 // duyệt hồ sơ ứng viên ứng tuyển
-export const approveApplication = async (id) => {
+export const approveApplication = async (id, interviewData) => {
   try {
-    const response = await axiosClient.put(`/employer/applications/${id}/approve`);
+    const response = await axiosClient.put(`/employer/applications/${id}/approve`, interviewData);
     return response.data;
   } catch (error) {
     console.error("Lỗi duyệt hồ sơ:", error);
