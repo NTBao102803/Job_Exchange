@@ -219,21 +219,41 @@ const AppliedJobsList = () => {
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="px-3 py-1 rounded-lg bg-gray-200 disabled:opacity-40"
+              className={`px-3 py-1 rounded-lg ${
+                page === 1
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
             >
               Trước
             </button>
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={`px-3 py-1 rounded-lg ${
+                  page === i + 1
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
             <button
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="px-3 py-1 rounded-lg bg-gray-200 disabled:opacity-40"
+              className={`px-3 py-1 rounded-lg ${
+                page === totalPages
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
             >
               Sau
             </button>
           </div>
         </div>
       )}
-
       {/* Modal hiển thị lịch phỏng vấn chi tiết */}
       {isInterviewModalOpen && selectedInterviewSchedule && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
